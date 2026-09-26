@@ -200,3 +200,14 @@ def test_youtube_upload_confirmed_only_when_public(monkeypatch):
     monkeypatch.setattr(youtube, "video_status", lambda vid: {"privacyStatus": "public"})
     pipeline.reconcile()
     assert db.posts_for_item("y1")[0]["status"] == "published"
+
+
+def test_every_module_imports():
+    """Catches syntax errors in modules the other tests don't touch (cli, preview, publishers)."""
+    import importlib
+    import pkgutil
+
+    import tfs
+
+    for mod in pkgutil.walk_packages(tfs.__path__, "tfs."):
+        importlib.import_module(mod.name)

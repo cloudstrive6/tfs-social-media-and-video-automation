@@ -56,8 +56,7 @@ def main() -> None:
             print(analyst.run().summary_markdown)
         case "preview-styles":
             from .preview import run
-            print("
-".join(run()))
+            print("\n".join(run()))
         case "verify":
             from .verify import run_all
             sys.exit(0 if run_all() else 1)
