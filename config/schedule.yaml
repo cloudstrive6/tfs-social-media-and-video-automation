@@ -24,8 +24,8 @@ instagram_carousels:          # 2 / day
   - "11:00"
   - "19:00"
 
-tiktok:                       # 3 / day via Post for Me — enable once the account is connected there
-  enabled: false
+tiktok:                       # 3 / day via Post for Me ("New Project" quickstart project, connected 2026-09-26)
+  enabled: true
   slots:
     - "12:00"
     - "18:30"

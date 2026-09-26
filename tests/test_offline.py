@@ -19,7 +19,7 @@ def test_day_units_match_schedule():
     kinds = [u.kind for u in units]
     assert kinds.count("long_form") == 1 and kinds.count("vertical") == 3 and kinds.count("carousel") == 2
     vert0 = next(u for u in units if u.id.endswith("vert0"))
-    assert set(vert0.platforms) == {"youtube_shorts", "instagram_reel", "facebook_reel"}  # tiktok disabled
+    assert set(vert0.platforms) == {"youtube_shorts", "instagram_reel", "facebook_reel", "tiktok"}
     assert vert0.anchor.strftime("%H:%M") == "07:30"
 
 
