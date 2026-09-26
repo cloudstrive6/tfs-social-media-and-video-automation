@@ -38,6 +38,8 @@ llm:
     visual_director:  {model: claude-opus-5, effort: medium}
     carousel_designer: {model: claude-opus-5, effort: medium}
     analyst:          {model: claude-opus-5, effort: high}
+    audio_qa:         {model: claude-opus-5, effort: medium}
+    visual_qa:        {model: claude-opus-5, effort: high}
 
 # Quality gates: a slot is SKIPPED rather than filled with a weak piece.
 quality:
@@ -46,6 +48,17 @@ quality:
   # Fully automated: no human approval step. Unproven allegations are rewritten to roles by the fact-checker;
   # anything that still names a living person over an unproven allegation is skipped automatically.
   require_human_approval_for: []
+  # Review team: after rendering and before scheduling, Whisper checks the narration against the script
+  # and Visual QA looks at a frame from every shot. Blocking problems are fixed (new image / re-voice /
+  # re-render) up to max_fix_rounds times; if one still remains, the piece is skipped.
+  review:
+    enabled: true
+    max_fix_rounds: 2
+    whisper_model: small      # faster-whisper model (tiny/base/small/medium); small handles Taglish well on CPU
+    whisper_language: tl
+    min_scene_match: 0.8      # scenes below this word match go to the Proofreader judge
+    max_frames: 48            # long-form: frames sampled across the video
+    frames_per_call: 12
 
 # Who publishes. direct = our own API access:
 #   YouTube + Shorts -> Google Cloud project "tfs-automation" (YouTube Data API)

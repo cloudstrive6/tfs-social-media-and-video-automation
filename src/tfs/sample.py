@@ -44,11 +44,13 @@ def run(kind: str = "vertical") -> Path:
     files = [Path(data["video"])] if data.get("video") else [Path(p) for p in data.get("slides", [])]
     for f in files:
         shutil.copy2(f, out / f.name)
-    for extra in ("seo.json", "titles.json", "factcheck.json"):   # factcheck.json holds the final script
+    for extra in ("seo.json", "titles.json", "factcheck.json", "qa_r0.json", "qa_r1.json", "qa_r2.json"):   # factcheck.json holds the final script
         src = pipeline.item_dir(unit.id) / extra
         if src.exists():
             shutil.copy2(src, out / extra)
     caption = f"🧪 SAMPLE (not scheduled): {data.get('title') or data.get('working_title')}"
+    if data.get("qa"):
+        caption += f"\n🔎 Review: {data['qa']['summary']}"
     if files and files[0].suffix == ".mp4":
         notify.send_video(files[0], caption)
     else:

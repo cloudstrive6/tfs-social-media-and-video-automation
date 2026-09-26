@@ -13,12 +13,12 @@ from typing import Callable, TypeVar
 
 from pydantic import BaseModel
 
-from . import db, notify, slots
+from . import db, notify, qa, slots
 from .agents import editor, packaging, trend_scout, writers
 from .config import channel, data_dir, item_dir, media, now, schedule
 from .llm import UsageLimitError
 from .media import cards, compose, images, render, tts
-from .models import (Carousel, FactCheck, HookReview, Scene, Script, SeoPack, ShotList,
+from .models import (Carousel, FactCheck, HookReview, ReviewReport, Scene, Script, SeoPack, ShotList,
                      ThumbnailPlan, TitlePlan)
 
 log = logging.getLogger(__name__)
@@ -91,8 +91,15 @@ def _script(item: dict, d: Path, dossier: str) -> tuple[Script, HookReview] | No
 
 
 # ---------------------------------------------------------------- video
+def _fixes(d: Path) -> dict:
+    """Corrections from the review team: {"images": {key: prompt}, "audio": {scene id: tts text}}."""
+    f = d / "qa_fixes.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {"images": {}, "audio": {}}
+
+
 def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, int]) -> list[render.Shot]:
     shot_list = cached(d / "shots.json", ShotList, lambda: packaging.shot_list(item, script))
+    fixed = _fixes(d)["images"]
     by_scene = {s.scene_id: s for s in shot_list.shots}
     img_dir = d / "img"
     img_dir.mkdir(exist_ok=True)
@@ -106,8 +113,9 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
             return render.Shot(out, "card")
         if shot and shot.kind == "reuse" and (img_dir / f"{shot.reuse_of_scene:03d}.png").exists():
             return render.Shot(img_dir / f"{shot.reuse_of_scene:03d}.png", shot.motion)
-        prompt = shot.image_prompt if shot and shot.image_prompt else scene.visual
-        images.generate(prompt, out, aspect, style=shot.style if shot else "story")
+        prompt = fixed.get(str(scene.id)) or (shot.image_prompt if shot and shot.image_prompt else scene.visual)
+        if not out.exists():
+            images.generate(prompt, out, aspect, style=shot.style if shot else "story")
         return render.Shot(out, shot.motion if shot else "push_in")
 
     # illustrations first (reuse shots point at them), in parallel
@@ -117,8 +125,97 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
     return [made.get(s.id) or make(s) for s in script.scenes]
 
 
+def _voiced(script: Script, d: Path) -> list[Scene]:
+    """Scenes as the narrator reads them (the Proofreader may respell a line so numbers/names come out right)."""
+    respell = _fixes(d)["audio"]
+    return [sc.model_copy(update={"text": respell[str(sc.id)]}) if respell.get(str(sc.id)) else sc
+            for sc in script.scenes]
+
+
+def _voiced_script(script: Script, d: Path) -> Script:
+    return script.model_copy(update={"scenes": _voiced(script, d)})
+
+
+def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
+    """Images, voice, render and (long form) thumbnail; every step cached, so a fix only redoes what it touched."""
+    kind = item["kind"]
+    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
+    size, aspect = (vcfg["width"], vcfg["height"]), "16:9" if kind == "long_form" else "9:16"
+    shots = _visuals(item, d, script, aspect, size)
+    clips = tts.synthesize(_voiced(script, d), d / "audio")
+    video, starts_file = d / "video.mp4", d / "starts.json"
+    if not video.exists():
+        _, starts = render.render(shots, clips, kind, d / "work", video, hook.on_screen_hook_text)
+        starts_file.write_text(json.dumps(starts))
+    starts = json.loads(starts_file.read_text())
+    thumb_path, thumb_moment = None, "(no custom thumbnail)"
+    if kind == "long_form":
+        plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
+        best = plan.concepts[0]
+        thumb_moment = best.moment
+        art = d / "thumb_art.png"
+        if not art.exists():
+            images.generate(_fixes(d)["images"].get("thumbnail") or best.image_prompt, art, "16:9", style="story")
+        thumb_path = d / "thumbnail.jpg"
+        if not thumb_path.exists():
+            compose.thumbnail(art, best.overlay_text, thumb_path)
+    return video, starts, thumb_path, thumb_moment
+
+
+def _save_fixes(d: Path, report: ReviewReport) -> None:
+    fixes = _fixes(d)
+    fixes["images"].update(report.redo_images)
+    fixes["audio"].update({k: v for k, v in report.redo_audio.items() if v})
+    (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def _apply_video_fixes(d: Path, report: ReviewReport) -> None:
+    import shutil
+
+    _save_fixes(d, report)
+    for key in report.redo_images:
+        targets = ([d / "thumb_art.png", d / "thumbnail.jpg"] if key == "thumbnail"
+                   else [d / "img" / f"{int(key):03d}.png"])
+        for t in targets:
+            t.unlink(missing_ok=True)
+    for key in report.redo_audio:
+        for ext in (".mp3", ".json"):
+            (d / "audio" / f"{int(key):03d}{ext}").unlink(missing_ok=True)
+    if any(k != "thumbnail" for k in report.redo_images) or report.redo_audio:
+        for f in (d / "video.mp4", d / "starts.json"):
+            f.unlink(missing_ok=True)
+        shutil.rmtree(d / "work", ignore_errors=True)
+
+
+def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T], ReviewReport],
+              fix: Callable[[ReviewReport], None]) -> tuple[T, ReviewReport | None] | None:
+    """Build → review → fix, up to max_fix_rounds. Returns (build result, final report), or None if skipped."""
+    rounds = qa.cfg().get("max_fix_rounds", 2) if qa.enabled() else 0
+    for rnd in range(rounds + 1):
+        built = build()
+        if not qa.enabled():
+            return built, None
+        report = cached(d / f"qa_r{rnd}.json", ReviewReport, lambda: qa.safe(review, built))
+        log.info("review r%d %s: %s", rnd, item["id"], report.summary)
+        if report.passed:
+            return built, report
+        if rnd < rounds:
+            fix(report)
+    problems = "; ".join(report.warnings[:6])
+    db.set_status(item["id"], "skipped", f"failed review after {rounds} fix rounds: {problems}"[:2000])
+    notify.send(f"⛔ {item['id']} skipped by the review team after {rounds} fix rounds:\n{problems}")
+    return None
+
+
+def _qa_note(report: ReviewReport | None) -> dict:
+    if not report:
+        return {}
+    return {"qa": {"summary": report.summary, "appeal": report.appeal, "hook_frame": report.hook_frame,
+                   "warnings": report.warnings[:10]}}
+
+
 def _produce_video(item: dict, d: Path, dossier: str) -> None:
-    iid, kind = item["id"], item["kind"]
+    kind = item["kind"]
     result = _script(item, d, dossier)
     if not result:
         return
@@ -127,30 +224,23 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     if not _gate(item, fc):
         return
     script = fc.script
-    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
-    size, aspect = (vcfg["width"], vcfg["height"]), "16:9" if kind == "long_form" else "9:16"
 
-    shots = _visuals(item, d, script, aspect, size)
-    clips = tts.synthesize(script.scenes, d / "audio")
-    video, starts_file = d / "video.mp4", d / "starts.json"
-    if not video.exists():
-        _, starts = render.render(shots, clips, kind, d / "work", video, hook.on_screen_hook_text)
-        starts_file.write_text(json.dumps(starts))
-    starts = json.loads(starts_file.read_text())
+    def review(built) -> ReviewReport:
+        video, starts, thumb, _ = built
+        shots = ShotList.model_validate_json((d / "shots.json").read_text(encoding="utf-8"))
+        return qa.review_video(kind, d, _voiced_script(script, d), shots, starts, video, thumb,
+                               hook.on_screen_hook_text)
 
-    thumb_path = None
-    thumb_moment = "(no custom thumbnail)"
-    if kind == "long_form":
-        plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
-        best = plan.concepts[0]
-        thumb_moment = best.moment
-        art = images.generate(best.image_prompt, d / "thumb_art.png", "16:9", style="story")
-        thumb_path = compose.thumbnail(art, best.overlay_text, d / "thumbnail.jpg")
+    done = _reviewed(item, d, lambda: _build_video(item, d, script, hook), review,
+                     lambda report: _apply_video_fixes(d, report))
+    if not done:
+        return
+    (video, starts, thumb_path, thumb_moment), report = done
     titles = cached(d / "titles.json", TitlePlan, lambda: packaging.titles(item, script, thumb_moment))
     chapters = render.chapters(script.scenes, starts) if kind == "long_form" else []
     cached(d / "seo.json", SeoPack, lambda: packaging.seo(item, script, titles.primary, chapters))
 
-    _schedule(item, title=titles.primary, video=str(video), thumbnail=str(thumb_path or ""))
+    _schedule(item, title=titles.primary, video=str(video), thumbnail=str(thumb_path or ""), **_qa_note(report))
 
 
 # ---------------------------------------------------------------- carousel
@@ -165,22 +255,42 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
     edited = {sc.id: sc.text for sc in fc.script.scenes}
     slide_dir = d / "slides"
     slide_dir.mkdir(exist_ok=True)
-    paths = []
-    for i, s in enumerate(car.slides):
-        headline, _, body = edited.get(i, f"{s.headline}\n{s.body}").partition("\n")
-        art = (images.generate(s.image_prompt, slide_dir / f"art{i:02d}.png", "4:5", style=s.style)
-               if s.image_prompt else None)
-        out = slide_dir / f"slide{i:02d}.jpg"
-        handle = channel()["channel"]["handle"].lower()
-        if s.layout == "panel":
-            compose.panel_slide(i, len(car.slides), headline, body, s.source, art, out, handle)
-        else:
-            compose.slide(i, len(car.slides), headline, body, s.source, s.theme, art, out, handle)
-        paths.append(str(out))
+    handle = channel()["channel"]["handle"].lower()
+
+    def build() -> list[str]:
+        fixed = _fixes(d)["images"]
+        paths = []
+        for i, s in enumerate(car.slides):
+            headline, _, body = edited.get(i, f"{s.headline}\n{s.body}").partition("\n")
+            art_path, out = slide_dir / f"art{i:02d}.png", slide_dir / f"slide{i:02d}.jpg"
+            art = None
+            if s.image_prompt:
+                if not art_path.exists():
+                    images.generate(fixed.get(str(i)) or s.image_prompt, art_path, "4:5", style=s.style)
+                    out.unlink(missing_ok=True)
+                art = art_path
+            if not out.exists():
+                if s.layout == "panel":
+                    compose.panel_slide(i, len(car.slides), headline, body, s.source, art, out, handle)
+                else:
+                    compose.slide(i, len(car.slides), headline, body, s.source, s.theme, art, out, handle)
+            paths.append(str(out))
+        return paths
+
+    def fix(report: ReviewReport) -> None:
+        _save_fixes(d, report)
+        for key in report.redo_images:
+            (slide_dir / f"art{int(key):02d}.png").unlink(missing_ok=True)
+
+    prompts = [s.image_prompt for s in car.slides]
+    done = _reviewed(item, d, build, lambda paths: qa.review_slides([Path(p) for p in paths], prompts), fix)
+    if not done:
+        return
+    paths, report = done
     text = "\n".join(f"{i + 1}. {s.headline} — {s.body}" for i, s in enumerate(car.slides))
     cached(d / "seo.json", SeoPack,
            lambda: packaging.seo(item, None, car.slides[0].headline, [], f"\n\n# Slides\n{text}"))
-    _schedule(item, title=car.slides[0].headline, slides=paths)
+    _schedule(item, title=car.slides[0].headline, slides=paths, **_qa_note(report))
 
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
@@ -208,6 +318,8 @@ def _notify_ready(item: dict) -> None:
     when = "\n".join(f"• {PLATFORM_LABEL.get(p, p)} — {datetime.fromisoformat(t).strftime('%a %d %b, %H:%M')} PHT"
                      for p, t in sorted(data["platforms"].items(), key=lambda kv: kv[1]))
     caption = f"✅ Ready: {data.get('title') or data.get('working_title')}\n{item['kind'].replace('_', ' ')}\n{when}"
+    if data.get("qa"):
+        caption += f"\n🔎 Review: {data['qa']['summary']}"
     if item["kind"] == "carousel":
         notify.send_photos([media(p) for p in data.get("slides", [])], caption)
     elif item["kind"] == "vertical":

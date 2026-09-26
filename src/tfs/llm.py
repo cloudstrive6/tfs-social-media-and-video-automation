@@ -16,6 +16,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import TypeVar
 
 import anthropic
@@ -80,6 +81,18 @@ def structured(agent: str, user: str, schema: type[T]) -> T:
     return _api_structured(agent, user, schema)
 
 
+def structured_with_images(agent: str, user: str, images: list, schema: type[T]) -> T:
+    """Like `structured`, but the model also looks at the given image files (frames, slides, model sheets)."""
+    if _backend() == "claude_code":
+        try:
+            return _cc_vision(agent, user, images, schema)
+        except UsageLimitError:
+            if not env("ANTHROPIC_API_KEY"):
+                raise
+            log.warning("%s: subscription limit reached, falling back to the API key", agent)
+    return _api_vision(agent, user, images, schema)
+
+
 def research(agent: str, user: str, max_searches: int = 20) -> str:
     """Free-text answer grounded in live web search (used by the Researcher)."""
     if _backend() == "claude_code":
@@ -129,6 +142,19 @@ def _cc_structured(agent: str, user: str, schema: type[T]) -> T:
     return schema.model_validate(data)
 
 
+def _cc_vision(agent: str, user: str, images: list, schema: type[T]) -> T:
+    listing = "\n".join(f"- {Path(p).resolve()}" for p in images)
+    dirs = sorted({str(Path(p).resolve().parent) for p in images})
+    out = _claude(agent, user + "\n\nOpen and look at EVERY one of these images with the Read tool before "
+                  "answering:\n" + listing,
+                  ["--tools", "Read", "--allowedTools", "Read", "--json-schema",
+                   json.dumps(schema.model_json_schema()), "--add-dir", *dirs])
+    data = out.get("structured_output")
+    if data is None:
+        raise RuntimeError(f"{agent}: no structured_output in Claude Code result")
+    return schema.model_validate(data)
+
+
 def _cc_research(agent: str, user: str, max_searches: int) -> str:
     out = _claude(agent, user + f"\n\n(Use up to {max_searches} web searches; fetch primary sources when useful.)",
                   ["--tools", "WebSearch,WebFetch", "--allowedTools", "WebSearch,WebFetch"])
@@ -147,6 +173,27 @@ def _api_structured(agent: str, user: str, schema: type[T], max_tokens: int = 64
         output_config={"effort": effort},
         output_format=schema,
         **FALLBACK,
+    ) as stream:
+        msg = stream.get_final_message()
+    _check(msg, agent)
+    return msg.parsed_output
+
+
+def _api_vision(agent: str, user: str, images: list, schema: type[T], max_tokens: int = 32000) -> T:
+    import base64
+    import mimetypes
+
+    content: list[dict] = []
+    for p in images:
+        media = mimetypes.guess_type(str(p))[0] or "image/png"
+        content += [{"type": "text", "text": f"Image: {Path(p).name}"},
+                    {"type": "image", "source": {"type": "base64", "media_type": media,
+                                                 "data": base64.b64encode(Path(p).read_bytes()).decode()}}]
+    content.append({"type": "text", "text": user})
+    model, effort = _agent_cfg(agent)
+    with client().beta.messages.stream(
+        model=model, max_tokens=max_tokens, system=_system(agent), messages=[{"role": "user", "content": content}],
+        thinking={"type": "adaptive"}, output_config={"effort": effort}, output_format=schema, **FALLBACK,
     ) as stream:
         msg = stream.get_final_message()
     _check(msg, agent)

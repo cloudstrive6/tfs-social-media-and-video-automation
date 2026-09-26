@@ -362,3 +362,41 @@ def test_archive_uploads_finished_item_once(data_dir, monkeypatch):
     assert "2026/09/2026-09-27-vert0/item.json" in r2.objects
     assert not any("work/" in k or "_archived" in k for k in r2.objects)
     assert archive.archive_item(item) == 0              # nothing new
+
+
+def test_proofreader_matches_words_by_scene():
+    from tfs import qa
+
+    heard = [("Alam", 0.1, 0.3), ("mo", 0.3, 0.4), ("ba", 0.4, 0.5), ("limang", 2.1, 2.4), ("bilyon", 2.4, 2.8)]
+    assert qa.split_by_scene(heard, [0.0, 2.0, 4.0]) == ["Alam mo ba", "limang bilyon"]
+    assert qa.scene_match("Alam mo ba *talaga*?", "alam mo ba talaga") == 1.0
+    assert qa.scene_match("Limang bilyon ang nawala", "limang ang") < 0.8        # skipped words get flagged
+
+
+def test_review_fix_regenerates_only_the_flagged_shot_and_rerenders(data_dir, monkeypatch):
+    from tfs import pipeline
+    from tfs.media import images
+    from tfs.models import ReviewReport, Scene, Script, Shot, ShotList
+
+    d = data_dir / "items" / "x"
+    (d / "img").mkdir(parents=True)
+    (d / "work").mkdir()
+    shot = dict(kind="illustration", style="story", card_type="none", card_title="", card_lines=[],
+                reuse_of_scene=0, motion="push_in")
+    (d / "shots.json").write_text(ShotList(shots=[Shot(scene_id=i, image_prompt=f"old {i}", **shot)
+                                                  for i in (0, 1)]).model_dump_json())
+    for i in (0, 1):
+        (d / "img" / f"{i:03d}.png").write_bytes(b"png")
+    (d / "video.mp4").write_bytes(b"v")
+    report = ReviewReport(passed=False, redo_images={"1": "new 1, no text in the sign"}, redo_audio={"0": "D-P-W-H"},
+                          warnings=[], appeal=6, hook_frame=6, summary="")
+    pipeline._apply_video_fixes(d, report)
+    assert not (d / "video.mp4").exists() and not (d / "work").exists() and (d / "img" / "000.png").exists()
+
+    made = []
+    monkeypatch.setattr(images, "generate", lambda prompt, out, *a, **k: (made.append(prompt), out.write_bytes(b"p")))
+    script = Script(scenes=[Scene(id=i, chapter="c", speaker="NARRATOR", text=f"line {i}", visual="v")
+                            for i in (0, 1)], sources=[])
+    pipeline._visuals({"id": "x"}, d, script, "9:16", (1080, 1920))
+    assert made == ["new 1, no text in the sign"]
+    assert pipeline._voiced(script, d)[0].text == "D-P-W-H"

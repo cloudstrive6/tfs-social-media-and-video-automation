@@ -166,3 +166,41 @@ class AnalystReport(BaseModel):
     agent_notes: list[AgentNote]
     schedule_changes: list[SlotChange]
     title_swaps: list[str]        # "videoId | new title"
+
+
+# ---------- Review team (after render, before scheduling) ----------
+class AudioVerdict(BaseModel):
+    scene_id: int
+    ok: bool
+    problem: str                  # "" if ok
+    tts_text: str                 # "" or the scene text respelled so the narrator says it right (numbers, names)
+
+
+class AudioQA(BaseModel):
+    scenes: list[AudioVerdict]
+    summary: str
+
+
+class ShotVerdict(BaseModel):
+    frame: str                    # the frame label as given (e.g. "scene 12", "thumbnail", "slide 3", "hook")
+    ok: bool
+    blocking: bool                # must be fixed before posting
+    problems: list[str]
+    fix_prompt: str               # full corrected image prompt for an AI illustration, else ""
+
+
+class VisualQA(BaseModel):
+    frames: list[ShotVerdict]
+    appeal_score: int             # 1-10: would a Filipino scrolling at 11pm stop for this?
+    hook_frame_score: int         # 1-10: the first frame alone
+    notes: list[str]
+
+
+class ReviewReport(BaseModel):
+    passed: bool
+    redo_images: dict[str, str]   # "scene id" / "thumbnail" / "slide N" -> corrected prompt
+    redo_audio: dict[str, str]    # scene id -> tts text ("" = just re-voice)
+    warnings: list[str]
+    appeal: int
+    hook_frame: int
+    summary: str
