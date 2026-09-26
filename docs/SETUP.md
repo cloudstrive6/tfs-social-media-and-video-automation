@@ -63,17 +63,18 @@ A private bucket for nightly database backups (`S3_ENDPOINT_URL`, `S3_ACCESS_KEY
 | Platform | How | Setup |
 |---|---|---|
 | YouTube + Shorts | direct, Google Cloud project `tfs-automation` | section 7 |
-| Facebook + Instagram | direct, Meta app **TFS Content Creator** (App ID 2122587118630314, created 2026-09-26; separate from TFS Publisher, which Post for Me uses) | section 6a |
+| Facebook + Instagram | direct, Meta app **TFS Content Creator** (App ID 4222661254707523, classic Business-type app in Development mode, created 2026-09-26 on the Whop Clipper pattern; separate from TFS Publisher, which Post for Me uses) | section 6a |
 | TikTok | Post for Me Quickstart project (approved TikTok app, public posts) | section 6b |
 
 ### 6a. Meta app "TFS Content Creator"
 Do not touch **TFS Publisher**; it's connected to Post for Me.
-1. The app stays in **Development mode**. It's used only by you (an app admin) on your own Page and Instagram
+1. Created with Meta's "Other" option (the old, classic experience) → type Business, with no products and no
+   business portfolio, the same as the working Whop Clipper apps. It stays in **Development mode**. It's used only by you (an app admin) on your own Page and Instagram
    account, so no App Review or Live switch is needed.
 2. Get a Page token:
-   - In the Graph API Explorer (app TFS Content Creator, User Token), add these permissions: `pages_show_list,
-     pages_read_engagement, pages_manage_posts, publish_video, instagram_basic, instagram_content_publish,
-     instagram_manage_insights, read_insights, business_management`. Click Generate Access Token and approve for
+   - In the Graph API Explorer (app TFS Content Creator, User Token), add these permissions (all Standard access,
+     no App Review): `pages_show_list, pages_read_engagement, pages_manage_posts, publish_video, instagram_basic,
+     instagram_content_publish, instagram_manage_insights, read_insights, business_management`. Click Generate Access Token and approve for
      The Filipino Standard Page and Instagram account.
    - In the Access Token Debugger, click **Extend Access Token** to get a long-lived user token.
    - Back in the Explorer, with that long-lived token, run
