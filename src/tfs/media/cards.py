@@ -15,6 +15,10 @@ def render_card(card_type: str, title: str, lines: list[str], size: tuple[int, i
     if card_type == "map":                  # real geography: card_lines are the place names to highlight
         from .maps import render_map
         return render_map(title, lines or [title], size, out)
+    if card_type == "bars":                 # only exists as an animation; the still is its last frame
+        from .motion import still
+        still("bars", title, lines, size).save(out)
+        return out
     w, h = size
     if h > w * 1.3:                         # 9:16: lay the card out in the upper area, clear of the captions
         inner = _draw(card_type, title, lines, (w, int(h * CAPTION_SAFE)), stripes=False)

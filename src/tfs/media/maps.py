@@ -252,86 +252,176 @@ def _centroid(polys) -> tuple[float, float]:
     return sum(p[0] for p in big) / len(big), sum(p[1] for p in big) / len(big)
 
 
-def render_map(title: str, places: list[str], size: tuple[int, int], out: Path) -> Path:
-    w, h = size
-    W, H = w * SS, h * SS
-    img = Image.new("RGB", (W, H), SEA)
-    d = ImageDraw.Draw(img)
-    pad = int(min(W, H) * 0.06)
+def _lerp_box(a, b, t: float):
+    """Camera move between two view boxes: centre moves linearly, span zooms geometrically (feels natural)."""
+    (a0, a1, a2, a3), (b0, b1, b2, b3) = a, b
+    ca, cb = ((a0 + a2) / 2, (a1 + a3) / 2), ((b0 + b2) / 2, (b1 + b3) / 2)
+    cx, cy = ca[0] + (cb[0] - ca[0]) * t, ca[1] + (cb[1] - ca[1]) * t
+    sw = (a2 - a0) * ((b2 - b0) / (a2 - a0)) ** t
+    sh = (a3 - a1) * ((b3 - b1) / (a3 - a1)) ** t
+    return cx - sw / 2, cy - sh / 2, cx + sw / 2, cy + sh / 2
 
-    tf, tl, tlh = fit_text(d, title.upper(), "display", W - 2 * pad, int(H * 0.16), start=int(min(W, H) * 0.085))
-    band = pad + tlh * len(tl) + pad // 2
-    rect = (pad, band + pad // 2, W - pad, H - pad)
 
-    hl = [x for x in (resolve(p) for p in places[:5]) if x]
-    foreign = any(x.foreign for x in hl)
-    pts = [pt for x in hl for pt in ([x.point] if x.point else [c for r in x.polys for c in r])]
-    shift = foreign and _shift_for([p[0] for p in pts + [(PH_BBOX[0], 0), (PH_BBOX[2], 0)]])
-    fix = (lambda lon: lon + 360 if lon < 0 else lon) if shift else (lambda lon: lon)
-    aspect = (rect[2] - rect[0]) / (rect[3] - rect[1])
-    if foreign:
-        allpts = [(fix(x), y) for x, y in pts] + [(PH_BBOX[0], PH_BBOX[1]), (PH_BBOX[2], PH_BBOX[3])]
-        view_box = _grow(_bbox(allpts), min_span=20, pad=0.25, aspect=aspect)
-    elif pts:
-        view_box = _grow(_bbox(pts), min_span=3.0, pad=0.6, aspect=aspect)
-    else:
-        view_box = _grow(PH_BBOX, min_span=0, pad=0.05, aspect=aspect)
-    v = View(view_box, rect)
+def _clamp(t: float) -> float:
+    return max(0.0, min(1.0, t))
 
-    def draw_rings(rings, fill, outline=None, width=1):
-        for ring in rings:
-            for s in ((0.0, 360.0) if shift else (0.0,)):
-                d.polygon(v.ring(ring, s), fill=fill, outline=outline, width=width)
 
-    for c in _load("countries"):
-        if c["iso"] != "PHL":
-            draw_rings(c["polys"], LAND, outline=(72, 82, 100), width=SS)
-    zoomed = view_box[2] - view_box[0] < 9 and not foreign
-    for p in _load("ph_provinces"):
-        draw_rings(p["polys"], PH_LAND, outline=BORDER if zoomed else None, width=SS)
-    for x in hl:
-        if x.kind in ("area", "country"):
-            draw_rings(x.polys, HILITE, outline=YELLOW, width=3 * SS)
+def _phase(p: float, a: float, b: float) -> float:
+    return _clamp((p - a) / (b - a))
 
-    # labels and pins on top
-    bounds = (rect[0], rect[1], rect[2], rect[3])
-    taken: list = []
-    lsize = int(min(W, H) * 0.038)
-    r = min(W, H) * 0.012
-    for x in hl:
+
+def _ease(t: float) -> float:            # ease-in-out cubic
+    return 4 * t ** 3 if t < 0.5 else 1 - (-2 * t + 2) ** 3 / 2
+
+
+def _back(t: float, s: float = 1.9) -> float:   # ease-out with a small overshoot (pins, pops)
+    t -= 1
+    return 1 + (s + 1) * t ** 3 + s * t ** 2 if t > -1 else 0.0
+
+
+class MapScene:
+    """One map card. `frame(p)` draws it at animation progress p (0..1); p=1 is the finished, static card.
+
+    Timeline: the camera flies from the whole country to the target view, regions fill in, pins drop, labels
+    pop, and a route arc draws between the Philippine place and the foreign one (e.g. Manila -> Acapulco).
+    """
+
+    def __init__(self, title: str, places: list[str], size: tuple[int, int], ss: int = SS,
+                 caption_safe: bool = False):
+        self.w, self.h, self.ss = size[0], size[1], ss
+        W, H = self.W, self.H = self.w * ss, self.h * ss
+        probe = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+        self.pad = pad = int(min(W, H) * 0.06)
+        self.tf, self.tl, self.tlh = fit_text(probe, title.upper(), "display", W - 2 * pad, int(H * 0.16),
+                                              start=int(min(W, H) * 0.085))
+        self.band = pad + self.tlh * len(self.tl) + pad // 2
+        bottom = int(H * 0.56) if caption_safe else H - pad   # 9:16: keep the action above the captions
+        self.rect = (pad, self.band + pad // 2, W - pad, bottom)
+        self.hl = [x for x in (resolve(q) for q in places[:5]) if x]
+        self.foreign = any(x.foreign for x in self.hl)
+        pts = [pt for x in self.hl for pt in ([x.point] if x.point else [c for r in x.polys for c in r])]
+        self.shift = self.foreign and _shift_for([q[0] for q in pts + [(PH_BBOX[0], 0), (PH_BBOX[2], 0)]])
+        aspect = (self.rect[2] - self.rect[0]) / (self.rect[3] - self.rect[1])
+        ph_view = _grow(PH_BBOX, min_span=0, pad=0.05, aspect=aspect)
+        if self.foreign:
+            allpts = [(self.fix(x), y) for x, y in pts] + [(PH_BBOX[0], PH_BBOX[1]), (PH_BBOX[2], PH_BBOX[3])]
+            self.view = _grow(_bbox(allpts), min_span=20, pad=0.25, aspect=aspect)
+        elif pts:
+            self.view = _grow(_bbox(pts), min_span=3.0, pad=0.6, aspect=aspect)
+        else:
+            self.view = ph_view
+        self.start = ph_view
+        self.zoomed = self.view[2] - self.view[0] < 9 and not self.foreign
+
+    def fix(self, lon: float) -> float:
+        return lon + 360 if self.shift and lon < 0 else lon
+
+    def _anchor(self, x: Highlight) -> tuple[float, float]:
         lon, lat = x.point if x.point else _centroid(x.polys)
-        px, py = v.xy(fix(lon), lat)
-        if x.point:
-            _pin(d, px, py, r, x.kind == "sea")
-        elif _pixel_extent(v, x.polys, fix) < min(W, H) * 0.03:     # too small to see: pin it too
-            _pin(d, px, py, r, False)
-        _label(d, x.label, px, py, lsize, taken, bounds, x.kind == "sea")
+        return self.fix(lon), lat
 
-    if zoomed:
-        _inset(img, v, view_box, rect)
+    def frame(self, p: float = 1.0) -> Image.Image:
+        W, H, ss = self.W, self.H, self.ss
+        img = Image.new("RGB", (W, H), SEA)
+        d = ImageDraw.Draw(img)
+        box = _lerp_box(self.start, self.view, _ease(_phase(p, 0.0, 0.45)))
+        v = View(box, self.rect)
+        shifts = (0.0, 360.0) if self.shift else (0.0,)
 
-    # title band + flag stripes + credit
-    d.rectangle([0, 0, W, band], fill=(10, 14, 24))
-    y = pad
-    for row in tl:
-        d.text((W / 2, y), row, font=tf, fill=YELLOW, anchor="mt")
-        y += tlh
-    d.rectangle([0, 0, W, int(H * 0.012)], fill=BLUE)
-    d.rectangle([0, H - int(H * 0.012), W, H], fill=RED)
-    cf = font("body", int(min(W, H) * 0.018))
-    d.text((pad, H - pad * 0.45), "Map data: Natural Earth", font=cf, fill=(150, 160, 180), anchor="ls")
+        def rings(rs, fill, outline=None, width=1):
+            for ring in rs:
+                for s in shifts:
+                    d.polygon(v.ring(ring, s), fill=fill, outline=outline, width=width)
 
-    img.resize((w, h), Image.LANCZOS).save(out)
+        for c in _load("countries"):
+            if c["iso"] != "PHL":
+                rings(c["polys"], LAND, outline=(72, 82, 100), width=ss)
+        detail = box[2] - box[0] < 9 and not self.foreign
+        for prov in _load("ph_provinces"):
+            rings(prov["polys"], PH_LAND, outline=BORDER if detail else None, width=ss)
+
+        fill_t = _phase(p, 0.4, 0.6)
+        if fill_t > 0:
+            layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            dl = ImageDraw.Draw(layer)
+            alpha = int(255 * fill_t)
+            for x in self.hl:
+                if x.kind in ("area", "country"):
+                    for ring in x.polys:
+                        for s in shifts:
+                            dl.polygon(v.ring(ring, s), fill=HILITE + (alpha,), outline=YELLOW + (alpha,),
+                                       width=3 * ss)
+            img.paste(layer, (0, 0), layer)
+            d = ImageDraw.Draw(img)
+
+        self._route(d, v, _phase(p, 0.45, 0.8))
+
+        taken: list = []
+        r = min(W, H) * 0.012
+        lsize = int(min(W, H) * 0.038)
+        for i, x in enumerate(self.hl):
+            px, py = v.xy(*self._anchor(x))
+            drop = _phase(p, 0.5 + 0.06 * i, 0.68 + 0.06 * i)
+            if drop <= 0:
+                continue
+            needs_pin = x.point or _pixel_extent(v, x.polys, self.fix) < min(W, H) * 0.03
+            if needs_pin and x.kind != "sea":
+                _pin(d, px, py - (1 - _back(drop)) * H * 0.06, r, False)
+            if drop >= 0.6:
+                _label(d, x.label, px, py, int(lsize * (0.7 + 0.3 * _phase(drop, 0.6, 1.0))), taken,
+                       self.rect, x.kind == "sea")
+
+        if self.zoomed and p >= 0.45:
+            _inset(img, v, box, self.rect, ss)
+
+        d.rectangle([0, 0, W, self.band], fill=(10, 14, 24))
+        y = self.pad
+        for row in self.tl:
+            d.text((W / 2, y), row, font=self.tf, fill=YELLOW, anchor="mt")
+            y += self.tlh
+        d.rectangle([0, 0, W, int(H * 0.012)], fill=BLUE)
+        d.rectangle([0, H - int(H * 0.012), W, H], fill=RED)
+        cf = font("body", int(min(W, H) * 0.018))
+        d.text((self.pad, H - self.pad * 0.45), "Map data: Natural Earth", font=cf, fill=(150, 160, 180),
+               anchor="ls")
+        return img.resize((self.w, self.h), Image.LANCZOS) if ss > 1 else img
+
+    def _route(self, d: ImageDraw.ImageDraw, v: View, t: float) -> None:
+        """Dashed arc from the Philippine place to the foreign one, drawn progressively."""
+        if t <= 0 or not self.foreign:
+            return
+        home = next((x for x in self.hl if not x.foreign), None)
+        away = next((x for x in self.hl if x.foreign), None)
+        if not home or not away:
+            return
+        (x0, y0), (x1, y1) = v.xy(*self._anchor(home)), v.xy(*self._anchor(away))
+        mx, my = (x0 + x1) / 2, min(y0, y1) - abs(x1 - x0) * 0.18       # the arc bulges upward
+        n = 90
+        pts = []
+        for i in range(int(n * t) + 1):
+            u = i / n
+            pts.append(((1 - u) ** 2 * x0 + 2 * (1 - u) * u * mx + u ** 2 * x1,
+                        (1 - u) ** 2 * y0 + 2 * (1 - u) * u * my + u ** 2 * y1))
+        width = max(3, int(min(self.W, self.H) * 0.006))
+        for a, b in zip(pts[::2], pts[1::2]):                                # dashes
+            d.line([a, b], fill=YELLOW, width=width)
+        if pts:
+            hx, hy = pts[-1]
+            rr = width * 1.6
+            d.ellipse([hx - rr, hy - rr, hx + rr, hy + rr], fill=WHITE)
+
+
+def render_map(title: str, places: list[str], size: tuple[int, int], out: Path) -> Path:
+    MapScene(title, places, size).frame(1.0).save(out)
     return out
 
 
-def _inset(img: Image.Image, v: View, view_box, rect) -> None:
+def _inset(img: Image.Image, v: View, view_box, rect, ss: int = SS) -> None:
     """Whole-Philippines locator in a corner, with the zoomed area outlined."""
     W, H = img.size
     iw = int(min(W, H) * 0.2)
     ih = int(iw * 1.55)
     x1, y1 = rect[2], rect[3]
-    box = (x1 - iw, y1 - ih, x1, y1)
     inset = Image.new("RGB", (iw, ih), (10, 22, 42))
     di = ImageDraw.Draw(inset)
     iv = View(PH_BBOX, (int(iw * 0.08), int(ih * 0.05), int(iw * 0.92), int(ih * 0.95)))
@@ -339,6 +429,6 @@ def _inset(img: Image.Image, v: View, view_box, rect) -> None:
         for ring in p["polys"]:
             di.polygon(iv.ring(ring), fill=(190, 182, 160))
     a, b = iv.xy(view_box[0], view_box[3]), iv.xy(view_box[2], view_box[1])
-    di.rectangle([a[0], a[1], b[0], b[1]], outline=YELLOW, width=max(2, SS * 2))
-    di.rectangle([0, 0, iw - 1, ih - 1], outline=(90, 100, 120), width=SS)
-    img.paste(inset, box[:2])
+    di.rectangle([a[0], a[1], b[0], b[1]], outline=YELLOW, width=max(2, ss * 2))
+    di.rectangle([0, 0, iw - 1, ih - 1], outline=(90, 100, 120), width=ss)
+    img.paste(inset, (x1 - iw, y1 - ih))

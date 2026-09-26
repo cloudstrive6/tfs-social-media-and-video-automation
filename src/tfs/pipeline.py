@@ -115,7 +115,8 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
         if shot and shot.kind == "card":
             if not out.exists():
                 cards.render_card(shot.card_type, shot.card_title, shot.card_lines, size, out)
-            return render.Shot(out, "card")
+            return render.Shot(out, "card", card={"card_type": shot.card_type, "title": shot.card_title,
+                                                  "lines": shot.card_lines})
         if shot and shot.kind == "reuse" and (img_dir / f"{shot.reuse_of_scene:03d}.png").exists():
             return render.Shot(img_dir / f"{shot.reuse_of_scene:03d}.png", shot.motion)
         prompt = fixed.get(str(scene.id)) or (shot.image_prompt if shot and shot.image_prompt else scene.visual)

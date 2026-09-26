@@ -24,6 +24,7 @@ GAP = 0.25  # seconds of air between scenes
 class Shot:
     image: Path
     motion: str
+    card: dict | None = None      # {"card_type", "title", "lines"}: rendered as an animated infographic
 
 
 def ff(args: list[str], cwd: Path) -> None:
@@ -194,7 +195,12 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
         frames = round(bounds[i + 1] * fps) - round(bounds[i] * fps)
         name = work / f"s{i:03d}.mp4"
         if not name.exists():
-            shot_clip(shot.image, max(frames, 1), shot.motion, size, fps, name)
+            if shot.card:
+                from .motion import animate_card
+                animate_card(shot.card["card_type"], shot.card["title"], shot.card["lines"], size, fps,
+                             max(frames, 2), name)
+            else:
+                shot_clip(shot.image, max(frames, 1), shot.motion, size, fps, name)
         names.append(name.name)
     (work / "shots.txt").write_text("".join(f"file '{n}'\n" for n in names), encoding="utf-8")
     ff(["-f", "concat", "-safe", "0", "-i", "shots.txt", "-c", "copy", "video.mp4"], cwd=work)

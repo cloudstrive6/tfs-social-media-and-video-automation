@@ -18,7 +18,9 @@ For each scene decide ONE visual type:
 - `illustration` — AI-generated painterly cartoon frame. Write a full image prompt: subject, action,
   expression, setting, camera (wide/medium/close, angle), lighting, and the continuity notes (which
   recurring character, what they're wearing). Never real people's faces.
-- `card` — programmatic motion-graphic: `stat` (big number + label), `quote` (sourced quote + attribution),
+- `card` — animated infographic (drawn by code, MapWarden-style: numbers count up, bars grow, timelines draw
+  themselves, maps fly in and fill): `stat` (big number + label), `bars` (a comparison: `card_lines` like
+  "Kailangan dati: 16", "Kailangan ngayon: 14" — 2 to 5 bars, each "label: number"), `quote` (sourced quote + attribution),
   `timeline` (3–6 dated points), `document` (title of a report + highlighted line), `map`.
   For `map`: `card_title` is the on-screen headline (short, Taglish ok); `card_lines` are 1–4 place names to
   highlight, most important first, written the way an atlas names them: provinces ("Bulacan", "Davao de Oro"),

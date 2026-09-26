@@ -123,7 +123,7 @@ class Shot(BaseModel):
     kind: Literal["illustration", "card", "reuse"]
     style: Style                  # illustration only; ignored for cards
     image_prompt: str             # illustration only
-    card_type: Literal["stat", "quote", "timeline", "document", "map", "none"]
+    card_type: Literal["stat", "bars", "quote", "timeline", "document", "map", "none"]
     card_title: str
     card_lines: list[str]
     reuse_of_scene: int           # reuse only, else 0

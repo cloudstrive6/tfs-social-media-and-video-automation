@@ -470,3 +470,26 @@ def test_long_caption_words_shrink_to_stay_in_frame():
     from tfs.media import render
 
     assert render._fit_size("PINAKAMAHALAGANG PAGKAKAKILANLAN", 105, 1080 - 2 * 75) < 105
+
+
+@pytest.mark.parametrize("card", ["stat", "bars", "timeline", "quote", "document", "map"])
+def test_animated_cards_have_exact_length_and_actually_move(data_dir, card):
+    import subprocess
+
+    from tfs.media import motion
+
+    lines = {"bars": ["Dati: 16", "Ngayon: 14"], "map": ["Bulacan"], "timeline": ["2001 — a", "2012 — b"]}.get(
+        card, ["₱5.4B"])
+    out = motion.animate_card(card, "Pamagat", lines, (540, 960), 30, 45, data_dir / f"{card}.mp4")
+    n = subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries",
+                        "stream=nb_read_frames", "-of", "csv=p=0", str(out)], capture_output=True, text=True)
+    assert int(n.stdout.strip()) == 45                          # matches the narration timing exactly
+    frames = list(motion.ANIMATIONS[card]("Pamagat", lines, (540, 960), 6))
+    assert frames[0].tobytes() != frames[-1].tobytes()          # it is an animation, not a still
+
+
+def test_count_up_keeps_number_format():
+    from tfs.media.motion import _count
+
+    assert _count("₱5.4B", 0.5) == "₱2.7B"
+    assert _count("1,200 proyekto", 1.0) == "1,200 proyekto"
