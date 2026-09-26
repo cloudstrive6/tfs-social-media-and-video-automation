@@ -1,0 +1,10 @@
+# Actions -> status -> Run workflow: items and posts from the saved state (read-only).
+name: status
+on:
+  workflow_dispatch:
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: status
+    secrets: inherit

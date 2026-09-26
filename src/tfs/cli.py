@@ -90,12 +90,19 @@ def main() -> None:
             from .publish import youtube
             print("YOUTUBE_REFRESH_TOKEN=" + youtube.authorize())
         case "status":
+            from . import state
+            if state.enabled():
+                state.pull()
             for status in ("awaiting_approval", "planned", "approved", "scheduled", "failed", "skipped"):
                 for it in db.items_with_status(status)[-15:]:
                     posts = {x["platform"]: x["status"] for x in db.posts_for_item(it["id"])}
                     print(f"{it['anchor_at'][:16]}  {status:<17} {it['id']:<22} "
                           f"{it['data'].get('title') or it['data'].get('working_title', '')[:60]}  "
                           f"{json.dumps(posts) if posts else ''}")
+            for status in ("failed", "submitted", "published"):
+                for post in db.posts_with_status(status)[-20:]:
+                    print(f"  post {post['id']:>3} {post['item_id']:<18} {post['platform']:<18} {status:<9} "
+                          f"{post['slot_at'][:16]}  {(post.get('error') or '')[:160]}")
 
 
 if __name__ == "__main__":
