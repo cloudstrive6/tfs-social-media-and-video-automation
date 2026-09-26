@@ -26,3 +26,8 @@ First frame + first 1.5 s is the whole game. The first line must be understandab
 the on-screen hook text too). Loop the ending into the start where possible.
 
 Return the rewritten script plus scores (0–10) and a list of the retention fixes you made.
+
+
+## Length is a hard limit
+The format line gives a spoken-word limit for verticals. Your rewrite must stay within it; if the draft is
+over, cut (never pad). A 2-minute "Short" loses the audience and the Shorts shelf.

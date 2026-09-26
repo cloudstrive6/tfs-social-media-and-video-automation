@@ -14,6 +14,21 @@ def _brief(item: dict) -> str:
                       ensure_ascii=False, default=str)
 
 
+WORDS_PER_SECOND = 1.9
+
+
+def max_words(kind: str) -> int:
+    """Spoken-word ceiling for a format (None-like 10**6 for long form, which is bounded by minutes)."""
+    if kind == "vertical":
+        return int(channel()["video"]["vertical"]["target_seconds"][1] * WORDS_PER_SECOND)
+    return 10 ** 6
+
+
+def spoken_words(script: Script) -> int:
+    from ..media.tts import clean
+    return sum(len(clean(s.text, keep_audio_tags=False).split()) for s in script.scenes)
+
+
 def _length(kind: str) -> str:
     v = channel()["video"]
     if kind == "long_form":
@@ -21,7 +36,9 @@ def _length(kind: str) -> str:
         return f"long-form narration of {lo}-{hi} minutes (~{lo * 150}-{hi * 150} spoken words)"
     if kind == "vertical":
         lo, hi = v["vertical"]["target_seconds"]
-        return f"vertical video narration of {lo}-{hi} seconds (~{lo * 2.6:.0f}-{hi * 2.6:.0f} words)"
+        return (f"vertical video narration of {lo}-{hi} seconds: HARD LIMIT {max_words(kind)} spoken words in total "
+                f"(the narrator reads Taglish at ~{WORDS_PER_SECOND} words per second; aim for {int(lo * WORDS_PER_SECOND)}-"
+                f"{max_words(kind)})")
     return "carousel (no narration)"
 
 

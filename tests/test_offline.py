@@ -400,3 +400,21 @@ def test_review_fix_regenerates_only_the_flagged_shot_and_rerenders(data_dir, mo
     pipeline._visuals({"id": "x"}, d, script, "9:16", (1080, 1920))
     assert made == ["new 1, no text in the sign"]
     assert pipeline._voiced(script, d)[0].text == "D-P-W-H"
+
+
+@pytest.mark.parametrize("card", ["stat", "quote", "timeline", "document"])
+def test_vertical_cards_leave_the_caption_band_empty(data_dir, card):
+    from PIL import Image
+
+    from tfs.media import cards
+
+    out = cards.render_card(card, "Isang mahabang pamagat para sa card na ito", ["Unang linya na medyo mahaba",
+                            "Pangalawang linya", "Pangatlo"], (1080, 1920), data_dir / "c.png")
+    band = Image.open(out).convert("RGB").crop((0, int(1920 * 0.62), 1080, int(1920 * 0.74)))
+    assert len(set(band.getdata())) == 1            # nothing drawn where the burned captions go
+
+
+def test_vertical_word_budget():
+    from tfs.agents import writers
+
+    assert 100 <= writers.max_words("vertical") <= 115

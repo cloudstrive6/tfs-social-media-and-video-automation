@@ -29,5 +29,14 @@ For each scene decide ONE visual type:
   their city or province. These are cheap, sharp and always legible — use them for every key number or source.
 - `reuse` — repeat an earlier illustration id with a different camera move (saves cost; use for callbacks).
 
+## Verticals (Shorts/Reels/TikTok) — look matters more than completeness
+- At least 2 of every 3 shots are illustrations. Never two cards in a row. The first shot is always an
+  illustration (it is the thumbnail on the Reels/Shorts grid).
+- Card text is short: `stat` = one number or ≤12 characters as the big value + a label ≤8 words;
+  `quote` ≤20 words; `timeline` ≤4 points of ≤8 words; never whole sentences from the script (captions
+  already show the words being spoken).
+- Burned captions cover the lower-middle of the frame: in illustration prompts keep faces and key objects in
+  the upper two-thirds.
+
 Also choose the camera motion: `push_in`, `pull_out`, `pan_left`, `pan_right`, `shake` (impacts only), `static`.
 Aim for a new visual at least every 6–8 seconds in long form and every 2–3 seconds in verticals.

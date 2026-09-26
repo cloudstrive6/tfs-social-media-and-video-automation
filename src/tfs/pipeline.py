@@ -82,6 +82,11 @@ def _script(item: dict, d: Path, dossier: str) -> tuple[Script, HookReview] | No
         draft = cached(d / f"script_r{rnd}.json", Script,
                        lambda: writers.write_script(item, dossier, issue, feedback))
         hook = cached(d / f"hook_r{rnd}.json", HookReview, lambda: writers.hook_pass(item, draft))
+        n, limit = writers.spoken_words(hook.script), writers.max_words(item["kind"])
+        if n > limit * 1.08:
+            feedback = (f"TOO LONG: {n} spoken words; the hard limit is {limit}. Cut to {limit} words or fewer: "
+                        "one idea, no second example, shortest possible setup.\n" + "\n".join(hook.fixes))
+            continue
         if hook.hook_score >= q["min_hook_score"] and hook.retention_score >= q["min_script_score"]:
             return hook.script, hook
         feedback = "\n".join(hook.fixes) + f"\n(hook {hook.hook_score}/10, retention {hook.retention_score}/10)"
