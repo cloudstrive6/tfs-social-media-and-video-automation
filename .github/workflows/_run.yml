@@ -84,6 +84,7 @@ jobs:
       - if: inputs.needs_claude
         run: curl -fsSL https://claude.ai/install.sh | bash && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: pip install -q -e .
+      - run: python -m compileall -q src && python -c "import pkgutil, importlib, tfs; [importlib.import_module('tfs.' + m.name) for m in pkgutil.walk_packages(tfs.__path__) if not m.ispkg]"
       - run: python -m tfs.cli $TFS_COMMAND
       - if: inputs.encrypt_to != ''
         env:
