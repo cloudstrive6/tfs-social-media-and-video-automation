@@ -63,6 +63,14 @@ def data_dir() -> Path:
     return path
 
 
+def media(path: str) -> Path:
+    """A stored artifact path, re-rooted onto this machine's data dir if the run's workspace moved."""
+    p = Path(path)
+    if p.exists() or "items" not in p.parts:
+        return p
+    return data_dir().joinpath(*p.parts[len(p.parts) - p.parts[::-1].index("items") - 1:])
+
+
 def item_dir(item_id: str) -> Path:
     path = data_dir() / "items" / item_id
     path.mkdir(parents=True, exist_ok=True)

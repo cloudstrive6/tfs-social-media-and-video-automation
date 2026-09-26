@@ -238,3 +238,80 @@ def test_ready_notification_sends_the_posts_media(monkeypatch, data_dir):
     video.write_bytes(b"x")
     pipeline._schedule(db.get_item("v1"), title="Short", video=str(video))
     assert sent[-1][0] == "video"
+
+
+class FakeR2:
+    """Just enough of the boto3 S3 client for tfs.state."""
+    def __init__(self):
+        self.objects: dict[str, bytes] = {}
+
+    def upload_file(self, path, bucket, key, ExtraArgs=None):
+        self.objects[key] = open(path, "rb").read()
+
+    def download_file(self, bucket, key, path):
+        open(path, "wb").write(self.objects[key])
+
+    def get_paginator(self, _):
+        fake = self
+
+        class P:
+            def paginate(self, Bucket, Prefix):
+                yield {"Contents": [{"Key": k} for k in sorted(fake.objects) if k.startswith(Prefix)]}
+        return P()
+
+    def delete_objects(self, Bucket, Delete):
+        for o in Delete["Objects"]:
+            self.objects.pop(o["Key"])
+
+
+def test_state_round_trips_through_r2(data_dir, monkeypatch):
+    import shutil
+
+    from tfs import db, state
+    from tfs.publish import storage
+
+    r2 = FakeR2()
+    monkeypatch.setenv("S3_BACKUP_BUCKET", "tfs-state")
+    monkeypatch.setattr(storage, "_s3", lambda: r2)
+    db.upsert_item("2026-09-27-vert0", "vertical", "2026-09-27T07:30:00+08:00", "scheduled", {})
+    db.queue_post("2026-09-27-vert0", "instagram_reel", "2026-09-27T07:30:00+08:00")
+    db.upsert_item("2026-09-01-vert0", "vertical", "2026-09-01T07:30:00+08:00", "scheduled", {})
+    for iid in ("2026-09-27-vert0", "2026-09-01-vert0"):
+        (data_dir / "items" / iid / "work").mkdir(parents=True)
+        (data_dir / "items" / iid / "video.mp4").write_bytes(b"v")
+        (data_dir / "items" / iid / "seo.json").write_text("{}")
+        (data_dir / "items" / iid / "work" / "tmp.mp4").write_bytes(b"x")
+    (data_dir / "schedule_override.yaml").write_text("x: 1")
+
+    assert state.push() == 5                      # 2 items x (video + seo) + override; never work/
+    assert state.push() == 0                      # nothing changed
+    assert "state/items/2026-09-27-vert0/work/tmp.mp4" not in r2.objects
+
+    shutil.rmtree(data_dir)                       # a fresh GitHub runner
+    data_dir.mkdir()
+    state._seen.clear()
+    state.pull()
+    assert db.queued_posts()[0]["platform"] == "instagram_reel"
+    assert (data_dir / "items" / "2026-09-27-vert0" / "video.mp4").exists()      # still has a queued post
+    assert not (data_dir / "items" / "2026-09-01-vert0").exists()                # done: not downloaded
+    assert (data_dir / "schedule_override.yaml").read_text() == "x: 1"
+
+    state.prune()                                 # old finished item keeps text, loses media
+    assert "state/items/2026-09-01-vert0/seo.json" in r2.objects
+    assert "state/items/2026-09-01-vert0/video.mp4" not in r2.objects
+    assert "state/items/2026-09-27-vert0/video.mp4" in r2.objects
+
+
+def test_media_paths_follow_the_data_dir(data_dir):
+    from tfs.config import media
+
+    moved = "/home/runner/old/data/items/2026-09-27-vert0/video.mp4"
+    assert media(moved) == data_dir / "items" / "2026-09-27-vert0" / "video.mp4"
+
+
+def test_cloud_run_refuses_without_saved_state(monkeypatch):
+    from tfs import pipeline
+
+    monkeypatch.delenv("S3_BACKUP_BUCKET", raising=False)
+    with pytest.raises(SystemExit):
+        pipeline.cloud_run()

@@ -13,23 +13,27 @@ on a fixed daily schedule — then studies the analytics and retunes itself week
 config/     channel (brand, models, quality gates, voice, image style), schedule (PHT slots), sources
 prompts/    one system prompt per agent
 src/tfs/    agents/ (Claude), media/ (TTS, images, cards, FFmpeg render, thumbnails, slides),
-            publish/ (Post for Me for all platforms; direct YouTube/Meta/TikTok fallback; R2 backups), pipeline.py (orchestrator), cli.py
-deploy/     crontab (tick 15 min, publish 5 min, analyze weekly, backup nightly) + docker-compose
-.github/    deploy (push → test → image → cloud VM), command (remote control), ci
+            publish/ (YouTube, Meta, Post for Me for TikTok), state.py (R2), pipeline.py (orchestrator), cli.py
+.github/    run (the automation), verify, preview-styles, telegram-setup, ci; all go through _run.yml
 ```
 
-Everything runs in the cloud: a Docker container on a cloud VM with cron inside, deployed from GitHub.
+Everything runs in the cloud, with no server to maintain:
+- **cron-job.org** starts the GitHub Actions `run` workflow every 30 minutes.
+- **GitHub Actions** does the work: scouting, writing, rendering and publishing.
+- **Cloudflare R2** keeps the state between runs.
+
+This repo is public, which is what makes GitHub Actions free. It holds no secrets: those live in GitHub
+repository secrets, each one mapped by name in `.github/workflows/_run.yml`.
 
 ## Commands
-Run from GitHub → Actions → **command**, or automatically by cron in the container.
+The `run` workflow calls `tfs run`. Everything else is for running by hand or for debugging.
 
 | | |
 |---|---|
-| `tfs tick` | scout if stale → plan slots in the next ~8 h → produce the next item |
-| `tfs publish` | publish every post whose time has come |
+| `tfs run` | restore state from R2 → publish what's due (and keep publishing every minute) → scout / plan / produce → save state |
+| `tfs tick` / `tfs publish` | one production step / one publish pass, on the local state only |
 | `tfs scout` / `tfs plan` / `tfs produce <id>` | run a stage by hand |
 | `tfs status` | items and per-platform post status |
-| `tfs approve <id>` / `tfs reject <id>` | answer a legal-review request |
 | `tfs retry <post_id>` / `tfs requeue <id>` | recover failures |
-| `tfs analyze` | weekly growth report + agent notes |
-| `tfs backup` | snapshot the state DB to the private R2 bucket (runs nightly) |
+| `tfs analyze` | weekly growth report + agent notes (runs itself Mondays 09:00 PHT inside `tfs run`) |
+| `tfs verify` | checks every credential; prints names only |

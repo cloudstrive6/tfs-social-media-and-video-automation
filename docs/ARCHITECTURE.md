@@ -9,7 +9,7 @@
 | 3 | **Researcher** | `researcher.md` | Anthropic web search (≤25 searches), primary sources first. Timeline, facts with `[S#]` citations, people (established vs. alleged), surprising angles, historical roots. | `dossier.md` |
 | 4 | **Head Writer** | `scriptwriter.md` | Historically-style script in Taglish: cold-open skit → pop-quiz hook → "Standard Issue #N" → chapters with open loops → system reveal → callback ending. Scene-by-scene with visual cues. | `script_r*.json` |
 | 5 | **Hook Master** | `hook_master.md` | Retention psychologist: rewrites first 5 s, re-hooks at 0:30 / 1:30 / 25 / 50 / 75 %, scores hook & retention. Below 8/10 → sent back to the writer (max 3 drafts, then the slot is skipped). | `hook_r*.json` |
-| 6 | **Fact-Check & Legal** | `fact_checker.md` | Checks every line against the dossier, enforces cyber-libel rules, flags content naming living people with allegations → **human approval** via Telegram. | `factcheck.json` |
+| 6 | **Fact-Check & Legal** | `fact_checker.md` | Checks every line against the dossier, enforces cyber-libel rules, applies the naming policy (names only for history or final convictions, otherwise roles) and rewrites; anything it can't make safe is skipped automatically. | `factcheck.json` |
 | 7 | **Visual Director** | `visual_director.md` | One visual per scene: AI illustration, motion-graphic card (stat / quote / timeline / document / place), or reuse; camera move. | `shots.json` |
 | 8 | **Narrator** | (code: `media/tts.py`) | ElevenLabs per scene with request stitching for natural flow, word timestamps for captions, optional separate character voices for skits. Fish Audio as a cheaper alternative. | `audio/*.mp3` |
 | 9 | **Video Editor** | (code: `media/render.py`) | FFmpeg: Ken-Burns shots timed to narration, music bed, loudness-normalised to −14 LUFS, burned word captions + hook text on verticals, SRT, chapters. | `video.mp4` |
@@ -30,16 +30,16 @@ flowchart LR
   subgraph every3h[every 3 h]
     S[Trend Scout] --> T[(topic pool)]
   end
-  subgraph every15[every 15 min: tfs tick]
+  subgraph run[GitHub Actions run, every 30 min via cron-job.org]
     T --> E[Editor-in-Chief] --> R[Researcher] --> W[Head Writer] --> H{Hook Master ≥ 8/10?}
     H -- no, notes --> W
     H -- yes --> F{Fact-Check & Legal}
-    F -- names a person + allegation --> A[/Telegram: tfs approve/] --> F2[continue]
+    F -- can't be made safe --> X[skip + Telegram alert]
     F -- pass --> V[Visual Director] --> I[Images + cards] --> N[Narrator] --> ED[Video Editor]
     ED --> P[Thumbnail + Titles + SEO] --> Q[(posts queue)]
     F -- carousel --> C[Carousel Designer] --> Q
   end
-  subgraph every5[every 5 min: tfs publish]
+  subgraph pub[publisher thread, every minute of every run]
     Q --> YT[YouTube / Shorts via Data API, publishAt = slot]
     Q --> META[Meta Graph API, at slot] --> IG[Instagram] & FB[Facebook]
     Q --> PFM[Post for Me, scheduled_at = slot] --> TT[TikTok]
@@ -59,10 +59,11 @@ flowchart LR
 
 - **Checkpointed**: every step writes its artifact to `TFS_DATA_DIR/items/<id>/`; a crash or approval pause resumes where it stopped.
 - **Skip, don't ship junk**: failing the quality bar, a fact-check reject, or missing the first slot → the slot is skipped and you're notified.
-- **Producer and publisher are separate** cron jobs with separate locks, so a 40-minute render never makes an
-  Instagram post late.
-- **Fully cloud**: Docker container on a cloud VM (cron inside), deployed from GitHub on every push; state on a
-  persistent volume, backed up nightly to a private R2 bucket; remote control via the GitHub `command` workflow.
+- **Publishing never waits for production**: inside each run, a publisher thread checks every minute. A run
+  stays up for any Facebook/Instagram post due within 35 minutes, and runs never overlap (concurrency group).
+- **Fully cloud, no server**: cron-job.org triggers the GitHub Actions `run` workflow every 30 min. State (SQLite
+  DB, notes, media of unposted items) lives in a private R2 bucket: it's restored at the start of each run and
+  saved after every step and every publish, with a dated DB backup daily.
 - All times are Asia/Manila.
 
 ## Running costs (1 long-form + 3 verticals + 2 carousels a day; Sep 2026 list prices — verify)
@@ -74,8 +75,8 @@ flowchart LR
 | ElevenLabs narration | ~430k characters/month (multilingual v2) → Pro tier (500k) | ~$99 |
 | Images (Gemini 2.5 Flash Image, ~$0.04 each) | ~130 images/day | ~$160 |
 | Post for Me (TikTok only) | ~90 posts/month | $10 |
-| Cloud VM (Docker, Singapore) | 8 vCPU / 16 GB | $30–85 |
-| Cloudflare R2 backups | < 1 GB | ~$0 |
-| **Total** | | **≈ $300–355 + your Max plan** (≈ $575–630 with the API instead) |
+| GitHub Actions (public repo) + cron-job.org | standard runners | $0 |
+| Cloudflare R2 state | a few GB (media pruned after 10 days) | ~$0 (free tier: 10 GB) |
+| **Total** | | **≈ $270 + your Max plan** (≈ $545 with the API instead) |
 
 Each extra daily long-form adds roughly $200/month (Claude ~$105, images ~$100, and ElevenLabs moves up to the Scale tier after the second).

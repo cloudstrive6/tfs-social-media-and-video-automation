@@ -1,0 +1,18 @@
+# The whole automation: cron-job.org triggers this every 30 minutes (see docs/SETUP.md).
+# One run restores state from R2, publishes whatever is due (a background thread keeps publishing every
+# minute), produces the next items, stays up for any Facebook/Instagram post due in the next 35 minutes,
+# then saves state back to R2.
+name: run
+on:
+  workflow_dispatch:
+concurrency:
+  group: tfs-state          # never two runs on the same state; a trigger mid-run waits its turn
+  cancel-in-progress: false
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: run
+      needs_claude: true
+      needs_media: true
+    secrets: inherit

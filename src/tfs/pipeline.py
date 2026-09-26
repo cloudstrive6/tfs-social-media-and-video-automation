@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -13,7 +15,7 @@ from pydantic import BaseModel
 
 from . import db, notify, slots
 from .agents import editor, packaging, trend_scout, writers
-from .config import channel, item_dir, now, schedule
+from .config import channel, data_dir, item_dir, media, now, schedule
 from .llm import UsageLimitError
 from .media import cards, compose, images, render, tts
 from .models import (Carousel, FactCheck, HookReview, Scene, Script, SeoPack, ShotList,
@@ -23,6 +25,10 @@ log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 SCOUT_EVERY = timedelta(hours=3)
 MAX_REWRITES = 2
+PUBLISH_EVERY = 60                      # seconds between publish checks while a cloud run is alive
+LINGER = timedelta(minutes=35)          # a run stays up for an exact-time post due within this window
+HARD_STOP = timedelta(hours=5, minutes=20)  # job timeout is 340 min; leave time to save state
+_publishing = threading.Lock()          # the publisher thread and the main thread never publish at once
 
 
 # ---------------------------------------------------------------- helpers
@@ -197,11 +203,11 @@ def _notify_ready(item: dict) -> None:
                      for p, t in sorted(data["platforms"].items(), key=lambda kv: kv[1]))
     caption = f"✅ Ready: {data.get('title') or data.get('working_title')}\n{item['kind'].replace('_', ' ')}\n{when}"
     if item["kind"] == "carousel":
-        notify.send_photos([Path(p) for p in data.get("slides", [])], caption)
+        notify.send_photos([media(p) for p in data.get("slides", [])], caption)
     elif item["kind"] == "vertical":
-        notify.send_video(Path(data["video"]), caption)
+        notify.send_video(media(data["video"]), caption)
     else:
-        thumb = Path(data["thumbnail"]) if data.get("thumbnail") else None
+        thumb = media(data["thumbnail"]) if data.get("thumbnail") else None
         notify.send_photos([thumb] if thumb else [], caption)
 
 
@@ -259,8 +265,8 @@ def _publish_one(post: dict) -> tuple[str, str]:
     d, data = item_dir(item["id"]), item["data"]
     seo = SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8"))
     slot = datetime.fromisoformat(post["slot_at"])
-    video = Path(data["video"]) if data.get("video") else None
-    slides = [Path(p) for p in data.get("slides", [])]
+    video = media(data["video"]) if data.get("video") else None
+    slides = [media(p) for p in data.get("slides", [])]
     platform = post["platform"]
     caption = {"youtube": seo.youtube_description, "youtube_shorts": seo.youtube_description,
                "instagram_reel": seo.instagram_caption, "instagram_carousel": seo.instagram_caption,
@@ -271,7 +277,7 @@ def _publish_one(post: dict) -> tuple[str, str]:
     if _provider(platform) == "postforme":
         from .publish import postforme
         media = slides if platform in ("instagram_carousel", "facebook_post") else [video]
-        thumb = Path(data["thumbnail"]) if platform == "youtube" and data.get("thumbnail") else None
+        thumb = media(data["thumbnail"]) if platform == "youtube" and data.get("thumbnail") else None
         pid = postforme.create_post(platform, caption, media, slot, title=title, description=caption,
                                     tags=seo.tags, thumbnail=thumb, external_id=f"{item['id']}:{platform}")
         return "submitted", pid
@@ -279,7 +285,7 @@ def _publish_one(post: dict) -> tuple[str, str]:
     from .publish import meta, tiktok, youtube
     match platform:
         case "youtube" | "youtube_shorts":
-            thumb = Path(data["thumbnail"]) if data.get("thumbnail") else None
+            thumb = media(data["thumbnail"]) if data.get("thumbnail") else None
             # "submitted" until reconcile() confirms YouTube actually made it public at the slot
             return "submitted", youtube.upload(video, title, caption, seo.tags, slot, thumb)
         case "instagram_reel":
@@ -340,6 +346,11 @@ def reconcile() -> None:
 
 
 def publish_due() -> int:
+    with _publishing:
+        return _publish_due()
+
+
+def _publish_due() -> int:
     done = 0
     for post in db.queued_posts():
         if not _due(post):
@@ -394,3 +405,89 @@ def tick(max_produce: int = 1) -> None:
     expire_stale()
     for item in db.items_with_status("planned", "approved")[:max_produce]:
         produce(item["id"])
+
+
+# ---------------------------------------------------------------- one GitHub Actions run
+def _next_timed_post() -> datetime | None:
+    """Earliest queued post that has to go out at its exact slot (Meta direct: no platform-side scheduling)."""
+    return min((datetime.fromisoformat(p["slot_at"]) for p in db.queued_posts() if not _due(p)), default=None)
+
+
+def _analysis_due() -> bool:
+    """Mondays from 09:00 PHT, once; catches up if a whole Monday was missed."""
+    marker = data_dir() / "last_analysis.txt"
+    last = datetime.fromisoformat(marker.read_text().strip()) if marker.exists() else None
+    t = now()
+    if last and t - last > timedelta(days=8):
+        return True
+    return t.weekday() == 0 and t.hour >= 9 and (not last or last.date() != t.date())
+
+
+def _weekly_analysis() -> None:
+    if not _analysis_due():
+        return
+    from .agents import analyst
+    try:
+        analyst.run()
+    except UsageLimitError as e:
+        log.warning("analysis postponed: %s", e)
+        return
+    except Exception as e:
+        log.exception("weekly analysis failed")
+        notify.send(f"⚠️ Weekly analysis failed: {e}")
+    (data_dir() / "last_analysis.txt").write_text(now().isoformat(timespec="seconds"))
+
+
+def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
+    """Everything one triggered run does, with state restored from and saved back to R2.
+
+    A background thread publishes every minute for the whole run, so a long render never delays a post.
+    Runs never overlap (workflow concurrency group); a trigger that arrives mid-run just waits.
+    """
+    from . import state
+
+    if not state.enabled():   # without saved state every run would re-plan and re-post the same slots
+        raise SystemExit("run: no R2 state bucket configured (S3_* secrets) — refusing to run")
+    state.pull()
+    stop = threading.Event()
+
+    def publisher() -> None:
+        while not stop.wait(PUBLISH_EVERY):
+            try:
+                if publish_due():
+                    state.push()
+            except Exception:
+                log.exception("publisher thread")
+
+    thread = threading.Thread(target=publisher, name="publisher", daemon=True)
+    thread.start()
+    started, tried, last_tick = now(), set(), None
+    try:
+        publish_due()
+        state.push()
+        while now() - started < HARD_STOP:
+            if not last_tick or now() - last_tick >= timedelta(minutes=30):
+                _weekly_analysis()
+                tick(max_produce=0)                  # scout if stale, plan upcoming slots, expire stale
+                state.push()
+                last_tick = now()
+            todo = [i for i in db.items_with_status("planned", "approved") if i["id"] not in tried]
+            if todo and now() - started < budget:
+                tried.add(todo[0]["id"])
+                produce(todo[0]["id"])
+                state.push()
+                continue
+            nxt = _next_timed_post()
+            if not nxt or nxt - now() > LINGER:
+                break
+            time.sleep(min(60.0, max(5.0, (nxt - now()).total_seconds())))
+        publish_due()
+    finally:
+        stop.set()
+        thread.join(timeout=600)
+        state.push()
+        state.daily_backup()
+        try:
+            state.prune()
+        except Exception:
+            log.exception("prune failed")

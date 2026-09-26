@@ -1,4 +1,4 @@
-"""`tfs` command line. Cron / GitHub Actions call `tfs tick` and `tfs publish`."""
+"""`tfs` command line. The GitHub Actions `run` workflow calls `tfs run`."""
 from __future__ import annotations
 
 import argparse
@@ -14,13 +14,14 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     p = argparse.ArgumentParser(prog="tfs", description="The Filipino Standard automation")
     sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("run", help="one cloud run: restore state from R2, publish + produce, save state back")
     sub.add_parser("tick", help="scout if stale, plan upcoming slots, produce the next item")
     sub.add_parser("publish", help="publish every post whose slot has arrived")
     sub.add_parser("scout", help="run the trend scout now and print the ranked topics")
     sub.add_parser("plan", help="plan upcoming slots now")
     sub.add_parser("analyze", help="weekly growth analysis + agent notes + schedule retune")
     sub.add_parser("status", help="show items and posts")
-    sub.add_parser("backup", help="copy the SQLite state to the private backup bucket")
+    sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
     sub.add_parser("preview-styles", help="generate one sample image per art style")
     sub.add_parser("telegram-setup", help="print the chat id(s) that messaged the bot; send a test message")
@@ -33,6 +34,8 @@ def main() -> None:
     a = p.parse_args()
 
     match a.cmd:
+        case "run":
+            pipeline.cloud_run()
         case "tick":
             pipeline.tick()
         case "publish":
@@ -69,16 +72,11 @@ def main() -> None:
             from .verify import run_all
             sys.exit(0 if run_all() else 1)
         case "backup":
-            import sqlite3
-            from .config import data_dir, env
-            if not env("S3_BACKUP_BUCKET"):
+            from . import state
+            if not state.enabled():
                 print("backup skipped: S3_BACKUP_BUCKET not configured")
                 return
-            from .publish import storage
-            snapshot = data_dir() / "backup.sqlite3"
-            with sqlite3.connect(data_dir() / "tfs.sqlite3") as src, sqlite3.connect(snapshot) as dst:
-                src.backup(dst)   # consistent copy even while other jobs write
-            print(storage.backup(snapshot))
+            state.daily_backup()
         case "auth":
             from .publish import youtube
             print("YOUTUBE_REFRESH_TOKEN=" + youtube.authorize())

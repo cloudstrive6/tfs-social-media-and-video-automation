@@ -11,7 +11,7 @@ from .config import env
 def _scrub(text: str) -> str:
     """Mask anything token-shaped (URLs can carry access_token=...)."""
     text = re.sub(r"(access_token|key|client_secret|refresh_token)=[^&\s'\"]+", r"\1=***", text)
-    return re.sub(r"(EAA[A-Za-z0-9]{20,}|1//[A-Za-z0-9_-]{20,}|ya29\.[A-Za-z0-9_.-]+|sk-ant-[A-Za-z0-9_-]+|sk_[A-Za-z0-9]{20,}|GOCSPX-[A-Za-z0-9_-]+)", "***", text)
+    return re.sub(r"(EAA[A-Za-z0-9]{20,}|1//[A-Za-z0-9_-]{20,}|ya29\.[A-Za-z0-9_.-]+|sk-ant-[A-Za-z0-9_-]+|sk_[A-Za-z0-9]{20,}|GOCSPX-[A-Za-z0-9_-]+|AIza[A-Za-z0-9_-]{20,}|bot\d+:[A-Za-z0-9_-]+)", "***", text)
 
 
 def _youtube() -> str:
@@ -49,10 +49,43 @@ def _postforme() -> str:
 
 
 def _claude() -> str:
+    import json
     import shutil
+    import subprocess
     if not shutil.which("claude"):
-        return "claude CLI not installed here (it is in the Docker image) — skipped"
-    return "Claude Code CLI present; CLAUDE_CODE_OAUTH_TOKEN " + ("set" if env("CLAUDE_CODE_OAUTH_TOKEN") else "MISSING")
+        return "claude CLI not installed on this machine (the run workflow installs it) — skipped"
+    out = subprocess.run(["claude", "-p", "Reply with the single word OK.", "--output-format", "json",
+                          "--model", "claude-haiku-4-5-20251001"],
+                         capture_output=True, text=True, timeout=180)
+    result = json.loads(out.stdout or "{}") if out.stdout.strip().startswith("{") else {}
+    if out.returncode or result.get("is_error"):
+        raise RuntimeError((result.get("result") or out.stderr or out.stdout)[:200])
+    return "Claude Code signed in with the Max subscription token and answering"
+
+
+def _gemini() -> str:
+    r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", timeout=20,
+                     headers={"x-goog-api-key": env("GEMINI_API_KEY")}, params={"pageSize": 200})
+    r.raise_for_status()
+    names = [m["name"] for m in r.json().get("models", [])]
+    image = [n for n in names if "image" in n]
+    return f"API key OK, {len(names)} models" + (f" incl. {image[0].split('/')[-1]}" if image else "")
+
+
+def _r2() -> str:
+    from . import state
+    s3, bucket = state._s3(), state._bucket()
+    s3.put_object(Bucket=bucket, Key="verify/ping.txt", Body=b"ok")
+    body = s3.get_object(Bucket=bucket, Key="verify/ping.txt")["Body"].read()
+    s3.delete_object(Bucket=bucket, Key="verify/ping.txt")
+    has_state = bool(state._keys(f"{state.PREFIX}{state.DB}"))
+    return f"bucket '{bucket}' read/write OK" + ("" if body == b"ok" else " (read mismatch!)") +         (", saved state present" if has_state else ", no state saved yet (first run creates it)")
+
+
+def _telegram() -> str:
+    r = requests.get(f"https://api.telegram.org/bot{env('TELEGRAM_BOT_TOKEN')}/getMe", timeout=20)
+    r.raise_for_status()
+    return f"bot @{r.json()['result']['username']}"
 
 
 CHECKS = [
@@ -60,7 +93,10 @@ CHECKS = [
     ("Facebook + Instagram", ("META_PAGE_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID"), _meta),
     ("ElevenLabs", ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"), _elevenlabs),
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY",), _postforme),
-    ("Claude", (), _claude),
+    ("Gemini images", ("GEMINI_API_KEY",), _gemini),
+    ("Cloudflare R2 state", ("S3_ENDPOINT_URL", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_BACKUP_BUCKET"), _r2),
+    ("Telegram", ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"), _telegram),
+    ("Claude", ("CLAUDE_CODE_OAUTH_TOKEN",), _claude),
 ]
 
 

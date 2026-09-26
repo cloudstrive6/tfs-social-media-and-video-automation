@@ -1,7 +1,7 @@
-"""Public media bucket (Cloudflare R2 or any S3-compatible store).
+"""S3-compatible client for Cloudflare R2.
 
-Instagram and Facebook photo endpoints fetch media from a public URL, so rendered files are
-pushed here first. Add a lifecycle rule on the bucket to delete objects after 7 days.
+The private state bucket (see tfs.state) uses it. `public_url` is only for a public media bucket, which the
+direct Meta publisher does not need (it hosts carousel images as unpublished Page photos).
 """
 from __future__ import annotations
 
@@ -26,10 +26,3 @@ def public_url(path: Path, key_prefix: str) -> str:
     content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     _s3().upload_file(str(path), require_env("S3_BUCKET"), key, ExtraArgs={"ContentType": content_type})
     return f"{require_env('S3_PUBLIC_BASE_URL').rstrip('/')}/{key}"
-
-
-def backup(path: Path) -> str:
-    """Nightly copy of the SQLite state to a PRIVATE bucket (S3_BACKUP_BUCKET)."""
-    key = f"backups/{path.stem}-{now().strftime('%Y%m%d')}{path.suffix}"
-    _s3().upload_file(str(path), require_env("S3_BACKUP_BUCKET"), key)
-    return key

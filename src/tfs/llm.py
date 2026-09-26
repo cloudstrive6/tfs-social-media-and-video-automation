@@ -96,7 +96,7 @@ def research(agent: str, user: str, max_searches: int = 20) -> str:
 def _claude(agent: str, user: str, extra: list[str], timeout_s: int = 3600) -> dict:
     exe = shutil.which("claude")
     if not exe:
-        raise RuntimeError("Claude Code CLI not found on PATH (see Dockerfile)")
+        raise RuntimeError("Claude Code CLI not found on PATH (the run workflow installs it: needs_claude)")
     model, effort = _agent_cfg(agent)
     system = style_bible() + "\n\n---\n\n" + load_prompt(agent)
     with tempfile.TemporaryDirectory(prefix="tfs-claude-") as work:   # clean cwd: no stray CLAUDE.md/settings
