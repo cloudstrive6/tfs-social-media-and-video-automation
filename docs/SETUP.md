@@ -60,33 +60,38 @@ Create a **private** bucket `tfs-backups` and an API token; fill `S3_ENDPOINT_UR
 `S3_SECRET_ACCESS_KEY`, `S3_BACKUP_BUCKET`. (A public media bucket is only needed if you ever switch
 `publishing.provider` to `direct`.)
 
-## 6. Publishing — Post for Me (all platforms)
-1. Sign up at postforme.dev (Pro, $10/month = 1,000 posts; we publish ~510/month).
-2. Create a **Quickstart** project, which posts through Post for Me's already-approved platform apps. That means:
-   - no YouTube API audit or upload quota for us;
-   - TikTok posts are public without our own TikTok audit;
-   - no Meta developer app to set up.
-3. In the Post for Me dashboard, connect YouTube (@TheFilipinoStandard), the Facebook Page, Instagram
-   (a Professional account linked to the Page) and, later, TikTok.
-4. API key → `POSTFORME_API_KEY`. When TikTok is connected, set `tiktok.enabled: true` in `config/schedule.yaml`.
+## 6. Publishing — Post for Me (Facebook, Instagram, TikTok)
+1. Pro plan ($10/month = 1,000 posts; we publish ~450/month outside YouTube).
+2. **The Filipino Standard** project (White Label): Facebook Page + Instagram are already connected →
+   its API key → `POSTFORME_API_KEY`.
+3. **Quickstart project**: TikTok is enabled there, and posts go through Post for Me's approved TikTok app,
+   so they're public without our own TikTok audit. Connect @thefilipinostandard under Social Media Accounts →
+   its API key → `POSTFORME_API_KEY_TIKTOK`. Then set `tiktok.enabled: true` in `config/schedule.yaml`.
 
-## 7. Google Cloud project (trend data + analytics)
-Uploads don't go through our project, so the default quota is plenty. It's used for:
-1. **YouTube Data API v3**, via an API key → `YOUTUBE_API_KEY` (the Trend Scout reads PH trending videos).
-2. **YouTube Analytics API**, via OAuth → the Growth Analyst reads CTR, retention and subscriber data:
-   - Create an OAuth client of type *Web application* with the authorized redirect URI
-     `https://developers.google.com/oauthplayground` → `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET`.
-   - Open the **OAuth 2.0 Playground** → ⚙️ "Use your own OAuth credentials".
-   - Select scopes `youtube.readonly` and `yt-analytics.readonly`, then authorize with the channel's Google account.
-   - Click "Exchange authorization code for tokens" and copy the refresh token → `YOUTUBE_REFRESH_TOKEN`.
-   - Set the consent screen's publishing status to **In production**, or the token expires after 7 days.
-3. In YouTube Studio, enable advanced features (phone verification) so custom thumbnails and >15-minute
+## 7. YouTube — Google Cloud project "TFS Automation" (uploads, analytics, trends)
+Created 2026-09-26: YouTube Data API v3 and YouTube Analytics API are enabled, the External consent screen
+is configured, and it has an OAuth client "TFS Analytics (OAuth Playground)" (Web) and an API key
+"TFS trend scout" restricted to the YouTube Data API.
+1. OAuth client ID/secret → `YOUTUBE_CLIENT_ID` / `YOUTUBE_CLIENT_SECRET`; API key → `YOUTUBE_API_KEY`.
+2. Google Auth Platform → **Audience → Publish app** (to "In production"). In Testing mode, refresh tokens
+   expire after 7 days. The app is unverified, so the consent screen shows a warning; that's fine for your own channel.
+3. Refresh token via the **OAuth 2.0 Playground**:
+   - ⚙️ → "Use your own OAuth credentials".
+   - Scopes: `https://www.googleapis.com/auth/youtube.upload`, `https://www.googleapis.com/auth/youtube.readonly`,
+     `https://www.googleapis.com/auth/yt-analytics.readonly`.
+   - Authorize as cloudstrive1688@gmail.com (the channel owner), then "Exchange authorization code for tokens".
+   - Copy the refresh token → `YOUTUBE_REFRESH_TOKEN`.
+4. ⏳ **API compliance audit (required before videos can go public).** YouTube locks uploads from unaudited
+   API projects to *private*. Submit the "YouTube API Services — Audit and Quota Extension" form for project
+   `tfs-automation` now; approval typically takes days to a few weeks. Until then, uploads land as private
+   videos you can publish by hand in YouTube Studio.
+5. Quota: 1 long-form + 3 Shorts + 1 thumbnail ≈ 6,450 of the default 10,000 units/day, so no increase is
+   needed at the current cadence. Request one in the same audit form before scaling past ~5 uploads/day.
+6. In YouTube Studio, enable advanced features (phone verification) so custom thumbnails and >15-minute
    videos work.
 
-## 8. Direct platform APIs (optional, not needed with Post for Me)
-`src/tfs/publish/youtube.py`, `meta.py` and `tiktok.py` remain as a fallback. You can switch one platform
-with `publishing.overrides` in `config/channel.yaml`. Each one then needs its own audit and approvals
-(YouTube compliance audit + quota, Meta app, TikTok audit).
+## 8. Direct Meta / TikTok APIs (optional fallback)
+`src/tfs/publish/meta.py` and `tiktok.py` remain; switch a platform with `publishing.overrides`.
 
 ## 9. Approvals & alerts — Telegram
 Message @BotFather → new bot → `TELEGRAM_BOT_TOKEN`; send the bot a message, read your chat id from

@@ -17,7 +17,7 @@
 | 11 | **Title Writer** | `title_writer.md` | 10 options scored for curiosity / clarity / keyword / honesty; primary + 2 alternates for later swaps. | `titles.json` |
 | 12 | **SEO & Discovery Writer** | `seo_writer.md` | Description written for YouTube search *and* AI answer engines, chapters, sources, tags, and native captions for Shorts / IG / FB / TikTok. | `seo.json` |
 | 13 | **Carousel Designer** | `carousel_designer.md` | 6–10 slide scroll-stoppers (cover hook, one idea per slide, "so what", CTA), fact-checked, rendered 1080×1350. | `slides/*.jpg` |
-| 14 | **Publisher** | (code: `publish/postforme.py`) | Submits every post to Post for Me as soon as it's rendered, with `scheduled_at` = slot: YouTube (title, tags, thumbnail, synthetic-media flag), IG Reels & carousels, FB Reels & multi-photo posts, TikTok (public, AI-generated label). Confirms each result afterwards. | `posts` table |
+| 14 | **Publisher** | (code: `publish/youtube.py`, `publish/postforme.py`) | YouTube + Shorts upload directly through the TFS Automation Google Cloud project with native `publishAt` scheduling, custom thumbnail and the synthetic-media flag. IG Reels & carousels, FB Reels & multi-photo posts and TikTok (public, AI-generated label) go through Post for Me with `scheduled_at` = slot, and each result is confirmed afterwards. | `posts` table |
 | 15 | **Growth Analyst** | `analyst.md` | Weekly: YouTube Analytics + IG insights → what worked, standing notes appended to every agent's prompt, schedule retune, title swaps on low-CTR videos. | `analyst_notes/` |
 
 Every agent's system prompt = `docs/STYLE_BIBLE.md` + its role prompt + the analyst's standing notes
@@ -40,7 +40,8 @@ flowchart LR
     F -- carousel --> C[Carousel Designer] --> Q
   end
   subgraph every5[every 5 min: tfs publish]
-    Q --> PFM[Post for Me, scheduled_at = slot] --> YT[YouTube / Shorts] & IG[Instagram] & FB[Facebook] & TT[TikTok]
+    Q --> YT[YouTube / Shorts via Data API, publishAt = slot]
+    Q --> PFM[Post for Me, scheduled_at = slot] --> IG[Instagram] & FB[Facebook] & TT[TikTok]
   end
   YT & IG --> AN[Growth Analyst weekly] -.notes & schedule.-> E & W & H & P
 ```
@@ -71,7 +72,7 @@ flowchart LR
 | … or Claude API (`llm.backend: api`) | ~$3.5 per long-form, ~$1.2 per vertical, ~$1 per carousel incl. web search | ~$275 |
 | ElevenLabs narration | ~430k characters/month (multilingual v2) → Pro tier (500k) | ~$99 |
 | Images (Gemini 2.5 Flash Image, ~$0.04 each) | ~130 images/day | ~$160 |
-| Post for Me | ~510 posts/month (Pro = 1,000) | $10 |
+| Post for Me (FB, IG, TikTok) | ~450 posts/month (Pro = 1,000) | $10 |
 | Cloud VM (Docker, Singapore) | 8 vCPU / 16 GB | $30–85 |
 | Cloudflare R2 backups | < 1 GB | ~$0 |
 | **Total** | | **≈ $300–355 + your Max plan** (≈ $575–630 with the API instead) |
