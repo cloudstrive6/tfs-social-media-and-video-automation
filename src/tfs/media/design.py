@@ -45,12 +45,22 @@ def _glyph(ch: str, fnt) -> bytes:
 
 
 def glyphsafe(text: str, fnt) -> str:
-    """Swap characters the font can't draw (Impact has no peso sign) for newspaper-style equivalents."""
+    """Never draw a tofu box: swap characters the font can't draw for newspaper-style equivalents (₱ -> P),
+    their plain form (① -> 1, ﬁ -> fi), or drop them."""
+    import unicodedata
+
     missing = _glyph(chr(0xFFFF), fnt)
     for ch, alt in (("₱", "P"), ("✓", ""), ("→", ">"), ("—", "-")):
         if ch in text and _glyph(ch, fnt) == missing:
             text = text.replace(ch, alt)
-    return text
+    out = []
+    for ch in text:
+        if ch.isascii() or ch.isspace() or _glyph(ch, fnt) != missing:
+            out.append(ch)
+            continue
+        plain = unicodedata.normalize("NFKC", ch)
+        out.append(plain if plain != ch and all(c.isascii() or _glyph(c, fnt) != missing for c in plain) else "")
+    return "".join(out)
 
 
 def wrap(draw: ImageDraw.ImageDraw, text: str, fnt, max_width: int) -> list[str]:

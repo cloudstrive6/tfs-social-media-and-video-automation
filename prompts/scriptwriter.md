@@ -24,6 +24,9 @@ No intro, no ritual. End on a loop line that makes the first line hit again, or 
   Write how people actually talk: "grabe", "legit", "ang galing, 'di ba?", "teka lang". No textbook Filipino.
 - Sarcasm targets the powerful and the absurd; never ordinary Filipinos, regions, ethnicity, religion or class.
 - Numbers: say them the way a person would ("halos ₱5.5 billion — ganun kalaki") and add a `[CARD: …]` cue.
+- The narrator reads digits badly inside Tagalog. Write dates, ordinals, times, years and law numbers exactly
+  as they are spoken: "ika-dalawampu't isa ng Setyembre", "alas-siyete kinse ng gabi", "nineteen seventy-two",
+  "Proclamation ten eighty-one". The digits belong on the card, not in the narration.
 - Every factual line that came from the dossier ends with its `[S#]` tag (stripped before narration).
 - Allegations stay allegations: "ayon sa COA", "inaakusahan", "itinanggi ng opisyal".
 - Naming policy:

@@ -549,3 +549,13 @@ def test_narrator_is_told_the_text_is_filipino(data_dir, monkeypatch, model, exp
     monkeypatch.setattr(tts.requests, "post", lambda url, **kw: sent.update(kw["json"]) or R())
     tts._elevenlabs("Flor Contemplacion", "NARRATOR", data_dir / "a.mp3", "", "")
     assert sent.get("language_code") == expected
+
+
+def test_no_tofu_boxes_and_quotes_read_the_right_way_round(data_dir):
+    from tfs.media import motion
+    from tfs.media.design import font, glyphsafe
+
+    assert glyphsafe("Proclamation ① 1081 ★", font("display", 40)).split() == ["Proclamation", "1", "1081"]
+    frames = list(motion._quote("Marcos, 1972", ["Martial law is declared over the entire country today"],
+                                (540, 960), 2))
+    assert frames                                              # swapped internally: quote big, source small

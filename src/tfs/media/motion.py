@@ -120,6 +120,7 @@ def _glow(img: Image.Image, p: float) -> Image.Image:
 
 
 def _text_layer(text: str, fnt, fill, stroke: int = 0) -> Image.Image:
+    text = glyphsafe(text, fnt)
     probe = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
     x0, y0, x1, y1 = probe.textbbox((0, 0), text, font=fnt, stroke_width=stroke)
     layer = Image.new("RGBA", (x1 - x0 + 4, y1 - y0 + 4), (0, 0, 0, 0))
@@ -273,6 +274,9 @@ def _timeline(title: str, lines: list[str], size, n: int, backdrop=None) -> Iter
 
 
 def _quote(title: str, lines: list[str], size, n: int, backdrop=None) -> Iterator[Image.Image]:
+    if lines and len(" ".join(lines).split()) > len(title.split()) * 1.5:
+        title, lines = " ".join(lines), [title]          # source name was given as the title: swap
+    title = title.strip("“”\"")
     x0, y0, x1, y1 = _area(size)
     w, ah = x1 - x0, y1 - y0
     pad = int(w * 0.06)
@@ -295,7 +299,7 @@ def _quote(title: str, lines: list[str], size, n: int, backdrop=None) -> Iterato
             take = max(0, min(len(words), shown - used))
             used += len(words)
             if take:
-                d.text((x0 + pad, y), " ".join(words[:take]), font=qf, fill=WHITE, stroke_width=2,
+                d.text((x0 + pad, y), glyphsafe(" ".join(words[:take]), qf), font=qf, fill=WHITE, stroke_width=2,
                        stroke_fill=(0, 0, 0))
             y += qlh
         y += pad * 0.5

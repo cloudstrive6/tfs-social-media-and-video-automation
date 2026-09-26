@@ -36,23 +36,30 @@ def run(kind: str = "vertical") -> Path:
     pipeline.produce(unit.id)
 
     item = db.get_item(unit.id)
-    if item["status"] != "sample":
-        raise SystemExit(f"sample not produced: {item['status']} — {item.get('error') or 'see log / Telegram'}")
     data = item["data"]
+    d = pipeline.item_dir(unit.id)
     out = data_dir() / "sample_out"
     out.mkdir(exist_ok=True)
-    files = [Path(data["video"])] if data.get("video") else [Path(p) for p in data.get("slides", [])]
+    rejected = item["status"] != "sample"
+    if rejected:                       # keep what was made, so the review itself can be judged
+        (out / "REJECTED.txt").write_text(f"{item['status']}: {item.get('error') or ''}", encoding="utf-8")
+        files = [d / "video.mp4"] if (d / "video.mp4").exists() else sorted((d / "slides").glob("slide*.jpg"))
+    else:
+        files = [Path(data["video"])] if data.get("video") else [Path(p) for p in data.get("slides", [])]
     for f in files:
         shutil.copy2(f, out / f.name)
     for extra in ("seo.json", "titles.json", "factcheck.json", "qa_r0.json", "qa_r1.json", "qa_r2.json"):   # factcheck.json holds the final script
         src = pipeline.item_dir(unit.id) / extra
         if src.exists():
             shutil.copy2(src, out / extra)
-    caption = f"🧪 SAMPLE (not scheduled): {data.get('title') or data.get('working_title')}"
+    caption = (f"🧪 SAMPLE{' — REJECTED by review' if rejected else ''} (not scheduled): "
+               f"{data.get('title') or data.get('working_title')}")
     if data.get("qa"):
         caption += f"\n🔎 Review: {data['qa']['summary']}"
     if files and files[0].suffix == ".mp4":
         notify.send_video(files[0], caption)
-    else:
+    elif files:
         notify.send_photos(files, caption)
+    if rejected and not files:
+        raise SystemExit(f"sample not produced: {item['status']} — {item.get('error') or ''}")
     return out

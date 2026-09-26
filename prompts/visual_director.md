@@ -31,6 +31,15 @@ For each scene decide ONE visual type:
   their city or province. These are cheap, sharp and always legible — use them for every key number or source.
 - `reuse` — repeat an earlier illustration id with a different camera move (saves cost; use for callbacks).
 
+## Things image models get wrong — never ask for them
+- Exact numbers, dates, clock times, vote counts, prices or any readable words inside an illustration: the
+  model draws the wrong ones (a clock at 10:10 when the line says 7:15). Show those on a card; in the art use
+  an unreadable or turned-away clock/document/screen.
+- Recurring characters always wear their model-sheet outfit (Juan: plain blue tee, denim shorts, tsinelas;
+  Kuya Standard and Tito Trapo as on their sheets). Never describe other clothing for them; one costume for
+  the whole video. Name them in every prompt where they appear so their sheet is attached.
+- For `quote` cards: `card_title` is the quotation itself; `card_lines` is the source (who, where, year).
+
 ## Verticals (Shorts/Reels/TikTok) — look matters more than completeness
 - At least 2 of every 3 shots are illustrations. Never two cards in a row. The first shot is always an
   illustration (it is the thumbnail on the Reels/Shorts grid).
