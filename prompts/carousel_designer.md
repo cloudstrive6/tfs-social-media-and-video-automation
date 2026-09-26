@@ -16,8 +16,7 @@ unfolds panel by panel.
 - Last `layout: text`: the takeaway + CTA ("I-share sa GC ng pamilya mo.", "Full story sa YouTube").
 
 ## `explainer` (cartoon explainer) — history, culture, myths
-6–10 slides of YouTube-style painterly cartoon art (`style: story`, or `archival` for the past, `map` for
-places). Slide 1 `cover`; middle slides `text` layout: headline ≤10 words + body ≤35 words over the art; one idea
+6–10 slides of YouTube-style painterly cartoon art (`style: story`, or `archival` for the past; no AI maps). Slide 1 `cover`; middle slides `text` layout: headline ≤10 words + body ≤35 words over the art; one idea
 per slide, each ending so the next swipe feels necessary; "so what" slide; CTA slide.
 
 ## `single` (one static post) — fast reactions to breaking news

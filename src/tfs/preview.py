@@ -13,7 +13,6 @@ SAMPLES = {
               "the contractor proudly points at an empty lot with one lonely signpost", "4:5"),
     "archival": ("Spanish-colonial Intramuros, 1800s: a friar and a gobernadorcillo counting tribute coins by "
                  "candlelight while farmers wait outside the gate", "16:9"),
-    "map": "Illustrated map of Luzon with Bulacan province highlighted with a warm glow and a red pin",
 }
 
 

@@ -115,7 +115,7 @@ class SeoPack(BaseModel):
 
 
 # ---------- Visuals ----------
-Style = Literal["story", "satire", "comic", "archival", "map"]
+Style = Literal["story", "satire", "comic", "archival"]
 
 
 class Shot(BaseModel):

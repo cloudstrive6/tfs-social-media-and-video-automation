@@ -49,7 +49,7 @@ def _openai(prompt: str, aspect: str) -> bytes:
     return base64.b64decode(resp.data[0].b64_json)
 
 
-STYLES = ("story", "satire", "comic", "archival", "map")
+STYLES = ("story", "satire", "comic", "archival")
 
 
 def full_prompt(prompt: str, style: str = "story") -> str:

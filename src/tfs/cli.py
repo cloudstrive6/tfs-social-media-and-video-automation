@@ -22,7 +22,8 @@ def main() -> None:
     sub.add_parser("status", help="show items and posts")
     sub.add_parser("backup", help="copy the SQLite state to the private backup bucket")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
-    sub.add_parser("preview-styles", help="generate one sample image per art style for approval")
+    sub.add_parser("preview-styles", help="generate one sample image per art style")
+    sub.add_parser("make-characters", help="generate the recurring cast's model sheets into assets/characters")
     for name in ("produce", "approve", "reject", "requeue"):
         sp = sub.add_parser(name)
         sp.add_argument("item_id")
@@ -54,6 +55,9 @@ def main() -> None:
         case "analyze":
             from .agents import analyst
             print(analyst.run().summary_markdown)
+        case "make-characters":
+            from .characters import run as make
+            print("\n".join(make()))
         case "preview-styles":
             from .preview import run
             print("\n".join(run()))
