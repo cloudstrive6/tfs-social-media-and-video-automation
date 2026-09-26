@@ -11,7 +11,7 @@ from .config import env
 def _scrub(text: str) -> str:
     """Mask anything token-shaped (URLs can carry access_token=...)."""
     text = re.sub(r"(access_token|key|client_secret|refresh_token)=[^&\s'\"]+", r"\1=***", text)
-    return re.sub(r"(EAA[A-Za-z0-9]{20,}|1//[A-Za-z0-9_-]{20,}|ya29\.[A-Za-z0-9_.-]+|sk-ant-[A-Za-z0-9_-]+|GOCSPX-[A-Za-z0-9_-]+)", "***", text)
+    return re.sub(r"(EAA[A-Za-z0-9]{20,}|1//[A-Za-z0-9_-]{20,}|ya29\.[A-Za-z0-9_.-]+|sk-ant-[A-Za-z0-9_-]+|sk_[A-Za-z0-9]{20,}|GOCSPX-[A-Za-z0-9_-]+)", "***", text)
 
 
 def _youtube() -> str:
@@ -34,6 +34,13 @@ def _meta() -> str:
     return f"Page '{page['name']}', Instagram @{ig['username']}"
 
 
+def _elevenlabs() -> str:
+    r = requests.get(f"https://api.elevenlabs.io/v1/voices/{env('ELEVENLABS_VOICE_ID')}", timeout=20,
+                     headers={"xi-api-key": env("ELEVENLABS_API_KEY")})
+    r.raise_for_status()
+    return f"voice '{r.json().get('name')}' reachable with the API key"
+
+
 def _postforme() -> str:
     from .publish import postforme
     accounts = postforme._call("GET", "/social-accounts", "tiktok", params={"platform": "tiktok"})["data"]
@@ -51,6 +58,7 @@ def _claude() -> str:
 CHECKS = [
     ("YouTube", ("YOUTUBE_REFRESH_TOKEN",), _youtube),
     ("Facebook + Instagram", ("META_PAGE_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID"), _meta),
+    ("ElevenLabs", ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"), _elevenlabs),
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY",), _postforme),
     ("Claude", (), _claude),
 ]
