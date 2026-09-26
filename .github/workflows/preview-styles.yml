@@ -1,5 +1,5 @@
-# Actions -> preview-styles -> Run workflow: one real image per art style (uses GEMINI_API_KEY), downloadable
-# as the "style-preview" artifact.
+# Actions -> preview-styles -> Run workflow: one real image per art style (uses GEMINI_API_KEY), sent to your
+# Telegram. Nothing is uploaded to GitHub, because this repo is public.
 name: preview-styles
 on:
   workflow_dispatch:
@@ -20,8 +20,11 @@ jobs:
       - name: Character sheets (only if missing from the repo)
         run: ls assets/characters/*.png >/dev/null 2>&1 || python -m tfs.cli make-characters
       - run: TFS_DATA_DIR=out python -m tfs.cli preview-styles
-      - run: mkdir -p out/style_preview/characters && cp assets/characters/*.png out/style_preview/characters/
-      - uses: actions/upload-artifact@v4
-        with:
-          name: style-preview
-          path: out/style_preview/
+      - name: Send the samples to Telegram
+        run: |
+          TFS_DATA_DIR=out python - <<'PY'
+          from pathlib import Path
+          from tfs import notify
+          files = sorted(Path("out/style_preview").glob("*.png")) + sorted(Path("out/style_preview").glob("*.jpg"))
+          notify.send_photos(files, "🎨 Style preview: " + ", ".join(p.stem for p in files))
+          PY

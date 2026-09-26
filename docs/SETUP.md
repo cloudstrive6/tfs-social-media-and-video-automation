@@ -98,7 +98,7 @@ is configured, and it has an OAuth client "TFS Analytics (OAuth Playground)" (We
    - ⚙️ → "Use your own OAuth credentials".
    - Scopes: `https://www.googleapis.com/auth/youtube.upload`, `https://www.googleapis.com/auth/youtube.readonly`,
      `https://www.googleapis.com/auth/yt-analytics.readonly`.
-   - Authorize as cloudstrive1688@gmail.com (the channel owner), then "Exchange authorization code for tokens".
+   - Authorize with the Google account that owns the channel, then "Exchange authorization code for tokens".
    - Copy the refresh token → `YOUTUBE_REFRESH_TOKEN`.
 4. No audit needed in practice. Google's docs say uploads from unaudited projects created after July 2020 are
    locked as private, but a comparable project (External, In production, unverified, default quota) was checked
