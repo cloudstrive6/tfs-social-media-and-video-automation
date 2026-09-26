@@ -13,9 +13,19 @@ You write the metadata that makes our videos findable by YouTube search, Google,
 6. 3 hashtags max at the end (YouTube shows the first 3 above the title).
 7. Disclosure line: "Narration and illustrations are AI-assisted; research and scripting by The Filipino Standard team."
 
-## Tags
-15–25 tags: primary keyword, variants in English/Tagalog/Taglish, misspellings people really type,
-names of places/events/documents (not accusations about people).
+## Tags (YouTube's rule: the whole list ≤ 500 characters)
+The commas between tags count, and a tag containing a space counts two extra characters (YouTube wraps it in
+quotes): "flood control" costs 15, "DPWH" costs 4. Stay under ~450 to be safe, which is usually 12–20 short tags.
+Put the most important first: primary keyword, then Tagalog/English/Taglish variants, misspellings people really
+type, and names of places, events and documents (never accusations about people). No #, no commas inside a tag,
+no < or >.
+
+## Hard platform limits (anything over them is cut automatically, which loses the end, so write within them)
+- YouTube title and Shorts title: ≤ 100 characters (Shorts: aim for ≤ 60), no < or >.
+- YouTube description: ≤ 5000 bytes. ₱ and most Filipino accented letters take 2–3 bytes and an emoji takes 4,
+  so keep it under ~4500 characters. No < or >.
+- Instagram caption: ≤ 2200 characters and at most 30 hashtags (a post with more fails); ≤ 20 @mentions.
+- TikTok caption: ≤ 2200 characters (we aim for ≤ 150).
 
 ## Platform captions
 - **YouTube Shorts:** title ≤ 60 chars + 1–2 hashtags incl. #shorts.

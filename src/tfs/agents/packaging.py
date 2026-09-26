@@ -44,7 +44,7 @@ def titles(item: dict, script: Script, thumb_moment: str) -> TitlePlan:
 def seo(item: dict, script: Script | None, title: str, chapters: list[tuple[float, str]], extra: str = "") -> SeoPack:
     chapter_lines = "\n".join(f"{int(t // 60):02d}:{int(t % 60):02d} {name}" for t, name in chapters)
     links = channel()["channel"]["links"]
-    return llm.structured(
+    pack = llm.structured(
         "seo_writer",
         f"Format: {item['kind']}\nFinal title: {title}\n"
         f"Chapter start times (long-form only):\n{chapter_lines or '(none)'}\n"
@@ -52,6 +52,8 @@ def seo(item: dict, script: Script | None, title: str, chapters: list[tuple[floa
         f"Sources:\n" + "\n".join(script.sources if script else []) + "\n\n" + _ctx(item, script) + extra,
         SeoPack,
     )
+    from ..publish.limits import enforce_seo
+    return enforce_seo(pack)
 
 
 def shot_list(item: dict, script: Script) -> ShotList:

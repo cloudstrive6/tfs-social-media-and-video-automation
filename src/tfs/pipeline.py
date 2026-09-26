@@ -507,7 +507,8 @@ def _publish_one(post: dict) -> tuple[str, str]:
     """Returns (status, remote_id). `submitted` = accepted by Post for Me, confirmed later by reconcile()."""
     item = db.get_item(post["item_id"])
     d, data = item_dir(item["id"]), item["data"]
-    seo = SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8"))
+    from .publish.limits import enforce_seo
+    seo = enforce_seo(SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8")))
     slot = datetime.fromisoformat(post["slot_at"])
     video = media(data["video"]) if data.get("video") else None
     slides = [media(p) for p in data.get("slides", [])]

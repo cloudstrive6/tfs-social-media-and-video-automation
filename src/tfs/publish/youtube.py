@@ -51,28 +51,15 @@ def authorize() -> str:
     return creds.refresh_token
 
 
-def clean_tags(tags: list[str], budget: int = 480) -> list[str]:
-    """YouTube rejects the whole upload ("invalidTags") if tags break its rules: <= 500 characters in total,
-    where a tag with a space counts with quotes, plus separators; no < or >. Keep the best tags that fit."""
-    import re
-
-    out, seen, used = [], set(), 0
-    for tag in tags:
-        t = re.sub(r"[<>#,\"]", "", tag or "").strip()
-        t = re.sub(r"\s+", " ", t)
-        if not t or len(t) > 30 or t.lower() in seen:
-            continue
-        cost = len(t) + (2 if " " in t else 0) + (1 if out else 0)
-        if used + cost > budget:
-            continue
-        out.append(t)
-        seen.add(t.lower())
-        used += cost
-    return out
+def clean_tags(tags: list[str]) -> list[str]:
+    from .limits import youtube_tags
+    return youtube_tags(tags)
 
 
 def upload(video: Path, title: str, description: str, tags: list[str], publish_at: datetime,
            thumbnail: Path | None = None, category_id: str = "27") -> str:
+    from .limits import youtube_description, youtube_tags, youtube_title
+
     status = {"selfDeclaredMadeForKids": False, "containsSyntheticMedia": True}
     if publish_at > now():
         status |= {"privacyStatus": "private",
@@ -80,7 +67,8 @@ def upload(video: Path, title: str, description: str, tags: list[str], publish_a
     else:
         status["privacyStatus"] = "public"
     body = {
-        "snippet": {"title": title[:100], "description": description[:5000], "tags": clean_tags(tags),
+        "snippet": {"title": youtube_title(title), "description": youtube_description(description),
+                    "tags": youtube_tags(tags),
                     "categoryId": category_id, "defaultLanguage": "fil", "defaultAudioLanguage": "fil"},
         "status": status,
     }
@@ -103,7 +91,8 @@ def video_status(video_id: str) -> dict:
 
 def update_title(video_id: str, title: str) -> None:
     item = api().videos().list(part="snippet", id=video_id).execute()["items"][0]
-    snippet = item["snippet"] | {"title": title[:100]}
+    from .limits import youtube_title
+    snippet = item["snippet"] | {"title": youtube_title(title)}
     api().videos().update(part="snippet", body={"id": video_id, "snippet": snippet}).execute()
 
 

@@ -724,3 +724,26 @@ def test_youtube_tags_always_fit_the_rules():
     assert tags[0] == "Philippines" and "flood control scam" in tags
     assert sum(len(t) + (2 if " " in t else 0) for t in tags) + len(tags) - 1 <= 500
     assert all("<" not in t and "," not in t and len(t) <= 30 for t in tags)
+
+
+def test_metadata_follows_every_platform_rule():
+    from tfs.models import SeoPack
+    from tfs.publish import limits
+
+    # YouTube's documented examples: "Foo-Baz" costs 7, "Foo Baz" costs 9 (implicit quotes); commas count
+    assert limits.tags_length(["Foo-Baz"]) == 7 and limits.tags_length(["Foo Baz"]) == 9
+    assert limits.tags_length(["Foo-Baz", "Foo Baz"]) == 17
+    tags = limits.youtube_tags(["#Philippines", "flood control <scam>", "DPWH, COA", "philippines"]
+                               + [f"mahabang tag bilang {i}" for i in range(80)])
+    assert tags[:2] == ["Philippines", "flood control scam"] and limits.tags_length(tags) <= 500
+    assert all(c not in t for t in tags for c in "<>#,")
+    title = limits.youtube_title("Ang <Pinaka> " + "mahabang pamagat " * 12)
+    assert len(title) <= 100 and "<" not in title
+    desc = limits.youtube_description("₱" * 3000 + "\n" + "😀" * 500)
+    assert len(desc.encode("utf-8")) <= 5000 and "<" not in desc
+    pack = SeoPack(youtube_description="d", tags=["a b"] * 3, shorts_title="t",
+                   instagram_caption="Hook " + " ".join(f"#tag{i}" for i in range(45)), facebook_caption="f",
+                   tiktok_caption="x" * 3000)
+    fixed = limits.enforce_seo(pack)
+    assert len(limits.HASHTAG.findall(fixed.instagram_caption)) == 30
+    assert len(fixed.tiktok_caption) <= 2200 and fixed.tags == ["a b"]

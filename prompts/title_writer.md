@@ -16,3 +16,5 @@ Rules (from what makes Historically titles work):
 
 Produce 10 options, score each for curiosity, clarity, keyword fit and honesty, then pick a primary and two
 alternates (the alternates feed YouTube's Test & Compare / later swaps by the analyst).
+
+Hard limit: every title ≤ 100 characters (YouTube's maximum), no < or >.
