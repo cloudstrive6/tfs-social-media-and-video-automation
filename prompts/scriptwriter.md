@@ -36,6 +36,9 @@ No intro, no ritual. End on a loop line that makes the first line hit again, or 
   the person. Use only their role ("isang senador", "a DPWH district engineer", "the contractor", "isang
   kongresista mula sa Luzon"). Do not add identifying details that make the role point to one obvious person.
 - Institutions, agencies, projects, documents and amounts may always be named ("ayon sa COA 2025 audit ng DPWH…").
+- Emphasis ONLY with *asterisks* (stripped before narration). Never hyphenate or capitalise a word for stress
+  ("I-lang", "SOBRA"): the voice reads "I-lang" as "Bilang" and flips the meaning. Keep hyphens only where
+  Tagalog spelling needs them (mag-aral, pag-asa, i-check).
 - Delivery cues the narrator engine understands: `...` for a beat, *italic* word for stress,
   `[pause]` for a longer beat, `[laugh]`, `[whisper]`, `[sigh]`.
 

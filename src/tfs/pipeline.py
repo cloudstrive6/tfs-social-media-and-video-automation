@@ -204,6 +204,7 @@ def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple
     return video, starts, thumb_path, thumb_moment
 
 
+AUDIO_EXTRA_ROUNDS = 2   # extra re-voice rounds when only the narration still has a major problem
 MAX_IMAGE_ATTEMPTS = 1   # regenerate a failing shot once; if it fails again it is replaced (never sinks the video)
 
 
@@ -257,6 +258,15 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
             return built, report
         if rnd < rounds:
             fix(report)
+    extra = rnd
+    while report.major_audio and not report.redo_images and extra < rounds + AUDIO_EXTRA_ROUNDS:
+        extra += 1                         # visuals are fine; only the narration needs another take
+        fix(report)
+        built = build()
+        report = cached(d / f"qa_r{extra}.json", ReviewReport, lambda: qa.safe(review, built))
+        log.info("review r%d (voice only) %s: %s", extra, item["id"], report.summary)
+        if report.passed:
+            return built, report
     if not report.redo_images and not report.major_audio:
         log.info("review %s: only minor narration notes remain after %d rounds — accepted", item["id"], rounds)
         return built, report

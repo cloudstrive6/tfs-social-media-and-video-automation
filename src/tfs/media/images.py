@@ -52,10 +52,21 @@ def _openai(prompt: str, aspect: str, anchor: Path | None = None) -> bytes:
 STYLES = ("story", "satire", "comic", "archival")
 
 
+def cast_notes(prompt: str) -> str:
+    """Exact design of every recurring character the prompt names (costume drift is the fastest tell of AI slop:
+    Kuya Standard in Tito Trapo's cream barong put the narrator in the villain's clothes)."""
+    from ..characters import CAST
+
+    lowered = prompt.lower().replace("_", " ")
+    notes = [desc for key, desc in CAST.items() if key.replace("_", " ") in lowered]
+    return ("\nRecurring characters, drawn EXACTLY like this (same outfit and colours, never swapped):\n- "
+            + "\n- ".join(notes)) if notes else ""
+
+
 def full_prompt(prompt: str, style: str = "story") -> str:
     img = channel()["images"]
     style_text = img["styles"].get(style, img["styles"]["story"])
-    return f"{prompt}\n\nArt style: {style_text}\n{img['base']}\nNever: {img['never']}"
+    return f"{prompt}{cast_notes(prompt)}\n\nArt style: {style_text}\n{img['base']}\nNever: {img['never']}"
 
 
 ANCHOR_NOTE = ("The LAST attached image is this video's style anchor: match its art style, line weight, shading, "

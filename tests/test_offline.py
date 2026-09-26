@@ -631,3 +631,25 @@ def test_a_shot_failing_review_twice_is_replaced_not_fatal(data_dir, monkeypatch
         pipeline._apply_video_fixes(d, bad)
     shots = pipeline._visuals({"id": "y"}, d, script, "9:16", (1080, 1920))
     assert shots[1].image.name in ("000.png", "002.png")      # borrowed a neighbour's illustration
+
+
+def test_named_characters_get_their_exact_costume_in_the_prompt():
+    from tfs.media.images import full_prompt
+
+    p = full_prompt("Kuya Standard points at a chart while Juan scratches his head", "story")
+    assert "royal-blue barong" in p and "light-blue T-shirt" in p and "cream barong" not in p
+
+
+def test_voice_only_problems_get_extra_rounds(data_dir, monkeypatch):
+    from tfs import db, pipeline, qa
+    from tfs.models import ReviewReport
+
+    db.upsert_item("z", "vertical", "2026-09-27T07:30:00+08:00", "planned", {})
+    d = data_dir / "items" / "z"
+    d.mkdir(parents=True)
+    bad = ReviewReport(passed=False, major_audio=True, redo_images={}, redo_audio={"11": "Ilang"}, warnings=["x"],
+                       appeal=7, hook_frame=6, summary="s")
+    good = bad.model_copy(update={"passed": True, "major_audio": False, "redo_audio": {}})
+    reports = iter([bad, bad, bad, good])
+    monkeypatch.setattr(qa, "safe", lambda fn, built: next(reports))
+    assert pipeline._reviewed(db.get_item("z"), d, lambda: "built", lambda b: None, lambda r: None) == ("built", good)
