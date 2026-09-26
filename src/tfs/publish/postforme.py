@@ -109,3 +109,8 @@ def create_post(platform_key: str, caption: str, media: list[Path], slot: dateti
 def results(post_id: str, platform_key: str) -> list[dict]:
     """Per-account outcome once Post for Me has attempted the post (empty while still scheduled)."""
     return _call("GET", "/social-post-results", PLATFORMS[platform_key][0], params={"post_id": post_id})["data"]
+
+
+def cancel(post_id: str, platform_key: str) -> None:
+    """Delete a scheduled post that hasn't gone out yet."""
+    _call("DELETE", f"/social-posts/{post_id}", PLATFORMS[platform_key][0])

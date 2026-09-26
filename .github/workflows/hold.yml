@@ -1,0 +1,13 @@
+# Actions -> hold -> Run workflow: stop everything that hasn't gone live yet (nothing is deleted).
+name: hold
+on:
+  workflow_dispatch:
+concurrency:
+  group: tfs-state          # same group as `run`: never touches the state at the same time
+  cancel-in-progress: false
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: hold
+    secrets: inherit

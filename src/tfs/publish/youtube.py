@@ -85,3 +85,9 @@ def update_title(video_id: str, title: str) -> None:
     item = api().videos().list(part="snippet", id=video_id).execute()["items"][0]
     snippet = item["snippet"] | {"title": title[:100]}
     api().videos().update(part="snippet", body={"id": video_id, "snippet": snippet}).execute()
+
+
+def unschedule(video_id: str) -> None:
+    """Keep an uploaded video private and cancel its scheduled publish (nothing is deleted)."""
+    status = {"privacyStatus": "private", "selfDeclaredMadeForKids": False, "containsSyntheticMedia": True}
+    api().videos().update(part="status", body={"id": video_id, "status": status}).execute()
