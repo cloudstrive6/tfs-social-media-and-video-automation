@@ -54,7 +54,10 @@ def main() -> None:
             print(analyst.run().summary_markdown)
         case "backup":
             import sqlite3
-            from .config import data_dir
+            from .config import data_dir, env
+            if not env("S3_BACKUP_BUCKET"):
+                print("backup skipped: S3_BACKUP_BUCKET not configured")
+                return
             from .publish import storage
             snapshot = data_dir() / "backup.sqlite3"
             with sqlite3.connect(data_dir() / "tfs.sqlite3") as src, sqlite3.connect(snapshot) as dst:
