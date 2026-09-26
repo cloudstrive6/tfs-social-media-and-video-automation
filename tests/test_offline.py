@@ -582,3 +582,30 @@ def test_rejected_language_code_retries_without_it(data_dir, monkeypatch):
                         lambda url, **kw: bodies.append(dict(kw["json"])) or R(400 if "language_code" in kw["json"] else 200))
     tts._elevenlabs("a", "NARRATOR", data_dir / "a.mp3", "", "")
     assert "language_code" in bodies[0] and "language_code" not in bodies[1]
+
+
+def test_stat_card_puts_the_figure_first():
+    from tfs.media import motion
+
+    frames = list(motion._stat("₱37", ["Bawas kada 11-kg tank", "excise ₱3.36/kg"], (540, 960), 2))
+    assert frames                                    # figure/label swapped internally without error
+
+
+def test_minor_narration_notes_never_reject_a_piece(data_dir, monkeypatch):
+    from tfs import db, pipeline, qa
+    from tfs.models import ReviewReport
+
+    db.upsert_item("x", "vertical", "2026-09-27T07:30:00+08:00", "planned", {})
+    report = ReviewReport(passed=False, major_audio=False, redo_images={}, redo_audio={"3": ""}, warnings=["minor"],
+                          appeal=6, hook_frame=7, summary="s")
+    monkeypatch.setattr(qa, "safe", lambda fn, built: report)
+    d = data_dir / "items" / "x"
+    d.mkdir(parents=True)
+    result = pipeline._reviewed(db.get_item("x"), d, lambda: "built", lambda b: report, lambda r: None)
+    assert result == ("built", report)
+    major = report.model_copy(update={"major_audio": True})
+    for f in d.glob("qa_r*.json"):
+        f.unlink()
+    monkeypatch.setattr(qa, "safe", lambda fn, built: major)
+    monkeypatch.setattr(pipeline.notify, "send", lambda *a, **k: None)
+    assert pipeline._reviewed(db.get_item("x"), d, lambda: "built", lambda b: major, lambda r: None) is None

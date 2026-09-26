@@ -20,3 +20,9 @@ For each NOT-ok scene give a one-line `problem`. If the fix is pronunciation (nu
 `tts_text` to the scene text rewritten so a TTS voice says it correctly while still reading naturally as a
 caption (write numbers out, e.g. "limang punto limang bilyon"; spell acronyms "D-P-W-H"). Otherwise
 leave `tts_text` empty (the scene is simply re-voiced).
+
+Severity for every NOT-ok scene:
+- `major`: a viewer would get a wrong fact or lose the meaning — wrong number, date or name; a skipped or
+  repeated phrase; a garbled or cut-off line; a cue read aloud.
+- `minor`: noticeable but harmless — one word with an odd accent, slightly merged syllables, a flat delivery.
+Minor scenes are still re-voiced when possible, but only major problems can stop a video from posting.

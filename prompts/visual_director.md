@@ -39,6 +39,10 @@ For each scene decide ONE visual type:
   Kuya Standard and Tito Trapo as on their sheets). Never describe other clothing for them; one costume for
   the whole video. Name them in every prompt where they appear so their sheet is attached.
 - For `quote` cards: `card_title` is the quotation itself; `card_lines` is the source (who, where, year).
+- For `stat` cards: `card_lines[0]` is the figure alone ("₱37", "16 → 14", "1,200"); `card_title` is the short
+  label; further lines are small footnotes. The figure is what counts up and is the biggest thing on screen.
+- For `bars` cards: every bar in one chart uses the SAME unit (all pesos, or all votes, or all percent). Never
+  mix pesos, months and counts in one chart; make two cards instead.
 
 ## Verticals (Shorts/Reels/TikTok) — look matters more than completeness
 - At least 2 of every 3 shots are illustrations. Never two cards in a row. The first shot is always an

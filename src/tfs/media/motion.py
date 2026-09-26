@@ -162,6 +162,8 @@ def _stat(title: str, lines: list[str], size, n: int, backdrop=None) -> Iterator
     big = lines[0] if lines else title
     label = title if lines else ""
     extra = lines[1:3]
+    if label and NUM.search(label) and (not NUM.search(big) or len(label) < len(big)):
+        big, label = label, big                  # the director put the figure in the title: figure goes big
     bg = _background(size, backdrop=backdrop)
     probe = ImageDraw.Draw(bg)
     bf, brows, blh = fit_text(probe, big, "display", aw - 2 * pad, int(ah * 0.38), start=int(ah * 0.3))

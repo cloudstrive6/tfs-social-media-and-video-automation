@@ -228,6 +228,9 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
             return built, report
         if rnd < rounds:
             fix(report)
+    if not report.redo_images and not report.major_audio:
+        log.info("review %s: only minor narration notes remain after %d rounds — accepted", item["id"], rounds)
+        return built, report
     problems = "; ".join(report.warnings[:6])
     db.set_status(item["id"], "skipped", f"failed review after {rounds} fix rounds: {problems}"[:2000])
     notify.send(f"⛔ {item['id']} skipped by the review team after {rounds} fix rounds:\n{problems}")
@@ -247,7 +250,7 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     if not result:
         return
     script, hook = result
-    fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(script, dossier))
+    fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(script, dossier, kind))
     if not _gate(item, fc):
         return
     script = fc.script

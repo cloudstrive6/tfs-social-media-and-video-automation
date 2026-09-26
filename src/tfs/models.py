@@ -172,6 +172,7 @@ class AnalystReport(BaseModel):
 class AudioVerdict(BaseModel):
     scene_id: int
     ok: bool
+    severity: Literal["none", "minor", "major"]   # major = wrong number/name/fact, skipped phrase, garbled line
     problem: str                  # "" if ok
     tts_text: str                 # "" or the scene text respelled so the narrator says it right (numbers, names)
 
@@ -198,6 +199,7 @@ class VisualQA(BaseModel):
 
 class ReviewReport(BaseModel):
     passed: bool
+    major_audio: bool = False     # a wrong number/name/skipped phrase remains (minor slips never reject)
     redo_images: dict[str, str]   # "scene id" / "thumbnail" / "slide N" -> corrected prompt
     redo_audio: dict[str, str]    # scene id -> tts text ("" = just re-voice)
     warnings: list[str]

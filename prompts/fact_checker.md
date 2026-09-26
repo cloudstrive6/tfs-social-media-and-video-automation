@@ -33,3 +33,6 @@ Return:
 - `names_living_person_with_allegation`: true ONLY if, after your edits, the script still names a living person
   in connection with an unproven allegation (this automatically skips the piece)
 If a piece can't be made safe by rewriting (e.g. the whole story only works by naming someone), answer `reject`.
+
+Length: your edits must not make the script longer. For verticals keep within the spoken-word limit given in
+the brief; if a fix needs words, cut elsewhere.

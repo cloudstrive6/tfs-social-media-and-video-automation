@@ -87,7 +87,7 @@ def split_by_scene(heard: list[tuple[str, float, float]], bounds: list[float]) -
     return [" ".join(w) for w in out]
 
 
-def proofread(script: Script, starts: list[float], video: Path) -> tuple[dict[str, str], list[str], str]:
+def proofread(script: Script, starts: list[float], video: Path) -> tuple[dict[str, str], list[str], str, bool]:
     total = duration(video)
     heard = split_by_scene(transcribe(video, proper_nouns(script)), starts + [total])
     rows = []
@@ -98,12 +98,13 @@ def proofread(script: Script, starts: list[float], video: Path) -> tuple[dict[st
     flagged = [r for r in rows if r["match"] < cfg().get("min_scene_match", 0.8)]
     avg = sum(r["match"] for r in rows) / max(len(rows), 1)
     if not flagged:
-        return {}, [], f"narration matches the script ({avg:.0%} word match)"
+        return {}, [], f"narration matches the script ({avg:.0%} word match)", False
     verdict = llm.structured("audio_qa", "Scenes whose transcription differs from the script:\n\n"
                              + json.dumps(flagged, ensure_ascii=False, indent=1), AudioQA)
     redo = {str(v.scene_id): v.tts_text for v in verdict.scenes if not v.ok}
-    warnings = [f"voice, scene {v.scene_id}: {v.problem}" for v in verdict.scenes if not v.ok]
-    return redo, warnings, f"{verdict.summary} ({avg:.0%} word match)"
+    warnings = [f"voice, scene {v.scene_id} ({v.severity}): {v.problem}" for v in verdict.scenes if not v.ok]
+    major = any(not v.ok and v.severity == "major" for v in verdict.scenes)
+    return redo, warnings, f"{verdict.summary} ({avg:.0%} word match)", major
 
 
 # ---------------------------------------------------------------- Visual QA
@@ -186,9 +187,10 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
         else:
             warnings.append(f"{v.frame}: blocking but not auto-fixable (card/caption) — {'; '.join(v.problems)}")
 
-    redo_audio, voice_warnings, voice_summary = proofread(script, starts, video)
+    redo_audio, voice_warnings, voice_summary, major = proofread(script, starts, video)
     warnings += voice_warnings
-    return ReviewReport(passed=not redo_images and not redo_audio, redo_images=redo_images, redo_audio=redo_audio,
+    return ReviewReport(passed=not redo_images and not redo_audio, major_audio=major, redo_images=redo_images,
+                        redo_audio=redo_audio,
                         warnings=warnings, appeal=appeal, hook_frame=hook_score,
                         summary=f"visual appeal {appeal}/10, hook frame {hook_score}/10; {voice_summary}")
 

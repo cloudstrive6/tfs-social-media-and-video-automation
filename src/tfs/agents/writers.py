@@ -14,7 +14,7 @@ def _brief(item: dict) -> str:
                       ensure_ascii=False, default=str)
 
 
-WORDS_PER_SECOND = 1.9
+WORDS_PER_SECOND = 1.8          # Josh at speed 1.1, Taglish with numbers written out as words
 
 
 def max_words(kind: str) -> int:
@@ -70,9 +70,10 @@ def hook_pass(item: dict, script: Script) -> HookReview:
     )
 
 
-def fact_check(script: Script, dossier: str) -> FactCheck:
+def fact_check(script: Script, dossier: str, kind: str = "") -> FactCheck:
+    fmt = f"# Format\n{_length(kind)}\n\n" if kind in ("long_form", "vertical") else ""
     return llm.structured(
         "fact_checker",
-        f"# Dossier (the only evidence you may rely on)\n{dossier}\n\n# Script\n{script.model_dump_json()}",
+        f"{fmt}# Dossier (the only evidence you may rely on)\n{dossier}\n\n# Script\n{script.model_dump_json()}",
         FactCheck,
     )

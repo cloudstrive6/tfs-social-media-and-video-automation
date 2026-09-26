@@ -78,7 +78,7 @@ tts:
     stability: 0.38
     similarity_boost: 0.8
     style: 0.35
-    speed: 1.04
+    speed: 1.1                            # brisk, Historically-like pace (ElevenLabs max 1.2)
   fishaudio:
     reference_id: ""                      # set in .env (FISH_AUDIO_VOICE_ID)
     model: s1
