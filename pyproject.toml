@@ -19,6 +19,9 @@ dependencies = [
   "tzdata>=2024.1",
   "truststore>=0.9",
   "faster-whisper>=1.1",
+  "rembg>=2.0.60",
+  "onnxruntime>=1.18",
+  "opencv-python-headless>=4.9",
 ]
 
 [project.optional-dependencies]

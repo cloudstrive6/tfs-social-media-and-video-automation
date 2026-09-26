@@ -504,3 +504,20 @@ def test_card_text_never_shows_source_tags_and_stays_off_the_button_strip(data_d
                        (1080, 1920))
     strip = img.crop((int(1080 * 0.87), int(1920 * 0.1), 1080, int(1920 * 0.55))).convert("L")
     assert max(strip.getdata()) < 90                  # nothing bright (text/paper/stamp) under the side buttons
+
+
+def test_parallax_moves_subject_more_than_background(data_dir, monkeypatch):
+    from PIL import Image, ImageDraw
+
+    from tfs.media import depth
+
+    bg = Image.new("RGB", (600, 1000), (20, 30, 60))
+    fg = Image.new("RGBA", (600, 1000), (0, 0, 0, 0))
+    ImageDraw.Draw(fg).ellipse([200, 300, 400, 700], fill=(250, 200, 50, 255))
+    monkeypatch.setattr(depth, "layers", lambda image: (bg, fg))
+    out = data_dir / "p.mp4"
+    assert depth.parallax_clip(data_dir / "x.png", 20, "pan_left", (270, 480), 30, out) and out.exists()
+    zb, bx, _, zf, fx, _ = depth._moves("pan_left", 1.0, 0.5, (270, 480))
+    assert abs(fx) > abs(bx) > 0 and zf != zb                  # parallax: the subject travels further
+    monkeypatch.setattr(depth, "layers", lambda image: None)   # no clear subject -> caller uses Ken Burns
+    assert depth.parallax_clip(data_dir / "x.png", 20, "push_in", (270, 480), 30, data_dir / "q.mp4") is False

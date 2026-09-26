@@ -129,7 +129,13 @@ images:
 video:
   long_form: {width: 1920, height: 1080, fps: 30, target_minutes: [10, 16]}
   vertical:  {width: 1080, height: 1920, fps: 30, target_seconds: [35, 58]}
-  seconds_per_image: 6        # Ken-Burns shot length; lower = more images = more cost
+  seconds_per_image: 6        # shot length; lower = more images = more cost
+  # How illustrations move: "2.5d" = subject cut out (rembg isnet-anime) and animated on its own layer over
+  # an inpainted background (parallax + breathing/bob, free); "kenburns" = plain zoom/pan on the flat image.
+  illustration_motion: 2.5d
+  cutout_model: isnet-anime
+  # AI image-to-video (Veo 3.1 Lite, ~$0.08/s at 1080p) is OFF by choice (26 Sep 2026: free 2.5D only for now).
+  ai_video: off
   music_dir: assets/music     # royalty-free beds (YouTube Audio Library / Epidemic etc.)
   music_volume_db: -24
   font: assets/fonts/Anton-Regular.ttf

@@ -48,7 +48,8 @@ def archive_item(item: dict) -> int:
     try:
         for path in sorted(d.rglob("*")):
             rel = path.relative_to(d).as_posix()
-            if not path.is_file() or path.name.startswith(".") or rel == MANIFEST or SKIP_DIRS & set(rel.split("/")[:-1]):
+            if (not path.is_file() or path.name.startswith(".") or rel == MANIFEST
+                    or path.name.endswith((".fg.png", ".bg.png", ".nofg")) or SKIP_DIRS & set(rel.split("/")[:-1]):
                 continue
             stamp = f"{path.stat().st_size}:{int(path.stat().st_mtime)}"
             if done.get(rel) == stamp:

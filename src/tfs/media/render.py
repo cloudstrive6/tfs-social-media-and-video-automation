@@ -57,6 +57,11 @@ def shot_clip(image: Path, frames: int, motion: str, size: tuple[int, int], fps:
         "-preset", "veryfast", "-crf", "18", "-r", str(fps), out.name], cwd=out.parent)
 
 
+def _parallax(image: Path, frames: int, motion: str, size: tuple[int, int], fps: int, out: Path) -> bool:
+    from .depth import parallax_clip
+    return parallax_clip(image, frames, motion, size, fps, out)
+
+
 def narration(clips: list[Clip], work: Path) -> tuple[Path, list[float]]:
     """Concatenate scene clips with a short gap. Returns (wav, scene start times)."""
     parts, starts, t = [], [], 0.0
@@ -209,7 +214,8 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
                 from .motion import animate_card
                 animate_card(shot.card["card_type"], shot.card["title"], shot.card["lines"], size, fps,
                              max(frames, 2), name, backdrop=shot.card.get("backdrop"))
-            else:
+            elif not (channel()["video"].get("illustration_motion", "2.5d") == "2.5d"
+                      and _parallax(shot.image, max(frames, 1), shot.motion, size, fps, name)):
                 shot_clip(shot.image, max(frames, 1), shot.motion, size, fps, name)
         names.append(name.name)
     (work / "shots.txt").write_text("".join(f"file '{n}'\n" for n in names), encoding="utf-8")
