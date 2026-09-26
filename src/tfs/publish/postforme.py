@@ -29,12 +29,19 @@ PLATFORMS = {
 }
 
 
-def _headers() -> dict:
-    return {"Authorization": f"Bearer {require_env('POSTFORME_API_KEY')}", "Content-Type": "application/json"}
+def _key(platform: str | None) -> str:
+    """POSTFORME_API_KEY_<PLATFORM> (e.g. a Quickstart project for TikTok/YouTube) overrides POSTFORME_API_KEY."""
+    if platform and env(f"POSTFORME_API_KEY_{platform.upper()}"):
+        return env(f"POSTFORME_API_KEY_{platform.upper()}")
+    return require_env("POSTFORME_API_KEY")
 
 
-def _call(method: str, path: str, **kw) -> dict:
-    r = requests.request(method, f"{API}{path}", headers=_headers(), timeout=60, **kw)
+def _headers(platform: str | None = None) -> dict:
+    return {"Authorization": f"Bearer {_key(platform)}", "Content-Type": "application/json"}
+
+
+def _call(method: str, path: str, platform: str | None = None, **kw) -> dict:
+    r = requests.request(method, f"{API}{path}", headers=_headers(platform), timeout=60, **kw)
     if r.status_code >= 400:
         raise RuntimeError(f"Post for Me {method} {path}: {r.status_code} {r.text[:500]}")
     return r.json()
@@ -46,16 +53,16 @@ def account_id(platform: str) -> str:
     override = env(f"POSTFORME_ACCOUNT_{platform.upper()}")
     if override:
         return override
-    accounts = _call("GET", "/social-accounts", params={"platform": platform})["data"]
+    accounts = _call("GET", "/social-accounts", platform, params={"platform": platform})["data"]
     connected = [a for a in accounts if a.get("status") == "connected"]
     if not connected:
         raise RuntimeError(f"No connected {platform} account in Post for Me — connect it in the dashboard")
     return connected[0]["id"]
 
 
-def upload(path: Path) -> str:
+def upload(path: Path, platform: str | None = None) -> str:
     """Upload a local file to Post for Me's storage and return its public media URL."""
-    urls = _call("POST", "/media/create-upload-url")
+    urls = _call("POST", "/media/create-upload-url", platform)
     content_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     with path.open("rb") as f:
         r = requests.put(urls["upload_url"], data=f, headers={"Content-Type": content_type}, timeout=1800)
@@ -69,9 +76,9 @@ def create_post(platform_key: str, caption: str, media: list[Path], slot: dateti
     platform, placement = PLATFORMS[platform_key]
     items = []
     for i, path in enumerate(media):
-        item = {"url": upload(path)}
+        item = {"url": upload(path, platform)}
         if i == 0 and thumbnail:
-            item["thumbnail_url"] = upload(thumbnail)
+            item["thumbnail_url"] = upload(thumbnail, platform)
         items.append(item)
 
     config: dict = {}
@@ -96,9 +103,9 @@ def create_post(platform_key: str, caption: str, media: list[Path], slot: dateti
     }
     if slot > now():
         body["scheduled_at"] = slot.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return _call("POST", "/social-posts", json=body)["id"]
+    return _call("POST", "/social-posts", platform, json=body)["id"]
 
 
-def results(post_id: str) -> list[dict]:
+def results(post_id: str, platform_key: str) -> list[dict]:
     """Per-account outcome once Post for Me has attempted the post (empty while still scheduled)."""
-    return _call("GET", "/social-post-results", params={"post_id": post_id})["data"]
+    return _call("GET", "/social-post-results", PLATFORMS[platform_key][0], params={"post_id": post_id})["data"]

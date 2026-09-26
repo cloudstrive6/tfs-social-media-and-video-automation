@@ -254,7 +254,7 @@ def reconcile() -> None:
         late = now() - datetime.fromisoformat(post["slot_at"])
         if late < timedelta(minutes=20):
             continue
-        res = postforme.results(post["remote_id"])
+        res = postforme.results(post["remote_id"], post["platform"])
         if not res:
             if late > timedelta(hours=3):
                 db.finish_post(post["id"], "failed", post["remote_id"], "no result from Post for Me after 3h")
