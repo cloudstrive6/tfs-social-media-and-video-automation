@@ -88,6 +88,9 @@ def _elevenlabs(text: str, speaker: str, out: Path, prev_text: str, next_text: s
         body.pop("language_code")
         r = requests.post(url, params={"output_format": "mp3_44100_128"}, headers=headers, json=body, timeout=180)
     if r.status_code >= 400:
+        if "quota_exceeded" in r.text:              # out of credits: wait for a top-up instead of failing items
+            from ..llm import UsageLimitError
+            raise UsageLimitError(f"ElevenLabs credits exhausted: {r.text[:200]}")
         raise RuntimeError(f"ElevenLabs {r.status_code}: {r.text[:500]}")
     data = r.json()
     out.write_bytes(base64.b64decode(data["audio_base64"]))

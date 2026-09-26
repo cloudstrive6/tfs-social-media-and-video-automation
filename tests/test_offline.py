@@ -747,3 +747,17 @@ def test_metadata_follows_every_platform_rule():
     fixed = limits.enforce_seo(pack)
     assert len(limits.HASHTAG.findall(fixed.instagram_caption)) == 30
     assert len(fixed.tiktok_caption) <= 2200 and fixed.tags == ["a b"]
+
+
+def test_out_of_elevenlabs_credits_pauses_instead_of_failing(data_dir, monkeypatch):
+    from tfs.llm import UsageLimitError
+    from tfs.media import tts
+
+    class R:
+        status_code, text = 401, '{"detail":{"code":"quota_exceeded","status":"quota_exceeded"}}'
+
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "k")
+    monkeypatch.setenv("ELEVENLABS_VOICE_ID", "v")
+    monkeypatch.setattr(tts.requests, "post", lambda url, **kw: R())
+    with pytest.raises(UsageLimitError):
+        tts._elevenlabs("a", "NARRATOR", data_dir / "a.mp3", "", "")

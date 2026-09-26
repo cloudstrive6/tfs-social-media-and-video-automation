@@ -472,6 +472,15 @@ def _notify_live(post: dict, remote_id: str) -> None:
                 f"{_post_link(post['platform'], remote_id)}")
 
 
+def _alert_once(key: str, text: str, hours: int = 6) -> None:
+    """Telegram alert at most once per `hours` for the same kind of problem (marker file travels with the state)."""
+    marker = data_dir() / f"alert_{key}.txt"
+    if marker.exists() and now() - datetime.fromisoformat(marker.read_text().strip()) < timedelta(hours=hours):
+        return
+    notify.send(text)
+    marker.write_text(now().isoformat(timespec="seconds"))
+
+
 def produce(item_id: str) -> None:
     item = db.get_item(item_id)
     d = item_dir(item_id)
@@ -482,7 +491,10 @@ def produce(item_id: str) -> None:
         else:
             _produce_video(item, d, dossier)
     except UsageLimitError as e:
-        log.warning("Claude usage limit reached; %s will retry on the next tick (%s)", item_id, e)
+        log.warning("usage limit reached; %s will retry on the next run (%s)", item_id, e)
+        _alert_once("limit", f"⏸️ Production paused: {str(e)[:300]}\n"
+                    "Items are kept and retried every run; nothing broken is posted. "
+                    "Top up / upgrade and it resumes by itself.")
     except Exception as e:
         log.exception("production failed for %s", item_id)
         db.set_status(item_id, "failed", str(e)[:2000])
