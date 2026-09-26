@@ -1,11 +1,9 @@
 # Actions -> sound-library -> Run workflow: one-time (re-runnable) build of the music beds and sound effects
 # with ElevenLabs. Only missing files are generated; the library is stored in the private R2 state.
+# Not in the tfs-state queue: it only adds library files, and runs pick them up at their next start.
 name: sound-library
 on:
   workflow_dispatch:
-concurrency:
-  group: tfs-state
-  cancel-in-progress: false
 jobs:
   run:
     uses: ./.github/workflows/_run.yml
