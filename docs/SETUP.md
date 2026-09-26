@@ -71,6 +71,13 @@ illustration, the narration, the script, captions and sources, and an `item.json
 It uses the application key `tfs-archive-github-actions` (read and write on that bucket only), stored in
 `B2_KEY_ID` / `B2_APP_KEY`. Archiving never blocks posting: a failed upload is retried the next time.
 
+## 5c. Sound library — ElevenLabs (one time)
+Run GitHub → Actions → **sound-library** once. It generates 12 instrumental music beds (curious, wonder,
+investigative, satire, somber, hopeful, historical, kulintang, suspense, archival, news, lo-fi) and about 25
+sound effects with ElevenLabs. They're stored in the private R2 state under `library/`, not in this public
+repo, and every video reuses them. Re-running only generates what's missing. It needs a paid ElevenLabs plan
+(commercial use is allowed on paid plans) and an API key with Sound Effects and Music permissions.
+
 ## 6. Publishing
 | Platform | How | Setup |
 |---|---|---|

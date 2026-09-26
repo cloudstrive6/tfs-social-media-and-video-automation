@@ -677,3 +677,41 @@ def test_one_off_narration_flag_is_a_note_not_a_rejection(data_dir, monkeypatch)
     monkeypatch.setattr(qa, "safe", lambda fn, built: next(rounds))
     built, report = pipeline._reviewed(db.get_item("w"), d, lambda: "built", lambda b: None, lambda r: None)
     assert built == "built" and report.major_scenes == ["9"]           # accepted; the flag becomes a note
+
+
+def test_music_and_effects_are_mixed_under_the_narration(data_dir):
+    import subprocess
+
+    from tfs.media import cards, render, sound
+    from tfs.media.tts import Clip, duration
+    from tfs.models import MusicCue, SfxCue, SoundPlan
+
+    lib = sound.library_dir()
+    (lib / "music").mkdir(parents=True)
+    (lib / "sfx").mkdir(parents=True)
+    tone = lambda f, secs, out: subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
+                                                f"sine=frequency={f}:duration={secs}", "-q:a", "5", str(out)],
+                                               check=True)
+    tone(330, 8, lib / "music" / "curious.mp3")
+    tone(880, 0.5, lib / "sfx" / "pop.mp3")
+    tone(600, 0.8, lib / "sfx" / "whoosh_soft.mp3")
+    tone(200, 1.2, lib / "sfx" / "gavel.mp3")
+    clips, shots = [], []
+    for i in range(2):
+        mp3 = data_dir / f"n{i}.mp3"
+        tone(440, 2, mp3)
+        clips.append(Clip(mp3, duration(mp3), [("Ang", 0.1, 0.4), ("korte", 0.5, 1.0), ("nagpasya.", 1.1, 1.8)]))
+    img = cards.render_card("stat", "Kailangang boto", ["16"], (540, 960), data_dir / "c.png")
+    shots = [render.Shot(img, "card", card={"card_type": "stat", "title": "Kailangang boto", "lines": ["16"]}),
+             render.Shot(img, "push_in")]
+    plan = SoundPlan(music=[MusicCue(from_scene=10, mood="curious")],
+                     sfx=[SfxCue(scene_id=11, anchor_word="nagpasya", sound="gavel")])
+    segments, events = sound.timeline(plan, shots, clips, [10, 11], [0.0, 2.3], 4.6, "vertical")
+    assert segments and segments[0][0] == 0.0
+    keys = [e.path.stem for e in events]
+    assert "pop" in keys and "gavel" in keys and "whoosh_soft" in keys
+    gavel = next(e for e in events if e.path.stem == "gavel")
+    assert abs(gavel.at - (2.3 + 1.1)) < 0.01                    # lands exactly on "nagpasya"
+    out, _ = render.render(shots, clips, "vertical", data_dir / "work", data_dir / "v.mp4", "", plan, [10, 11])
+    assert (data_dir / "work" / "mix.wav").exists()
+    assert abs(duration(out) - duration(data_dir / "work" / "narration.wav")) < 0.15

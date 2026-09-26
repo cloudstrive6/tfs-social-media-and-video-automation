@@ -209,7 +209,8 @@ def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple
     clips = tts.synthesize(_voiced(script, d), d / "audio")
     video, starts_file = d / "video.mp4", d / "starts.json"
     if not video.exists():
-        _, starts = render.render(shots, clips, kind, d / "work", video, hook.on_screen_hook_text)
+        _, starts = render.render(shots, clips, kind, d / "work", video, hook.on_screen_hook_text,
+                                  sound_plan=_sound_plan(item, d, script), scene_ids=[sc.id for sc in script.scenes])
         starts_file.write_text(json.dumps(starts))
     starts = json.loads(starts_file.read_text())
     thumb_path, thumb_moment = None, "(no custom thumbnail)"
@@ -228,6 +229,25 @@ def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple
 
 AUDIO_EXTRA_ROUNDS = 2   # extra re-voice rounds when only the narration still has a major problem
 MAX_IMAGE_ATTEMPTS = 1   # regenerate a failing shot once; if it fails again it is replaced (never sinks the video)
+
+
+def _sound_plan(item: dict, d: Path, script: Script):
+    """Sound Designer: music moods + accent effects from the library (None -> code-only effects/no music)."""
+    from .media import sound
+    from .models import SoundPlan
+
+    music, sfx = sound.available()
+    if not (music or sfx) or not channel().get("sound", {}).get("enabled", True):
+        return None
+    try:
+        shots = ShotList.model_validate_json((d / "shots.json").read_text(encoding="utf-8"))
+        return cached(d / "sound.json", SoundPlan,
+                      lambda: packaging.sound_plan(item, script, shots, sound.describe_library()))
+    except UsageLimitError:
+        raise
+    except Exception:
+        log.exception("sound designer failed; default music, animation effects only")
+        return None
 
 
 def _save_fixes(d: Path, report: ReviewReport) -> list[str]:

@@ -78,7 +78,8 @@ def pull() -> None:
     if f"{PREFIX}{DB}" in keys:
         _download(f"{PREFIX}{DB}")
     for key in keys:                                # notes, schedule override, tokens
-        if "/" not in key[len(PREFIX):] or key.startswith(f"{PREFIX}analyst_notes/"):
+        if ("/" not in key[len(PREFIX):] or key.startswith(f"{PREFIX}analyst_notes/")
+                or key.startswith(f"{PREFIX}library/")):                 # music + sound effects library
             if key != f"{PREFIX}{DB}":
                 _download(key)
     active = _active_items()
@@ -99,6 +100,18 @@ def _snapshot() -> Path:
         src.close()
         dst.close()
     return snap
+
+
+def push_library() -> int:
+    """Upload the sound library (used by the one-time build job, which has no database)."""
+    if not enabled():
+        raise SystemExit("no R2 state bucket configured")
+    s3, bucket, sent = _s3(), _bucket(), 0
+    for path in (data_dir() / "library").rglob("*"):
+        if path.is_file():
+            s3.upload_file(str(path), bucket, PREFIX + _rel(path))
+            sent += 1
+    return sent
 
 
 def push() -> int:

@@ -207,3 +207,20 @@ class ReviewReport(BaseModel):
     appeal: int
     hook_frame: int
     summary: str
+
+
+# ---------- Sound ----------
+class MusicCue(BaseModel):
+    from_scene: int               # scene id where this mood starts
+    mood: str                     # a music key from the library
+
+
+class SfxCue(BaseModel):
+    scene_id: int
+    anchor_word: str              # the word in that scene the effect lands on
+    sound: str                    # an effect key from the library
+
+
+class SoundPlan(BaseModel):
+    music: list[MusicCue]
+    sfx: list[SfxCue]

@@ -26,6 +26,7 @@ def main() -> None:
         "--kind", choices=["vertical", "carousel"], default="vertical")
     sub.add_parser("hold", help="stop posts that haven't gone live yet (one item, or all); never deletes").add_argument(
         "item_id", nargs="?", default="")
+    sub.add_parser("build-sound-library", help="one-time: generate music beds + sound effects with ElevenLabs into R2")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
     sub.add_parser("preview-styles", help="generate one sample image per art style")
     sub.add_parser("telegram-setup", help="print the chat id(s) that messaged the bot; send a test message")
@@ -78,6 +79,13 @@ def main() -> None:
         case "hold":
             from .hold import run as hold
             print("\n".join(hold("held by request", a.item_id)) or "nothing to hold")
+        case "build-sound-library":
+            from . import state
+            from .media import sound
+            if state.enabled():
+                state.pull()                         # keep what's already built (only missing items are made)
+            made = sound.build_library()
+            print(f"generated {len(made)} new files; uploaded {state.push_library()} library files to R2")
         case "verify":
             from .verify import run_all
             sys.exit(0 if run_all() else 1)

@@ -189,7 +189,8 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
         else:
             warnings.append(f"{v.frame}: blocking but not auto-fixable (card/caption) — {'; '.join(v.problems)}")
 
-    redo_audio, voice_warnings, voice_summary, major = proofread(script, starts, video)
+    voice = d / "work" / "narration.wav"                     # clean voice track (no music/effects)
+    redo_audio, voice_warnings, voice_summary, major = proofread(script, starts, voice if voice.exists() else video)
     warnings += voice_warnings
     return ReviewReport(passed=not redo_images and not redo_audio, major_audio=bool(major), major_scenes=major,
                         redo_images=redo_images,

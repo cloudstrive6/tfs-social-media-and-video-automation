@@ -187,14 +187,8 @@ def srt(clips: list[Clip], starts: list[float], out: Path) -> None:
     out.write_text("\n".join(lines), encoding="utf-8")
 
 
-def _music() -> Path | None:
-    folder = ROOT / channel()["video"]["music_dir"]
-    tracks = [p for p in folder.glob("*") if p.suffix.lower() in (".mp3", ".wav", ".m4a")] if folder.exists() else []
-    return random.choice(tracks) if tracks else None
-
-
 def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Path,
-           hook_text: str = "") -> tuple[Path, list[float]]:
+           hook_text: str = "", sound_plan=None, scene_ids: list[int] | None = None) -> tuple[Path, list[float]]:
     """Returns the final mp4 and each scene's start time (for chapters)."""
     vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
     size, fps = (vcfg["width"], vcfg["height"]), vcfg["fps"]
@@ -222,14 +216,18 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
     ff(["-f", "concat", "-safe", "0", "-i", "shots.txt", "-c", "copy", "video.mp4"], cwd=work)
 
     srt(clips, starts, work / "captions.srt")
-    inputs = ["-i", "video.mp4", "-i", "narration.wav"]
-    music = _music()
-    if music:
-        inputs += ["-stream_loop", "-1", "-i", str(music.resolve())]
-        audio = (f"[2:a]volume={channel()['video']['music_volume_db']}dB[m];"
-                 "[1:a][m]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]")
-    else:
-        audio = "[1:a]loudnorm=I=-14:TP=-1.5:LRA=11[a]"
+    audio_file = "narration.wav"
+    if channel().get("sound", {}).get("enabled", True):
+        from . import sound
+        try:
+            segments, events = sound.timeline(sound_plan, shots, clips, scene_ids or list(range(len(clips))),
+                                              starts, total, kind)
+            if segments or events:
+                audio_file = sound.mix(wav, total, segments, events, work).name
+        except Exception:
+            log.exception("music/sfx mix failed; narration only")
+    inputs = ["-i", "video.mp4", "-i", audio_file]
+    audio = "[1:a]loudnorm=I=-14:TP=-1.5:LRA=11[a]"
 
     if kind == "vertical":
         captions_ass(clips, starts, size, hook_text, work / "captions.ass")

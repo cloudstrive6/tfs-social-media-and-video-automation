@@ -75,6 +75,19 @@ def preflight_shots(item: dict, script: Script, shots: ShotList, dossier: str) -
     )
 
 
+def sound_plan(item: dict, script: Script, shots: ShotList, library: str) -> "SoundPlan":
+    from ..models import SoundPlan
+
+    brief = [{"scene_id": sc.id, "chapter": sc.chapter, "text": sc.text,
+              "shot": next((f"{s.kind}:{s.card_type}" if s.kind == "card" else s.kind
+                            for s in shots.shots if s.scene_id == sc.id), "")} for sc in script.scenes]
+    return llm.structured(
+        "sound_designer",
+        f"Format: {item['kind']}\nLibrary: {library}\n\n# Scenes\n" + json.dumps(brief, ensure_ascii=False),
+        SoundPlan,
+    )
+
+
 def carousel(item: dict, dossier: str) -> Carousel:
     return llm.structured(
         "carousel_designer",

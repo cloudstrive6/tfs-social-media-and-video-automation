@@ -41,6 +41,7 @@ llm:
     audio_qa:         {model: claude-opus-5, effort: medium}
     narration_editor: {model: claude-opus-5, effort: medium}
     preflight_art:    {model: claude-opus-5, effort: high}
+    sound_designer:   {model: claude-opus-5, effort: medium}
     visual_qa:        {model: claude-opus-5, effort: high}
 
 # Quality gates: a slot is SKIPPED rather than filled with a weak piece.
@@ -139,7 +140,13 @@ video:
   cutout_model: isnet-anime
   # AI image-to-video (Veo 3.1 Lite, ~$0.08/s at 1080p) is OFF by choice (26 Sep 2026: free 2.5D only for now).
   ai_video: off
-  music_dir: assets/music     # royalty-free beds (YouTube Audio Library / Epidemic etc.)
-  music_volume_db: -24
   font: assets/fonts/Anton-Regular.ttf
   caption_font: assets/fonts/Montserrat-ExtraBold.ttf
+
+# Music + sound effects: a library generated ONCE with ElevenLabs (`sound-library` workflow), stored in the
+# private R2 state under library/ (not in this public repo), reused by every video. Music is ducked under the
+# narration automatically.
+sound:
+  enabled: true
+  music_model: music_v1
+  music_seconds: 120
