@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import json
 import re
 import subprocess
@@ -12,6 +13,7 @@ import requests
 
 from ..config import channel, env, require_env
 
+log = logging.getLogger(__name__)
 V3_TAGS = {"laugh", "laughs", "whisper", "whispers", "sigh", "sighs", "sarcastic", "excited", "curious"}
 
 
@@ -77,11 +79,16 @@ def _elevenlabs(text: str, speaker: str, out: Path, prev_text: str, next_text: s
         body["language_code"] = cfg["language_code"]
     if cfg["model_id"] != "eleven_v3":           # request stitching keeps prosody continuous across scenes
         body |= {"previous_text": prev_text[-300:], "next_text": next_text[:300]}
-    r = requests.post(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{_voice_for(speaker)}/with-timestamps",
-        params={"output_format": "mp3_44100_128"},
-        headers={"xi-api-key": require_env("ELEVENLABS_API_KEY")}, json=body, timeout=180)
-    r.raise_for_status()
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{_voice_for(speaker)}/with-timestamps"
+    headers = {"xi-api-key": require_env("ELEVENLABS_API_KEY")}
+    r = requests.post(url, params={"output_format": "mp3_44100_128"}, headers=headers, json=body, timeout=180)
+    if r.status_code == 400 and "language_code" in body:     # a language setting must never stop a video
+        log.warning("ElevenLabs rejected language_code=%s (%s); retrying without it",
+                    body["language_code"], r.text[:300])
+        body.pop("language_code")
+        r = requests.post(url, params={"output_format": "mp3_44100_128"}, headers=headers, json=body, timeout=180)
+    if r.status_code >= 400:
+        raise RuntimeError(f"ElevenLabs {r.status_code}: {r.text[:500]}")
     data = r.json()
     out.write_bytes(base64.b64decode(data["audio_base64"]))
     return _words_from_alignment(data["alignment"])

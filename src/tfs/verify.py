@@ -38,7 +38,15 @@ def _elevenlabs() -> str:
     r = requests.get(f"https://api.elevenlabs.io/v1/voices/{env('ELEVENLABS_VOICE_ID')}", timeout=20,
                      headers={"xi-api-key": env("ELEVENLABS_API_KEY")})
     r.raise_for_status()
-    return f"voice '{r.json().get('name')}' reachable with the API key"
+    from .config import channel
+    model = channel()["tts"]["elevenlabs"]["model_id"]
+    models = requests.get("https://api.elevenlabs.io/v1/models", timeout=20,
+                          headers={"xi-api-key": env("ELEVENLABS_API_KEY")}).json()
+    langs = next((m.get("languages", []) for m in models if m.get("model_id") == model), [])
+    fil = [f"{x.get('language_id')}={x.get('name')}" for x in langs
+           if any(k in (x.get("name") or "").lower() for k in ("filip", "tagal"))]
+    return (f"voice '{r.json().get('name')}' reachable; model {model} Filipino language ids: {fil or 'none listed'} "
+            f"({len(langs)} languages)")
 
 
 def _postforme() -> str:

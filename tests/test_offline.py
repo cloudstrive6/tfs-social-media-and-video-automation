@@ -533,8 +533,7 @@ def test_narrator_is_told_the_text_is_filipino(data_dir, monkeypatch, model, exp
     sent = {}
 
     class R:
-        def raise_for_status(self):
-            pass
+        status_code, text = 200, ""
 
         def json(self):
             return {"audio_base64": base64.b64encode(b"mp3").decode(),
@@ -559,3 +558,27 @@ def test_no_tofu_boxes_and_quotes_read_the_right_way_round(data_dir):
     frames = list(motion._quote("Marcos, 1972", ["Martial law is declared over the entire country today"],
                                 (540, 960), 2))
     assert frames                                              # swapped internally: quote big, source small
+
+
+def test_rejected_language_code_retries_without_it(data_dir, monkeypatch):
+    import base64
+
+    from tfs.media import tts
+
+    bodies = []
+
+    class R:
+        def __init__(self, code):
+            self.status_code, self.text = code, "language_code not supported"
+
+        def json(self):
+            return {"audio_base64": base64.b64encode(b"mp3").decode(),
+                    "alignment": {"characters": ["a"], "character_start_times_seconds": [0],
+                                  "character_end_times_seconds": [.1]}}
+
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "k")
+    monkeypatch.setenv("ELEVENLABS_VOICE_ID", "v")
+    monkeypatch.setattr(tts.requests, "post",
+                        lambda url, **kw: bodies.append(dict(kw["json"])) or R(400 if "language_code" in kw["json"] else 200))
+    tts._elevenlabs("a", "NARRATOR", data_dir / "a.mp3", "", "")
+    assert "language_code" in bodies[0] and "language_code" not in bodies[1]
