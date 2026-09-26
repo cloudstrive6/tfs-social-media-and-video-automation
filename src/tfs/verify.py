@@ -40,8 +40,12 @@ def _elevenlabs() -> str:
     r.raise_for_status()
     from .config import channel
     model = channel()["tts"]["elevenlabs"]["model_id"]
-    models = requests.get("https://api.elevenlabs.io/v1/models", timeout=20,
-                          headers={"xi-api-key": env("ELEVENLABS_API_KEY")}).json()
+    resp = requests.get("https://api.elevenlabs.io/v1/models", timeout=20,
+                        headers={"xi-api-key": env("ELEVENLABS_API_KEY")})
+    models = resp.json()
+    if not isinstance(models, list):
+        return (f"voice '{r.json().get('name')}' reachable; model list unavailable "
+                f"(HTTP {resp.status_code}: {str(models)[:200]})")
     langs = next((m.get("languages", []) for m in models if m.get("model_id") == model), [])
     fil = [f"{x.get('language_id')}={x.get('name')}" for x in langs
            if any(k in (x.get("name") or "").lower() for k in ("filip", "tagal"))]
