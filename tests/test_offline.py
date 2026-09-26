@@ -58,18 +58,20 @@ def test_db_item_and_post_flow():
     assert db.get_item("2026-09-28-long0")["data"]["title"] == "The ₱5 BILLION Wall"
 
 
-def test_gate_routes_allegations_to_human(monkeypatch):
+def test_gate_is_fully_automatic(monkeypatch):
     from tfs import db, pipeline
     from tfs.models import FactCheck, Script
 
     monkeypatch.setattr(pipeline.notify, "send", lambda text: None)
+    empty = Script(scenes=[], sources=[])
     db.upsert_item("i1", "long_form", "2026-09-28T08:00:00+08:00", "planned", {})
-    fc = FactCheck(verdict="pass", script=Script(scenes=[], sources=[]), issues=[],
-                   names_living_person_with_allegation=True)
-    assert pipeline._gate(db.get_item("i1"), fc) is False
-    assert db.get_item("i1")["status"] == "awaiting_approval"
-    db.set_status("i1", "approved", approved=True)
-    assert pipeline._gate(db.get_item("i1"), fc) is True
+    clean = FactCheck(verdict="pass_with_edits", script=empty, issues=[], names_living_person_with_allegation=False)
+    assert pipeline._gate(db.get_item("i1"), clean) is True          # names rewritten to roles -> publishes
+
+    db.upsert_item("i2", "long_form", "2026-09-28T08:00:00+08:00", "planned", {})
+    named = FactCheck(verdict="pass", script=empty, issues=[], names_living_person_with_allegation=True)
+    assert pipeline._gate(db.get_item("i2"), named) is False         # still names someone -> auto-skip
+    assert db.get_item("i2")["status"] == "skipped"                  # never waits for a human
 
 
 def _tone(path, seconds):

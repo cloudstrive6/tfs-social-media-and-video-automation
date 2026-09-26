@@ -26,6 +26,8 @@ Exactly 1 slide, `layout: panel`, `style: satire`: one editorial cartoon that ma
 ## Rules for every format
 - Real living officials: never their likeness. Only the fictional Tito Trapo archetype or a labelled silhouette
   ("ISANG SENADOR", "THE CONTRACTOR"). Attribute every allegation ("ayon sa COA…").
+- Names: only historical figures or people with a final court conviction. Allegations and investigations use
+  roles only, never names.
 - Never ask the image model for text. All words live in `headline` / `body` and are drawn by our code.
 - Humor punches up at power and absurdity, never at ordinary Filipinos, regions, religion or class.
 - Every factual slide carries a `source`. Same legal rules as the Fact-Check desk.

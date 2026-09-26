@@ -43,9 +43,9 @@ llm:
 quality:
   min_hook_score: 8          # hook_master self-score out of 10
   min_script_score: 8
-  require_human_approval_for:
-    - names_living_person_with_allegation   # corruption content naming someone -> approval queue
-  approval_timeout_action: skip            # skip | publish  (skip is the safe default)
+  # Fully automated: no human approval step. Unproven allegations are rewritten to roles by the fact-checker;
+  # anything that still names a living person over an unproven allegation is skipped automatically.
+  require_human_approval_for: []
 
 # Who publishes. direct = our own API access:
 #   YouTube + Shorts -> Google Cloud project "tfs-automation" (YouTube Data API)

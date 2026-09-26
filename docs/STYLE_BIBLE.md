@@ -105,10 +105,10 @@ Why the Philippines is the way it is: history → culture → the systems that c
   always legible).
 
 ### 2.5 Hard rules (enforced by the Fact-Check & Legal agent)
-1. Every factual claim about a **living person** must have ≥2 independent credible sources (or 1 primary source:
-   COA report, court decision, Senate/House record, Ombudsman filing). Otherwise it is cut.
-2. Say **"alleged", "accused", "according to the COA report"** until a court rules. Never state guilt that a court
-   hasn't found.
+1. **Naming:** name people only for history or when a FINAL court conviction exists (cite it). Allegations,
+   hearings, audits and ongoing cases use **roles only** ("isang senador", "the contractor"), never names.
+2. Every factual claim needs ≥2 independent credible sources or 1 primary source (COA report, court decision,
+   Senate/House record, Ombudsman filing); otherwise it is cut. Say "alleged" / "ayon sa COA" until a court rules.
 3. No doxxing, no private individuals, no content targeting a family member who holds no office.
 4. Satire must be *recognisably* satire and aimed at conduct, not at identity.
 5. All sources go in the description ("📚 Sources / Resibo").

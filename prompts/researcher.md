@@ -16,7 +16,9 @@ Dated bullet list of events.
 Numbered facts. Each ends with `[S#]` pointing to the source list. Money in ₱ with the year.
 
 ## People involved
-For every living person: their role, and **exactly** what is established vs. alleged, with source.
+For every living person: their role, and **exactly** what is established vs. alleged, with source. Flag clearly
+whether a FINAL court conviction exists (court, case number, year). Only those, plus historical figures, may be
+named on air; everyone else will be referred to by role.
 (e.g. "Charged with X before the Sandiganbayan (2025) [S3]; has denied wrongdoing [S4]").
 
 ## Surprising / counter-intuitive angles

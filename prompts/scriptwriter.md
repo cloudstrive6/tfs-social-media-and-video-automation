@@ -25,7 +25,14 @@ No intro, no ritual. End on a loop line that makes the first line hit again, or 
 - Sarcasm targets the powerful and the absurd; never ordinary Filipinos, regions, ethnicity, religion or class.
 - Numbers: say them the way a person would ("halos ₱5.5 billion — ganun kalaki") and add a `[CARD: …]` cue.
 - Every factual line that came from the dossier ends with its `[S#]` tag (stripped before narration).
-- Allegations stay allegations: "ayon sa COA", "inaakusahan", "itinanggi niya".
+- Allegations stay allegations: "ayon sa COA", "inaakusahan", "itinanggi ng opisyal".
+- Naming policy:
+- NAME people only when (a) the story is history (deceased figures or settled historical events), or (b) the
+  person has a FINAL court conviction for the act described; cite the decision (court, case, year).
+- For allegations, complaints, hearings, audits or anything still under investigation or on appeal: NEVER name
+  the person. Use only their role ("isang senador", "a DPWH district engineer", "the contractor", "isang
+  kongresista mula sa Luzon"). Do not add identifying details that make the role point to one obvious person.
+- Institutions, agencies, projects, documents and amounts may always be named ("ayon sa COA 2025 audit ng DPWH…").
 - Delivery cues the narrator engine understands: `...` for a beat, *italic* word for stress,
   `[pause]` for a longer beat, `[laugh]`, `[whisper]`, `[sigh]`.
 

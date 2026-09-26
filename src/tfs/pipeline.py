@@ -49,7 +49,13 @@ def _gate(item: dict, fc: FactCheck) -> bool:
         db.set_status(iid, "skipped", "fact-check rejected")
         notify.send(f"⛔ {iid} rejected by fact-check: " + "; ".join(i.problem for i in fc.issues[:5]))
         return False
-    rules = channel()["quality"]["require_human_approval_for"]
+    rules = channel()["quality"].get("require_human_approval_for", [])
+    if not rules and (fc.verdict == "needs_human" or fc.names_living_person_with_allegation):
+        reason = ("still names a living person over an unproven allegation" if fc.names_living_person_with_allegation
+                  else "fact-check could not clear it")
+        db.set_status(iid, "skipped", f"auto-skipped: {reason}")
+        notify.send(f"⏭️ {iid} auto-skipped ({reason}). The slot will be filled next cycle.")
+        return False
     if fc.verdict == "needs_human" or (fc.names_living_person_with_allegation
                                        and "names_living_person_with_allegation" in rules):
         db.set_status(iid, "awaiting_approval")
