@@ -1,0 +1,50 @@
+# Posting slots in Asia/Manila time (PHT, UTC+8).
+#
+# Philippine audiences peak at the morning commute (7–9), lunch (12–1) and the long evening
+# prime (7–11 PM). Long-form goes out 1–2 h BEFORE a peak so it has early velocity when the
+# crowd arrives. Verticals are staggered so the same clip never hits every platform at once.
+# The analyst agent rewrites these slots weekly from real analytics (see `tfs analyze`).
+
+production_lead_hours: 6      # everything is rendered at least this long before its slot
+
+youtube_long:                 # 1 / day to start (YouTube "inauthentic content" policy); add slots to scale
+  - "18:00"
+
+youtube_shorts:               # 3 / day
+  - "10:30"
+  - "15:30"
+  - "20:30"
+
+instagram_reels:              # 3 / day (same vertical masters, own captions)
+  - "07:30"
+  - "12:30"
+  - "20:00"
+
+instagram_carousels:          # 2 / day
+  - "11:00"
+  - "19:00"
+
+tiktok:                       # 3 / day via Post for Me — enable once the account is connected there
+  enabled: false
+  slots:
+    - "12:00"
+    - "18:30"
+    - "21:30"
+
+facebook_reels:               # 3 / day
+  - "08:30"
+  - "13:30"
+  - "19:30"
+
+facebook_posts:               # 2 / day (carousel / multi-photo posts)
+  - "10:00"
+  - "20:30"
+
+# Daily production that feeds the slots above:
+#   1 long-form video   -> youtube_long
+#   3 vertical videos   -> youtube_shorts + instagram_reels + facebook_reels + tiktok
+#   2 carousels         -> instagram_carousels + facebook_posts
+daily_production:
+  long_form: 1
+  vertical: 3
+  carousel: 2

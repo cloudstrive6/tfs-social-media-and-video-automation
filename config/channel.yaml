@@ -1,0 +1,90 @@
+# Brand + model settings shared by every agent.
+channel:
+  name: The Filipino Standard
+  handle: "@TheFilipinoStandard"
+  narrator_persona: Kuya Standard
+  series_tag: "Standard Issue"          # said after every cold open: "Standard Issue #42."
+  language: taglish                     # taglish | tagalog | english
+  timezone: Asia/Manila
+  links:
+    youtube: https://www.youtube.com/@TheFilipinoStandard
+    facebook: https://www.facebook.com/TheFilipinoStandard/
+    instagram: https://www.instagram.com/thefilipinostandard
+    tiktok: ""                          # add later
+
+pillars:                                # target share of the weekly slate
+  now_explained: 0.35
+  history_retold: 0.30
+  why_were_like_this: 0.20
+  myths_factchecks: 0.15
+
+# Claude. backend: claude_code = Claude Max subscription via the Claude Code CLI (CLAUDE_CODE_OAUTH_TOKEN);
+# api = Console API key (ANTHROPIC_API_KEY). With claude_code, an API key (if set) is used only as a
+# fallback when the subscription's usage window runs out.
+# Switching the high-volume agents to claude-sonnet-5 stretches the subscription's limits (or cuts API cost ~60%).
+llm:
+  backend: claude_code
+  default_model: claude-opus-5
+  agents:
+    trend_scout:      {model: claude-opus-5, effort: medium}
+    editor_in_chief:  {model: claude-opus-5, effort: high}
+    researcher:       {model: claude-opus-5, effort: high}
+    scriptwriter:     {model: claude-opus-5, effort: high}
+    hook_master:      {model: claude-opus-5, effort: high}
+    fact_checker:     {model: claude-opus-5, effort: high}
+    title_writer:     {model: claude-opus-5, effort: medium}
+    thumbnail_artist: {model: claude-opus-5, effort: medium}
+    seo_writer:       {model: claude-opus-5, effort: medium}
+    visual_director:  {model: claude-opus-5, effort: medium}
+    carousel_designer: {model: claude-opus-5, effort: medium}
+    analyst:          {model: claude-opus-5, effort: high}
+
+# Quality gates: a slot is SKIPPED rather than filled with a weak piece.
+quality:
+  min_hook_score: 8          # hook_master self-score out of 10
+  min_script_score: 8
+  require_human_approval_for:
+    - names_living_person_with_allegation   # corruption content naming someone -> approval queue
+  approval_timeout_action: skip            # skip | publish  (skip is the safe default)
+
+# Who publishes. postforme = one API for every platform through Post for Me's approved apps
+# (public TikTok + YouTube posts without our own audits; media hosting and scheduling included).
+# direct = our own YouTube Data API / Meta Graph API / TikTok app (each needs its own approvals).
+publishing:
+  provider: postforme
+  overrides: {}                         # e.g. {youtube: direct}
+
+tts:
+  provider: elevenlabs        # elevenlabs | fishaudio
+  elevenlabs:
+    model_id: eleven_multilingual_v2      # best Taglish prosody; eleven_v3 for more expressive reads
+    voice_id: ""                          # set in .env (ELEVENLABS_VOICE_ID) — ideally a Professional Voice Clone
+    stability: 0.38
+    similarity_boost: 0.8
+    style: 0.35
+    speed: 1.04
+  fishaudio:
+    reference_id: ""                      # set in .env (FISH_AUDIO_VOICE_ID)
+    model: s1
+
+images:
+  provider: gemini            # gemini | openai
+  gemini_model: gemini-2.5-flash-image
+  openai_model: gpt-image-1
+  style_prompt: >-
+    Painterly 2D cartoon illustration, thick dark ink outlines, soft painted shading, subtle halftone
+    texture, slight chromatic aberration, cinematic lighting with one warm key light against a dark
+    cool background. Characters are simple round-headed cartoon figures with dot eyes and one strong
+    expression. Philippine setting details. No text, no letters, no watermarks.
+  never: >-
+    photorealistic depictions of real, identifiable people; real politicians' faces; gore; flags or
+    symbols used disrespectfully
+
+video:
+  long_form: {width: 1920, height: 1080, fps: 30, target_minutes: [10, 16]}
+  vertical:  {width: 1080, height: 1920, fps: 30, target_seconds: [35, 58]}
+  seconds_per_image: 6        # Ken-Burns shot length; lower = more images = more cost
+  music_dir: assets/music     # royalty-free beds (YouTube Audio Library / Epidemic etc.)
+  music_volume_db: -24
+  font: assets/fonts/Anton-Regular.ttf
+  caption_font: assets/fonts/Montserrat-ExtraBold.ttf

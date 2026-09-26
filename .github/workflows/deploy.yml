@@ -1,0 +1,53 @@
+# Push to main -> test -> build image -> push to GHCR -> ship .env + compose file to the VM -> restart.
+name: deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        run: |
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:latest
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Render .env from repository secrets
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: python scripts/write_env.py
+
+      - name: Copy compose file + .env to the VM
+        env:
+          SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null key && echo "$SSH_KEY" > key
+          scp -i key -o StrictHostKeyChecking=accept-new deploy/docker-compose.yml .env \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/opt/tfs/
+
+      - name: Pull and restart
+        env:
+          SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null key && echo "$SSH_KEY" > key
+          ssh -i key -o StrictHostKeyChecking=accept-new ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "cd /opt/tfs && echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin \
+             && GITHUB_REPOSITORY=${GITHUB_REPOSITORY,,} docker compose pull \
+             && GITHUB_REPOSITORY=${GITHUB_REPOSITORY,,} docker compose up -d"

@@ -1,0 +1,55 @@
+# Trend-scout inputs. All of these were verified reachable without keys (Sep 2026),
+# except where marked `needs_key`.
+
+google_trends_rss:
+  - https://trends.google.com/trending/rss?geo=PH
+
+news_rss:
+  - {name: Rappler, url: https://www.rappler.com/feed/}
+  - {name: Google News PH - politics, url: "https://news.google.com/rss/search?q=Philippines+senate+OR+congress+OR+ombudsman&hl=en-PH&gl=PH&ceid=PH:en"}
+  - {name: Google News PH - corruption, url: "https://news.google.com/rss/search?q=Philippines+corruption+OR+anomaly+OR+COA&hl=en-PH&gl=PH&ceid=PH:en"}
+  - {name: Google News PH - top, url: "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en"}
+  - {name: Google News PH - Filipino, url: "https://news.google.com/rss?hl=fil&gl=PH&ceid=PH:fil"}
+
+x_trends_page: https://trends24.in/philippines/
+
+reddit:                       # needs_key: REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET (free "script" app)
+  subreddits: [Philippines, phinvest, PHGov, casualPH, PHbuildapc]
+  listings: [rising, hot]
+
+youtube_mostpopular:          # needs_key: YOUTUBE_API_KEY (Data API, 1 unit / call)
+  region: PH
+  categories: [25, 27, 22]    # News & Politics, Education, People & Blogs
+
+# Seed keywords expanded through YouTube + Google autocomplete every run.
+# Autocomplete growth between runs is our earliest "about to explode" signal.
+autocomplete_seeds:
+  - flood control
+  - senate hearing
+  - ombudsman
+  - COA report
+  - confidential funds
+  - pork barrel
+  - political dynasty
+  - martial law
+  - EDSA
+  - West Philippine Sea
+  - kasaysayan ng pilipinas
+  - bakit mahirap ang pilipinas
+  - korapsyon
+
+# Predictable spikes: publish 3–10 days BEFORE these so we are ranked when search peaks.
+calendar:
+  - {date: "01-23", name: "First Philippine Republic anniversary (Malolos)"}
+  - {date: "02-25", name: "EDSA People Power anniversary"}
+  - {date: "04-09", name: "Araw ng Kagitingan (Bataan)"}
+  - {date: "05-01", name: "Labor Day / wage hike debates"}
+  - {date: "06-12", name: "Independence Day"}
+  - {date: "07-12", name: "Arbitral ruling anniversary (West Philippine Sea)"}
+  - {date: "07-4th-mon", name: "SONA"}
+  - {date: "08-21", name: "Ninoy Aquino Day"}
+  - {date: "08-last-mon", name: "National Heroes Day"}
+  - {date: "08-01", name: "Budget season: NEP submitted to Congress"}
+  - {date: "09-21", name: "Martial Law declaration anniversary"}
+  - {date: "11-30", name: "Bonifacio Day"}
+  - {date: "12-30", name: "Rizal Day"}
