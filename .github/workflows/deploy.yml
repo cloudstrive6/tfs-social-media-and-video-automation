@@ -13,6 +13,8 @@ jobs:
 
   deploy:
     needs: test
+    # Turn on once the cloud VM exists: repo Settings -> Secrets and variables -> Actions -> Variables -> DEPLOY_ENABLED = true
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
