@@ -20,6 +20,8 @@ log = logging.getLogger(__name__)
 
 
 def run(kind: str = "vertical") -> Path:
+    from . import state
+    log.info("sound library: %d files", state.pull_library())      # music + effects, not the production DB
     topic = (env("TFS_SAMPLE_TOPIC") or "").strip()
     if topic:
         db.add_topics([{"title": topic, "momentum_score": 100, "why_now": "requested sample topic"}])

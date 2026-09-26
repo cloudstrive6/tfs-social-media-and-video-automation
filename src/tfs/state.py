@@ -102,6 +102,16 @@ def _snapshot() -> Path:
     return snap
 
 
+def pull_library() -> int:
+    """Only the sound library (samples run without the production state)."""
+    if not enabled():
+        return 0
+    keys = _keys(f"{PREFIX}library/")
+    for key in keys:
+        _download(key)
+    return len(keys)
+
+
 def push_library() -> int:
     """Upload the sound library (used by the one-time build job, which has no database)."""
     if not enabled():
