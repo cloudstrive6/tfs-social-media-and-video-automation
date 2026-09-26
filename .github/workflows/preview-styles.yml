@@ -1,0 +1,24 @@
+# Actions -> preview-styles -> Run workflow: one real image per art style (uses GEMINI_API_KEY), downloadable
+# as the "style-preview" artifact.
+name: preview-styles
+on:
+  workflow_dispatch:
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
+      - run: pip install -q -e .
+      - name: Write .env from repository secrets
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: python scripts/write_env.py
+      - run: TFS_DATA_DIR=out python -m tfs.cli preview-styles
+      - uses: actions/upload-artifact@v4
+        with:
+          name: style-preview
+          path: out/style_preview/

@@ -8,6 +8,12 @@ from ..config import channel
 from ..models import Carousel, Script, SeoPack, ShotList, ThumbnailPlan, TitlePlan
 
 
+def _style_kit() -> str:
+    img = channel()["images"]
+    styles = "\n".join(f"- {name}: {text}" for name, text in img["styles"].items())
+    return f"Style kit (pick one per image):\n{styles}\nShared rules: {img['base']}\nNever: {img['never']}"
+
+
 def _ctx(item: dict, script: Script | None = None) -> str:
     d = item["data"]
     out = json.dumps({k: d.get(k) for k in ("working_title", "pillar", "primary_keyword", "brief")},
@@ -20,8 +26,8 @@ def _ctx(item: dict, script: Script | None = None) -> str:
 def thumbnails(item: dict, script: Script) -> ThumbnailPlan:
     return llm.structured(
         "thumbnail_artist",
-        f"Channel style prompt to include in every image_prompt:\n{channel()['images']['style_prompt']}\n\n"
-        + _ctx(item, script),
+        "Thumbnails use the 'story' style (or 'satire' for pure political commentary). Describe the scene only;\n"
+        "the style text is appended automatically.\n" + _style_kit() + "\n\n" + _ctx(item, script),
         ThumbnailPlan,
     )
 
@@ -51,9 +57,10 @@ def seo(item: dict, script: Script | None, title: str, chapters: list[tuple[floa
 def shot_list(item: dict, script: Script) -> ShotList:
     return llm.structured(
         "visual_director",
-        f"Format: {item['kind']}\nChannel style prompt (prepend to every image_prompt):\n"
-        f"{channel()['images']['style_prompt']}\nNever: {channel()['images']['never']}\n\n"
-        "Return exactly one shot per scene id.\n\n# Scenes\n" + script.model_dump_json(),
+        f"Format: {item['kind']}\n{_style_kit()}\n\n"
+        "Describe only the scene in image_prompt (subject, action, expression, setting, camera); the style text is "
+        "appended automatically from the `style` you choose. Return exactly one shot per scene id.\n\n# Scenes\n"
+        + script.model_dump_json(),
         ShotList,
     )
 
@@ -61,7 +68,8 @@ def shot_list(item: dict, script: Script) -> ShotList:
 def carousel(item: dict, dossier: str) -> Carousel:
     return llm.structured(
         "carousel_designer",
-        f"Language: {channel()['channel']['language']}\nChannel style prompt for image_prompt fields:\n"
-        f"{channel()['images']['style_prompt']}\n\n{_ctx(item)}\n\n# Dossier\n{dossier}",
+        f"Language: {channel()['channel']['language']}\n{_style_kit()}\n"
+        "For slide art, describe the scene only and set `style`.\n\n"
+        f"{_ctx(item)}\n\n# Dossier\n{dossier}",
         Carousel,
     )

@@ -3,6 +3,16 @@
 You turn each script scene into on-screen visuals. Keep the look consistent across the whole video: same
 character designs, same palette, same lighting logic.
 
+## Pick a style for every illustration (the style kit is in your context)
+- **story**: default for narration and character moments (~60% of illustrations).
+- **satire**: when the line is political commentary or irony about power, money, corruption (~15%). The joke
+  lives in symbolic props and archetypes, never in a real person's face.
+- **comic**: cold-open skits and dialogue beats (our own text/bubbles are overlaid later).
+- **archival**: anything set before ~1990: Spanish era, American era, WWII, Martial Law flashbacks.
+- **map**: whenever a place matters ("sa Bulacan…", "the West Philippine Sea").
+Vary styles so no single style runs longer than ~40 seconds, but stay in one style inside a mini-story.
+Real living officials appear only as labelled silhouettes or the fictional Tito Trapo, never their likeness.
+
 For each scene decide ONE visual type:
 - `illustration` — AI-generated painterly cartoon frame. Write a full image prompt: subject, action,
   expression, setting, camera (wide/medium/close, angle), lighting, and the continuity notes (which

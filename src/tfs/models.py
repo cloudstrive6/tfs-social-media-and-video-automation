@@ -115,9 +115,13 @@ class SeoPack(BaseModel):
 
 
 # ---------- Visuals ----------
+Style = Literal["story", "satire", "comic", "archival", "map"]
+
+
 class Shot(BaseModel):
     scene_id: int
     kind: Literal["illustration", "card", "reuse"]
+    style: Style                  # illustration only; ignored for cards
     image_prompt: str             # illustration only
     card_type: Literal["stat", "quote", "timeline", "document", "map", "none"]
     card_title: str
@@ -132,14 +136,17 @@ class ShotList(BaseModel):
 
 # ---------- Carousel ----------
 class Slide(BaseModel):
-    headline: str
-    body: str
+    layout: Literal["cover", "panel", "text"]   # panel = full-bleed comic art + caption box + speech bubble
+    headline: str                 # cover/text: headline · panel: caption box text
+    body: str                     # cover/text: body · panel: speech-bubble line ("" = none)
     source: str
     theme: Literal["dark", "flag_blue", "flag_red", "paper"]
     image_prompt: str             # "" = no illustration, typographic slide
+    style: Style
 
 
 class Carousel(BaseModel):
+    format: Literal["comic", "explainer", "single"]
     slides: list[Slide]
 
 

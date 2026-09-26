@@ -22,6 +22,7 @@ def main() -> None:
     sub.add_parser("status", help="show items and posts")
     sub.add_parser("backup", help="copy the SQLite state to the private backup bucket")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
+    sub.add_parser("preview-styles", help="generate one sample image per art style for approval")
     for name in ("produce", "approve", "reject", "requeue"):
         sp = sub.add_parser(name)
         sp.add_argument("item_id")
@@ -53,6 +54,10 @@ def main() -> None:
         case "analyze":
             from .agents import analyst
             print(analyst.run().summary_markdown)
+        case "preview-styles":
+            from .preview import run
+            print("
+".join(run()))
         case "verify":
             from .verify import run_all
             sys.exit(0 if run_all() else 1)

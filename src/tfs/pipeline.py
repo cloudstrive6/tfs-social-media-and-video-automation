@@ -95,7 +95,7 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
         if shot and shot.kind == "reuse" and (img_dir / f"{shot.reuse_of_scene:03d}.png").exists():
             return render.Shot(img_dir / f"{shot.reuse_of_scene:03d}.png", shot.motion)
         prompt = shot.image_prompt if shot and shot.image_prompt else scene.visual
-        images.generate(prompt, out, aspect)
+        images.generate(prompt, out, aspect, style=shot.style if shot else "story")
         return render.Shot(out, shot.motion if shot else "push_in")
 
     # illustrations first (reuse shots point at them), in parallel
@@ -132,7 +132,7 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
         plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
         best = plan.concepts[0]
         thumb_moment = best.moment
-        art = images.generate(best.image_prompt, d / "thumb_art.png", "16:9")
+        art = images.generate(best.image_prompt, d / "thumb_art.png", "16:9", style="story")
         thumb_path = compose.thumbnail(art, best.overlay_text, d / "thumbnail.jpg")
     titles = cached(d / "titles.json", TitlePlan, lambda: packaging.titles(item, script, thumb_moment))
     chapters = render.chapters(script.scenes, starts) if kind == "long_form" else []
@@ -156,10 +156,14 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
     paths = []
     for i, s in enumerate(car.slides):
         headline, _, body = edited.get(i, f"{s.headline}\n{s.body}").partition("\n")
-        art = images.generate(s.image_prompt, slide_dir / f"art{i:02d}.png", "4:5") if s.image_prompt else None
+        art = (images.generate(s.image_prompt, slide_dir / f"art{i:02d}.png", "4:5", style=s.style)
+               if s.image_prompt else None)
         out = slide_dir / f"slide{i:02d}.jpg"
-        compose.slide(i, len(car.slides), headline, body, s.source, s.theme, art, out,
-                      channel()["channel"]["handle"].lower())
+        handle = channel()["channel"]["handle"].lower()
+        if s.layout == "panel":
+            compose.panel_slide(i, len(car.slides), headline, body, s.source, art, out, handle)
+        else:
+            compose.slide(i, len(car.slides), headline, body, s.source, s.theme, art, out, handle)
         paths.append(str(out))
     text = "\n".join(f"{i + 1}. {s.headline} — {s.body}" for i, s in enumerate(car.slides))
     cached(d / "seo.json", SeoPack,

@@ -6,7 +6,9 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 from ..config import ROOT
-from .design import BLUE, RED, THEMES, WHITE, YELLOW, cover, fit_text, font, vertical_gradient
+from .design import BLUE, INK, PAPER, RED, THEMES, WHITE, YELLOW, cover, fit_text, font, vertical_gradient
+
+INK_RGB, PAPER_RGB = INK, PAPER
 
 LOGO = ROOT / "assets" / "logo.png"
 
@@ -90,6 +92,52 @@ def slide(index: int, total: int, headline: str, body: str, source: str, theme: 
     d.text((pad, size[1] - 50), handle, font=font("body", 28), fill=body_c, anchor="ls")
     d.text((size[0] // 2, size[1] - 50), f"{index + 1}/{total}", font=font("body", 28), fill=body_c,
            anchor="ms")
+    _logo(canvas, 56, "tr")
+    canvas.convert("RGB").save(out, "JPEG", quality=92)
+    return out
+
+
+def panel_slide(index: int, total: int, caption: str, speech: str, source: str, art: Path | None,
+                out: Path, handle: str) -> Path:
+    """Comic/satire carousel panel: full-bleed art, speech bubble up top, caption box at the bottom."""
+    size, pad = (1080, 1350), 56
+    canvas = Image.new("RGBA", size, (*PAPER_RGB, 255))
+    if art:
+        canvas.alpha_composite(cover(Image.open(art).convert("RGB"), size).convert("RGBA"))
+    d = ImageDraw.Draw(canvas)
+    # comic border
+    d.rectangle([18, 18, size[0] - 18, size[1] - 18], outline=INK_RGB, width=10)
+
+    if speech:
+        sf, slines, slh = fit_text(d, speech, "body", size[0] - 2 * pad - 120, 300, start=52, min_size=30)
+        bw = max(d.textlength(line, font=sf) for line in slines) + 80
+        bh = slh * len(slines) + 60
+        x0, y0 = pad + 20, pad + 40
+        tail = [(x0 + 90, y0 + bh - 20), (x0 + 150, y0 + bh - 20), (x0 + 100, y0 + bh + 70)]
+        d.polygon(tail, fill=WHITE)
+        d.line([tail[0], tail[2], tail[1]], fill=INK_RGB, width=6)
+        d.rounded_rectangle([x0, y0, x0 + bw, y0 + bh], radius=46, fill=WHITE, outline=INK_RGB, width=6)
+        d.polygon([(x0 + 96, y0 + bh - 8), (x0 + 144, y0 + bh - 8), (x0 + 101, y0 + bh + 58)], fill=WHITE)
+        y = y0 + 30
+        for line in slines:
+            d.text((x0 + 40, y), line, font=sf, fill=INK_RGB)
+            y += slh
+
+    if caption:
+        cf, clines, clh = fit_text(d, caption.upper(), "display", size[0] - 2 * pad - 60, 330, start=74, min_size=36)
+        box_h = clh * len(clines) + 56 + (40 if source else 0)
+        y0 = size[1] - pad - 40 - box_h
+        d.rectangle([pad, y0, size[0] - pad, y0 + box_h], fill=YELLOW, outline=INK_RGB, width=6)
+        y = y0 + 26
+        for line in clines:
+            d.text((pad + 30, y), line, font=cf, fill=INK_RGB)
+            y += clh
+        if source:
+            srcf = font("body", 22)
+            d.text((pad + 30, y + 4), "Source: " + source, font=srcf, fill=INK_RGB)
+
+    d.text((pad, size[1] - 34), handle, font=font("body", 24), fill=INK_RGB, anchor="ls")
+    d.text((size[0] - pad, size[1] - 34), f"{index + 1}/{total}", font=font("body", 24), fill=INK_RGB, anchor="rs")
     _logo(canvas, 56, "tr")
     canvas.convert("RGB").save(out, "JPEG", quality=92)
     return out

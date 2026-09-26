@@ -73,14 +73,46 @@ images:
   provider: gemini            # gemini | openai
   gemini_model: gemini-2.5-flash-image
   openai_model: gpt-image-1
-  style_prompt: >-
-    Painterly 2D cartoon illustration, thick dark ink outlines, soft painted shading, subtle halftone
-    texture, slight chromatic aberration, cinematic lighting with one warm key light against a dark
-    cool background. Characters are simple round-headed cartoon figures with dot eyes and one strong
-    expression. Philippine setting details. No text, no letters, no watermarks.
+  # Shared by every style: palette, recurring cast, hard rules.
+  base: >-
+    The Filipino Standard visual identity: Philippine flag palette accents (royal blue #0038A8, red #CE1126,
+    sun yellow #FCD116) against deep ink-navy shadows. Recurring cast when relevant: Kuya Standard (calm,
+    witty narrator, round head, rolled-up barong sleeves), Juan (confused everyman, round head, plain
+    shirt, tsinelas), Tito Trapo (fictional corrupt politician archetype: round head, slicked hair, tight
+    barong, sash, gold watch, too-wide grin). No text, letters, captions, logos or watermarks in the image.
   never: >-
-    photorealistic depictions of real, identifiable people; real politicians' faces; gore; flags or
-    symbols used disrespectfully
+    photorealistic images of real, identifiable people; the face or likeness of any real politician or public
+    official (represent them only as a labelled silhouette or the fictional Tito Trapo archetype); gore;
+    disrespect to the flag, religion, regions or ethnic groups; AI-drawn text or lettering
+  # One visual language per job. The Visual Director picks a style for every scene.
+  styles:
+    story: >-
+      Painterly 2D cartoon in the style of premium animated history explainers: thick dark ink outlines,
+      soft painted shading, subtle halftone texture, slight chromatic aberration, cinematic lighting with one
+      warm key light against a dark cool background. Simple round-headed characters with dot eyes and one
+      strong, readable expression. Rich Philippine setting details.
+    satire: >-
+      Filipino broadsheet editorial cartoon: bold pen-and-ink linework with crosshatching, limited palette of
+      ink black plus flag red and sun yellow accents on off-white newsprint, exaggerated archetypal
+      characters, symbolic props carrying the joke (money bags, hard hats, empty dikes, red tape), dry
+      visual irony, generous negative space where our own caption will be added.
+    comic: >-
+      Comic-strip panel: clean inked outlines, flat bright colours with halftone shading, dynamic camera
+      angle, exaggerated comedic acting, clear empty space at the top for a speech bubble we add later
+      (never draw the bubble or any text).
+    archival: >-
+      Vintage 19th/early-20th-century illustration: hand-coloured lithograph or sepia oil-painting look, aged
+      paper texture, subtle foxing and vignette, period-accurate Philippine clothing and architecture
+      (Spanish colonial, American era) or grainy 1970s poster tones for Martial Law scenes. Characters keep
+      the round-headed channel design, rendered in the period technique.
+    map: >-
+      Hand-painted illustrated map of the Philippine archipelago (or the named region): parchment and ocean
+      blues, the relevant place highlighted with a warm glow and a red pin, small painted icons for
+      landmarks, compass rose, clean areas for our own labels.
+  style_prompt: >-
+    Mix of styles chosen per scene: story (painterly cartoon, default), satire (editorial pen-and-ink
+    cartoon for political commentary), comic (skit panels), archival (period illustration for history),
+    map (illustrated map). No text in images.
 
 video:
   long_form: {width: 1920, height: 1080, fps: 30, target_minutes: [10, 16]}

@@ -49,10 +49,19 @@ def _openai(prompt: str, aspect: str) -> bytes:
     return base64.b64decode(resp.data[0].b64_json)
 
 
-def generate(prompt: str, out: Path, aspect: str = "16:9", retries: int = 3) -> Path:
+STYLES = ("story", "satire", "comic", "archival", "map")
+
+
+def full_prompt(prompt: str, style: str = "story") -> str:
+    img = channel()["images"]
+    style_text = img["styles"].get(style, img["styles"]["story"])
+    return f"{prompt}\n\nArt style: {style_text}\n{img['base']}\nNever: {img['never']}"
+
+
+def generate(prompt: str, out: Path, aspect: str = "16:9", style: str = "story", retries: int = 3) -> Path:
     if out.exists():
         return out
-    full = f"{prompt}\n\nStyle: {channel()['images']['style_prompt']}\nAvoid: {channel()['images']['never']}"
+    full = full_prompt(prompt, style)
     fn = _openai if channel()["images"]["provider"] == "openai" else _gemini
     for attempt in range(retries):
         try:
