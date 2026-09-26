@@ -17,6 +17,16 @@ on:
         required: false
         type: boolean
         default: false
+      topic:
+        description: optional topic for `tfs sample`
+        required: false
+        type: string
+        default: ""
+      encrypt_to:
+        description: base64 PEM public key; if set, data/sample_out is attached ENCRYPTED to it (public repo)
+        required: false
+        type: string
+        default: ""
 
 jobs:
   run:
@@ -50,6 +60,7 @@ jobs:
       REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
       REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
       TFS_COMMAND: ${{ inputs.command }}
+      TFS_SAMPLE_TOPIC: ${{ inputs.topic }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -62,3 +73,19 @@ jobs:
         run: curl -fsSL https://claude.ai/install.sh | bash && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: pip install -q -e .
       - run: python -m tfs.cli $TFS_COMMAND
+      - if: inputs.encrypt_to != ''
+        env:
+          PUBKEY_B64: ${{ inputs.encrypt_to }}
+        run: |
+          printf '%s' "$PUBKEY_B64" | base64 -d > "$RUNNER_TEMP/pub.pem"
+          KEY=$(openssl rand -hex 32)
+          echo "::add-mask::$KEY"
+          mkdir -p "$RUNNER_TEMP/enc"
+          tar -C "$TFS_DATA_DIR/sample_out" -cf - . | openssl enc -aes-256-cbc -pbkdf2 -salt -pass "pass:$KEY" -out "$RUNNER_TEMP/enc/sample.tar.enc"
+          printf '%s' "$KEY" | openssl pkeyutl -encrypt -pubin -inkey "$RUNNER_TEMP/pub.pem" -out "$RUNNER_TEMP/enc/key.bin"
+      - if: inputs.encrypt_to != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-encrypted
+          path: ${{ runner.temp }}/enc/
+          retention-days: 1

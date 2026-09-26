@@ -189,6 +189,9 @@ PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagra
 
 
 def _schedule(item: dict, **artifacts) -> None:
+    if item["data"].get("sample"):                # `tfs sample`: finished, but never queued for posting
+        db.set_status(item["id"], "sample", **artifacts)
+        return
     for platform, slot in item["data"]["platforms"].items():
         db.queue_post(item["id"], platform, slot)
     db.set_status(item["id"], "scheduled", **artifacts)

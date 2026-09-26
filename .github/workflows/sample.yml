@@ -1,0 +1,28 @@
+# Actions -> sample -> Run workflow: one vertical (or carousel) produced now for review, never posted.
+# It goes to Telegram. `encrypt_to` (a base64 PEM public key) also attaches it encrypted, since this repo is public.
+name: sample
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        options: [vertical, carousel]
+        default: vertical
+      topic:
+        description: optional topic (blank = today's top trend)
+        required: false
+        default: ""
+      encrypt_to:
+        description: optional base64 PEM public key to attach the result encrypted
+        required: false
+        default: ""
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: sample --kind ${{ inputs.kind }}
+      needs_claude: true
+      needs_media: true
+      topic: ${{ inputs.topic }}
+      encrypt_to: ${{ inputs.encrypt_to }}
+    secrets: inherit

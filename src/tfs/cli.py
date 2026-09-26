@@ -22,6 +22,8 @@ def main() -> None:
     sub.add_parser("analyze", help="weekly growth analysis + agent notes + schedule retune")
     sub.add_parser("status", help="show items and posts")
     sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
+    sub.add_parser("sample", help="produce one piece now for review; never scheduled or posted").add_argument(
+        "--kind", choices=["vertical", "carousel"], default="vertical")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
     sub.add_parser("preview-styles", help="generate one sample image per art style")
     sub.add_parser("telegram-setup", help="print the chat id(s) that messaged the bot; send a test message")
@@ -68,6 +70,9 @@ def main() -> None:
         case "preview-styles":
             from .preview import run
             print("\n".join(run()))
+        case "sample":
+            from .sample import run as make_sample
+            print(make_sample(a.kind))
         case "verify":
             from .verify import run_all
             sys.exit(0 if run_all() else 1)
