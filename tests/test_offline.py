@@ -609,3 +609,25 @@ def test_minor_narration_notes_never_reject_a_piece(data_dir, monkeypatch):
     monkeypatch.setattr(qa, "safe", lambda fn, built: major)
     monkeypatch.setattr(pipeline.notify, "send", lambda *a, **k: None)
     assert pipeline._reviewed(db.get_item("x"), d, lambda: "built", lambda b: major, lambda r: None) is None
+
+
+def test_a_shot_failing_review_twice_is_replaced_not_fatal(data_dir, monkeypatch):
+    from tfs import pipeline
+    from tfs.media import images
+    from tfs.models import ReviewReport, Scene, Script, Shot, ShotList
+
+    d = data_dir / "items" / "y"
+    (d / "img").mkdir(parents=True)
+    shot = dict(kind="illustration", style="story", card_type="none", card_title="", card_lines=[],
+                reuse_of_scene=0, motion="push_in")
+    (d / "shots.json").write_text(ShotList(shots=[Shot(scene_id=i, image_prompt=f"p{i}", **shot)
+                                                  for i in (0, 1, 2)]).model_dump_json())
+    monkeypatch.setattr(images, "generate", lambda prompt, out, *a, **k: out.write_bytes(b"p"))
+    script = Script(scenes=[Scene(id=i, chapter="c", speaker="N", text=f"l{i}", visual="v") for i in (0, 1, 2)],
+                    sources=[])
+    bad = ReviewReport(passed=False, redo_images={"1": "calendar again"}, redo_audio={}, warnings=[], appeal=6,
+                       hook_frame=6, summary="")
+    for _ in range(2):                               # fails, is regenerated, fails again
+        pipeline._apply_video_fixes(d, bad)
+    shots = pipeline._visuals({"id": "y"}, d, script, "9:16", (1080, 1920))
+    assert shots[1].image.name in ("000.png", "002.png")      # borrowed a neighbour's illustration

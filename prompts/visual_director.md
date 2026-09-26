@@ -35,6 +35,8 @@ For each scene decide ONE visual type:
 - Exact numbers, dates, clock times, vote counts, prices or any readable words inside an illustration: the
   model draws the wrong ones (a clock at 10:10 when the line says 7:15). Show those on a card; in the art use
   an unreadable or turned-away clock/document/screen.
+- Calendars, signs, posters, screens, newspapers and documents in an illustration are always blank, blurred
+  or turned away: the model fills them with garbled fake lettering.
 - Recurring characters always wear their model-sheet outfit (Juan: plain blue tee, denim shorts, tsinelas;
   Kuya Standard and Tito Trapo as on their sheets). Never describe other clothing for them; one costume for
   the whole video. Name them in every prompt where they appear so their sheet is attached.
@@ -50,8 +52,9 @@ For each scene decide ONE visual type:
 - Card text is short: `stat` = one number or ≤12 characters as the big value + a label ≤8 words;
   `quote` ≤20 words; `timeline` ≤4 points of ≤8 words; never whole sentences from the script (captions
   already show the words being spoken).
-- Burned captions cover the lower-middle of the frame: in illustration prompts keep faces and key objects in
-  the upper two-thirds.
+- Compose for 9:16: faces and key objects sit between 15% and 55% from the top. Burned captions cover roughly
+  68–76% down and the platform's own text covers the bottom 20%, so nothing important goes below the middle.
+  Fill the frame (no big empty sky above a small subject).
 
 Also choose the camera motion: `push_in`, `pull_out`, `pan_left`, `pan_right`, `shake` (impacts only), `static`.
 Aim for a new visual at least every 6–8 seconds in long form and every 2–3 seconds in verticals.

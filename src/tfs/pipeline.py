@@ -99,7 +99,8 @@ def _script(item: dict, d: Path, dossier: str) -> tuple[Script, HookReview] | No
 def _fixes(d: Path) -> dict:
     """Corrections from the review team: {"images": {key: prompt}, "audio": {scene id: tts text}}."""
     f = d / "qa_fixes.json"
-    return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {"images": {}, "audio": {}}
+    fixes = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    return {"images": {}, "audio": {}, "attempts": {}, "drop": [], **fixes}
 
 
 def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, int]) -> list[render.Shot]:
@@ -142,6 +143,20 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
         rest = [sc for sc in first if sc.id not in made]
         made.update(dict(zip([sc.id for sc in rest], pool.map(make, rest))))
     shots = [made.get(sc.id) or make(sc) for sc in script.scenes]
+
+    # shots the review team rejected twice borrow the nearest other illustration (with a different camera move)
+    dropped = set(_fixes(d)["drop"])
+    if dropped:
+        ids = [sc.id for sc in script.scenes]
+        bad = {i for i, sc in enumerate(script.scenes)
+               if str(sc.id) in dropped or (by_scene.get(sc.id) and by_scene[sc.id].kind == "reuse"
+                                            and str(by_scene[sc.id].reuse_of_scene) in dropped)}
+        good = [i for i, sh in enumerate(shots) if not sh.card and i not in bad]
+        for i in sorted(bad):
+            if good:
+                j = min(good, key=lambda g: (abs(g - i), g > i))
+                shots[i] = render.Shot(shots[j].image, "pull_out" if shots[j].motion != "pull_out" else "pan_left")
+        log.info("replaced shots %s with neighbouring illustrations", [ids[i] for i in sorted(bad)])
 
     # cards get the nearest illustration (before, else after) as their blurred backdrop
     art = [sh.image if not sh.card else None for sh in shots]
@@ -189,18 +204,32 @@ def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple
     return video, starts, thumb_path, thumb_moment
 
 
-def _save_fixes(d: Path, report: ReviewReport) -> None:
+MAX_IMAGE_ATTEMPTS = 1   # regenerate a failing shot once; if it fails again it is replaced (never sinks the video)
+
+
+def _save_fixes(d: Path, report: ReviewReport) -> list[str]:
+    """Record the review's corrections. Returns the image keys to regenerate (the rest were dropped)."""
     fixes = _fixes(d)
-    fixes["images"].update(report.redo_images)
+    regenerate = []
+    for key, prompt in report.redo_images.items():
+        fixes["attempts"][key] = fixes["attempts"].get(key, 0) + 1
+        if fixes["attempts"][key] > MAX_IMAGE_ATTEMPTS and key != "thumbnail":
+            if key not in fixes["drop"]:
+                fixes["drop"].append(key)
+            log.info("shot %s failed review %d times: replaced by a neighbouring illustration", key,
+                     fixes["attempts"][key] - 1)
+        else:
+            fixes["images"][key] = prompt
+            regenerate.append(key)
     fixes["audio"].update({k: v for k, v in report.redo_audio.items() if v})
     (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+    return regenerate
 
 
 def _apply_video_fixes(d: Path, report: ReviewReport) -> None:
     import shutil
 
-    _save_fixes(d, report)
-    for key in report.redo_images:
+    for key in _save_fixes(d, report):
         targets = ([d / "thumb_art.png", d / "thumbnail.jpg"] if key == "thumbnail"
                    else [d / "img" / f"{int(key):03d}.png"])
         for t in targets:
@@ -294,7 +323,7 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
             headline, _, body = edited.get(i, f"{s.headline}\n{s.body}").partition("\n")
             art_path, out = slide_dir / f"art{i:02d}.png", slide_dir / f"slide{i:02d}.jpg"
             art = None
-            if s.image_prompt:
+            if s.image_prompt and str(i) not in _fixes(d)["drop"]:
                 if not art_path.exists():
                     images.generate(fixed.get(str(i)) or s.image_prompt, art_path, "4:5", style=s.style)
                     out.unlink(missing_ok=True)
@@ -308,9 +337,10 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
         return paths
 
     def fix(report: ReviewReport) -> None:
-        _save_fixes(d, report)
-        for key in report.redo_images:
+        for key in _save_fixes(d, report):
             (slide_dir / f"art{int(key):02d}.png").unlink(missing_ok=True)
+        for key in _fixes(d)["drop"]:                        # art failed twice: text-only slide
+            (slide_dir / f"slide{int(key):02d}.jpg").unlink(missing_ok=True)
 
     prompts = [s.image_prompt for s in car.slides]
     done = _reviewed(item, d, build, lambda paths: qa.review_slides([Path(p) for p in paths], prompts), fix)

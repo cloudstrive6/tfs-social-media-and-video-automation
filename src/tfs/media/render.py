@@ -135,7 +135,7 @@ def captions_ass(clips: list[Clip], starts: list[float], size: tuple[int, int], 
         "Style: Cap,{f},{cs},&H00FFFFFF,&H0016D1FC,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,10,4,2,{m},{m},{mv},1\n"
         "Style: Hook,{f},{hs},&H0016D1FC,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,9,3,8,{m},{m},{mt},1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-    ).format(w=w, h=h, f=family, cs=base, hs=int(h * 0.085), mv=int(h * 0.3), mt=int(h * 0.12), m=margin)
+    ).format(w=w, h=h, f=family, cs=base, hs=int(h * 0.085), mv=int(h * 0.24), mt=int(h * 0.12), m=margin)
     events = []
     if hook_text:
         hook = _ass_escape(hook_text)

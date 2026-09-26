@@ -73,7 +73,7 @@ def tidy(text: str) -> str:
 
 
 def _area(size: tuple[int, int]) -> tuple[int, int, int, int]:
-    """Where card content lives. 9:16: above the burned captions (top 58%) and clear of the Reels/TikTok
+    """Where card content lives. 9:16: above the burned captions (top 58%; captions sit ~68-76%), clear of the Reels/TikTok
     button strip on the right edge; 16:9: the whole frame."""
     w, h = size
     if h > w * 1.3:
