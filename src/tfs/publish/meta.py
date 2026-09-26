@@ -1,11 +1,10 @@
-"""Facebook Page + Instagram professional account via Meta's Graph API (app: TFS Publisher).
+"""Facebook Page + Instagram professional account via Meta's Graph API (app: TFS Auto Poster).
 
 Everything is uploaded straight to Meta; no public media bucket is needed:
 - Instagram Reels use Instagram's resumable upload (rupload.facebook.com).
 - Instagram carousel images are first uploaded to the Facebook Page as unpublished photos, and their
   Meta CDN URLs are handed to Instagram (Instagram only accepts image URLs for carousels).
 - Facebook Reels and multi-photo posts upload the files directly.
-The app must be in Live mode, or posts are visible only to people with a role on the app.
 """
 from __future__ import annotations
 
