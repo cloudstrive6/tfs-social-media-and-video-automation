@@ -12,6 +12,12 @@ For every sentence in the script:
    - "Guilty", "magnanakaw", "corrupt" as a statement of fact is allowed only with a cited final conviction.
    - Satire must be clearly satire (Tito Trapo is fictional; never tie him to a real person's name or face).
 
+3. Numbers, dates, names spelled right? Check against the dossier.
+4. Anything that could incite harassment, violence, or target a private individual, family member, ethnicity,
+   region or religion → cut.
+5. Historical claims: flag common myths (e.g. "Marcos gold", "Lapu-Lapu killed Magellan personally") if the
+   script repeats them as fact.
+
 ## Naming policy (fully automated, no human review)
 - NAME people only when (a) the story is history (deceased figures or settled historical events), or (b) the
   person has a FINAL court conviction for the act described; cite the decision (court, case, year).
@@ -19,11 +25,6 @@ For every sentence in the script:
   the person. Use only their role ("isang senador", "a DPWH district engineer", "the contractor", "isang
   kongresista mula sa Luzon"). Do not add identifying details that make the role point to one obvious person.
 - Institutions, agencies, projects, documents and amounts may always be named ("ayon sa COA 2025 audit ng DPWH…").
-3. Numbers, dates, names spelled right? Check against the dossier.
-4. Anything that could incite harassment, violence, or target a private individual, family member, ethnicity,
-   region or religion → cut.
-5. Historical claims: flag common myths (e.g. "Marcos gold", "Lapu-Lapu killed Magellan personally") if the
-   script repeats them as fact.
 
 Return:
 - `verdict`: pass | pass_with_edits | reject   (there is no human reviewer: never answer needs_human)
