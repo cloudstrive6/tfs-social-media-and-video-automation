@@ -69,9 +69,10 @@ def full_prompt(prompt: str, style: str = "story") -> str:
     return f"{prompt}{cast_notes(prompt)}\n\nArt style: {style_text}\n{img['base']}\nNever: {img['never']}"
 
 
-ANCHOR_NOTE = ("The LAST attached image is this video's style anchor: match its art style, line weight, shading, "
-               "palette and the way people are drawn exactly (same round-headed cartoon cast, never semi-realistic). "
-               "Do not copy its composition.")
+ANCHOR_NOTE = ("The LAST attached image is this video's style anchor: match its art style, line weight, shading "
+               "and palette, and draw people the same round-headed cartoon way (never semi-realistic). Copy ONLY the "
+               "style: not its composition, not its characters, and never put its characters' outfits on anyone "
+               "else. Background people wear plain, neutral clothes.")
 
 
 def generate(prompt: str, out: Path, aspect: str = "16:9", style: str = "story", retries: int = 3,

@@ -276,8 +276,8 @@ def _timeline(title: str, lines: list[str], size, n: int, backdrop=None) -> Iter
 
 
 def _quote(title: str, lines: list[str], size, n: int, backdrop=None) -> Iterator[Image.Image]:
-    if lines and len(" ".join(lines).split()) > len(title.split()) * 1.5:
-        title, lines = " ".join(lines), [title]          # source name was given as the title: swap
+    if lines and len(lines[0].split()) > max(8, len(title.split()) * 2):
+        title, lines = lines[0], [title, *lines[1:]]     # the quotation was put in lines[0]: swap just those two
     title = title.strip("“”\"")
     x0, y0, x1, y1 = _area(size)
     w, ah = x1 - x0, y1 - y0

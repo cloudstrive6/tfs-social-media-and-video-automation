@@ -653,3 +653,12 @@ def test_voice_only_problems_get_extra_rounds(data_dir, monkeypatch):
     reports = iter([bad, bad, bad, good])
     monkeypatch.setattr(qa, "safe", lambda fn, built: next(reports))
     assert pipeline._reviewed(db.get_item("z"), d, lambda: "built", lambda b: None, lambda r: None) == ("built", good)
+
+
+def test_quote_card_keeps_source_lines_separate():
+    from tfs.media import motion
+
+    # quote in the title, several source/footnote lines: no swap, no merging
+    frames = list(motion._quote("Hindi puwedeng basta-basta.", ["Senate President, 2026", "Rules, Sec. 5"],
+                                (540, 960), 2))
+    assert frames
