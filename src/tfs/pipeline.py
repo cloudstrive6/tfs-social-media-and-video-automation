@@ -228,22 +228,22 @@ def _publish_one(post: dict) -> tuple[str, str]:
                                     tags=seo.tags, thumbnail=thumb, external_id=f"{item['id']}:{platform}")
         return "submitted", pid
 
-    from .publish import meta, storage, tiktok, youtube
+    from .publish import meta, tiktok, youtube
     match platform:
         case "youtube" | "youtube_shorts":
             thumb = Path(data["thumbnail"]) if data.get("thumbnail") else None
             # "submitted" until reconcile() confirms YouTube actually made it public at the slot
             return "submitted", youtube.upload(video, title, caption, seo.tags, slot, thumb)
         case "instagram_reel":
-            return "published", meta.ig_reel(storage.public_url(video, item["id"]), caption)
+            return "published", meta.ig_reel(video, caption)
         case "facebook_reel":
             return "published", meta.fb_reel(video, caption)
         case "tiktok":
             return "published", tiktok.post_video(video, caption)
         case "instagram_carousel":
-            return "published", meta.ig_carousel([storage.public_url(p, item["id"]) for p in slides], caption)
+            return "published", meta.ig_carousel(slides, caption)
         case "facebook_post":
-            return "published", meta.fb_photos([storage.public_url(p, item["id"]) for p in slides], caption)
+            return "published", meta.fb_photos(slides, caption)
     raise ValueError(f"unknown platform {platform}")
 
 

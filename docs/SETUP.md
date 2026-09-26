@@ -55,18 +55,41 @@ The agents run through the Claude Code CLI inside the container (`llm.backend: c
 ## 4. Images — Google AI Studio
 API key → `GEMINI_API_KEY` (billing enabled; free tier is too small).
 
-## 5. Backups — Cloudflare R2 (free tier)
-Create a **private** bucket `tfs-backups` and an API token; fill `S3_ENDPOINT_URL`, `S3_ACCESS_KEY_ID`,
-`S3_SECRET_ACCESS_KEY`, `S3_BACKUP_BUCKET`. (A public media bucket is only needed if you ever switch
-`publishing.provider` to `direct`.)
+## 5. Backups — Cloudflare R2 (optional)
+A private bucket for nightly database backups (`S3_ENDPOINT_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`S3_BACKUP_BUCKET`). Without it, the backup job just skips.
 
-## 6. Publishing — Post for Me (Facebook, Instagram, TikTok)
-1. Pro plan ($10/month = 1,000 posts; we publish ~450/month outside YouTube).
-2. **The Filipino Standard** project (White Label): Facebook Page + Instagram are already connected →
-   its API key → `POSTFORME_API_KEY`.
-3. **Quickstart project**: TikTok is enabled there, and posts go through Post for Me's approved TikTok app,
-   so they're public without our own TikTok audit. Connect @thefilipinostandard under Social Media Accounts →
-   its API key → `POSTFORME_API_KEY_TIKTOK`. Then set `tiktok.enabled: true` in `config/schedule.yaml`.
+## 6. Publishing
+| Platform | How | Setup |
+|---|---|---|
+| YouTube + Shorts | direct, Google Cloud project `tfs-automation` | section 7 |
+| Facebook + Instagram | direct, Meta app **TFS Publisher** (App ID 1647638926490693) | section 6a |
+| TikTok | Post for Me Quickstart project (approved TikTok app, public posts) | section 6b |
+
+### 6a. Meta app "TFS Publisher"
+1. **Live mode is required.** In Development mode, posts are visible only to people with a role on the app.
+   Under App settings → Basic, fill in:
+   - Privacy policy URL: `https://cloudstrive6.github.io/privacy.html`
+   - Terms URL: `https://cloudstrive6.github.io/terms.html`
+   - User data deletion URL: `https://cloudstrive6.github.io/data-deletion.html`
+   - Category and a 1024×1024 app icon
+   Then switch App Mode to **Live**. No App Review is needed, because the app only uses your own Page and
+   Instagram account (Standard Access).
+2. Get a Page token:
+   - In the Graph API Explorer (app TFS Publisher, User Token), add these permissions: `pages_show_list,
+     pages_read_engagement, pages_manage_posts, publish_video, instagram_basic, instagram_content_publish,
+     instagram_manage_insights, read_insights, business_management`. Click Generate Access Token and approve for
+     The Filipino Standard Page and Instagram account.
+   - In the Access Token Debugger, click **Extend Access Token** to get a long-lived user token.
+   - Back in the Explorer, with that long-lived token, run
+     `me/accounts?fields=name,id,access_token,instagram_business_account`.
+   - Copy the Page's `access_token` (this Page token never expires) → `META_PAGE_ACCESS_TOKEN`,
+     `id` → `META_PAGE_ID`, and `instagram_business_account.id` → `META_IG_USER_ID`.
+3. No media bucket is needed. Reels upload straight to Meta, and carousel images go through unpublished Page photos.
+
+### 6b. TikTok via Post for Me
+Quickstart project ("New Project"): connect @thefilipinostandard under Social Media Accounts, then put that
+project's API key in `POSTFORME_API_KEY` and set `tiktok.enabled: true` in `config/schedule.yaml`.
 
 ## 7. YouTube — Google Cloud project "TFS Automation" (uploads, analytics, trends)
 Created 2026-09-26: YouTube Data API v3 and YouTube Analytics API are enabled, the External consent screen

@@ -168,12 +168,13 @@ def test_claude_code_backend_parses_structured_output_and_detects_limits(monkeyp
         llm.structured("title_writer", "q", Out)
 
 
-def test_youtube_goes_direct_everything_else_via_postforme():
+def test_youtube_and_meta_go_direct_tiktok_via_postforme():
     from tfs.pipeline import _provider
 
-    assert _provider("youtube") == "direct" and _provider("youtube_shorts") == "direct"
-    for platform in ("instagram_reel", "instagram_carousel", "facebook_reel", "facebook_post", "tiktok"):
-        assert _provider(platform) == "postforme"
+    for platform in ("youtube", "youtube_shorts", "instagram_reel", "instagram_carousel", "facebook_reel",
+                     "facebook_post"):
+        assert _provider(platform) == "direct"
+    assert _provider("tiktok") == "postforme"
 
 
 def test_youtube_upload_confirmed_only_when_public(monkeypatch):
