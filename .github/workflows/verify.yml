@@ -1,18 +1,12 @@
-# Actions -> verify -> Run workflow: checks every saved secret works (prints names only, never secrets).
+# Actions -> verify -> Run workflow (or triggered by cron-job.org).
 name: verify
 on:
   workflow_dispatch:
 jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install -q -e .
-      - name: Write .env from repository secrets
-        env:
-          SECRETS_JSON: ${{ toJSON(secrets) }}
-        run: python scripts/write_env.py
-      - run: python -m tfs.cli verify
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: verify
+      needs_claude: false
+      needs_media: false
+    secrets: inherit

@@ -1,30 +1,12 @@
-# Actions -> preview-styles -> Run workflow: one real image per art style (uses GEMINI_API_KEY), sent to your
-# Telegram. Nothing is uploaded to GitHub, because this repo is public.
+# Actions -> preview-styles -> Run workflow (or triggered by cron-job.org).
 name: preview-styles
 on:
   workflow_dispatch:
 jobs:
-  preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: sudo apt-get update && sudo apt-get install -y fonts-dejavu-core
-      - run: pip install -q -e .
-      - name: Write .env from repository secrets
-        env:
-          SECRETS_JSON: ${{ toJSON(secrets) }}
-        run: python scripts/write_env.py
-      - name: Character sheets (only if missing from the repo)
-        run: ls assets/characters/*.png >/dev/null 2>&1 || python -m tfs.cli make-characters
-      - run: TFS_DATA_DIR=out python -m tfs.cli preview-styles
-      - name: Send the samples to Telegram
-        run: |
-          TFS_DATA_DIR=out python - <<'PY'
-          from pathlib import Path
-          from tfs import notify
-          files = sorted(Path("out/style_preview").glob("*.png")) + sorted(Path("out/style_preview").glob("*.jpg"))
-          notify.send_photos(files, "🎨 Style preview: " + ", ".join(p.stem for p in files))
-          PY
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: preview-styles
+      needs_claude: false
+      needs_media: true
+    secrets: inherit

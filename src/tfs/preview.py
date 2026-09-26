@@ -1,7 +1,11 @@
 """`tfs preview-styles`: one real sample per art style + a sample comic panel, for human approval."""
 from __future__ import annotations
 
-from .config import channel, data_dir
+from pathlib import Path
+
+from . import notify
+from .characters import CAST, run as make_characters
+from .config import ROOT, channel, data_dir
 from .media import compose, images
 
 SAMPLES = {
@@ -17,6 +21,8 @@ SAMPLES = {
 
 
 def run() -> list[str]:
+    if not all((ROOT / "assets" / "characters" / f"{name}.png").exists() for name in CAST):
+        make_characters()
     out_dir = data_dir() / "style_preview"
     out_dir.mkdir(parents=True, exist_ok=True)
     made = []
@@ -27,4 +33,5 @@ def run() -> list[str]:
     made.append(str(compose.panel_slide(2, 8, "Ang dike: ₱5.4B. Ang tubig: wala.", "Bagong-bago pa po 'yan, Sir!",
                                         "COA 2025 Annual Audit Report", out_dir / "satire.png",
                                         out_dir / "carousel_panel_sample.jpg", handle)))
+    notify.send_photos([Path(m) for m in made], "🎨 Style preview: " + ", ".join(Path(m).stem for m in made))
     return made
