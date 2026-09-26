@@ -89,8 +89,9 @@ Do not touch **TFS Publisher**; it's connected to Post for Me.
 3. No media bucket is needed. Reels upload straight to Meta, and carousel images go through unpublished Page photos.
 
 ### 6b. TikTok via Post for Me
-Quickstart project ("New Project"): connect @thefilipinostandard under Social Media Accounts, then put that
-project's API key in `POSTFORME_API_KEY` and set `tiktok.enabled: true` in `config/schedule.yaml`.
+@thefilipinostandard is connected (2026-09-26) in the Quickstart project **New Project**, whose approved TikTok
+app posts publicly. That project's API key goes in `POSTFORME_API_KEY_TIKTOK`. The Filipino Standard project
+would need its own TikTok developer app, and posts from that app stay private until TikTok audits it.
 
 ## 7. YouTube — Google Cloud project "TFS Automation" (uploads, analytics, trends)
 Created 2026-09-26: YouTube Data API v3 and YouTube Analytics API are enabled, the External consent screen
