@@ -715,3 +715,12 @@ def test_music_and_effects_are_mixed_under_the_narration(data_dir):
     out, _ = render.render(shots, clips, "vertical", data_dir / "work", data_dir / "v.mp4", "", plan, [10, 11])
     assert (data_dir / "work" / "mix.wav").exists()
     assert abs(duration(out) - duration(data_dir / "work" / "narration.wav")) < 0.15
+
+
+def test_youtube_tags_always_fit_the_rules():
+    from tfs.publish.youtube import clean_tags
+
+    tags = clean_tags(["#Philippines", "flood control <scam>", "DPWH, COA"] + [f"mahabang tag bilang {i}" for i in range(60)])
+    assert tags[0] == "Philippines" and "flood control scam" in tags
+    assert sum(len(t) + (2 if " " in t else 0) for t in tags) + len(tags) - 1 <= 500
+    assert all("<" not in t and "," not in t and len(t) <= 30 for t in tags)
