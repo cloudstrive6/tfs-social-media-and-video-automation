@@ -64,6 +64,13 @@ Media of finished items is pruned from R2 after 10 days; their text files stay.
 
 `tfs run` refuses to start without it, because without saved state every run would re-plan and re-post the same slots.
 
+## 5b. Archive — Backblaze B2
+Every finished piece is copied for good to the private bucket `tfs-content-archive` (encrypted, keeps only the
+latest version of each file), under `YYYY/MM/<item>/`. That covers the video or slides, the thumbnail, every AI
+illustration, the narration, the script, captions and sources, and an `item.json` with the title and slots.
+It uses the application key `tfs-archive-github-actions` (read and write on that bucket only), stored in
+`B2_KEY_ID` / `B2_APP_KEY`. Archiving never blocks posting: a failed upload is retried the next time.
+
 ## 6. Publishing
 | Platform | How | Setup |
 |---|---|---|

@@ -340,3 +340,25 @@ def test_map_card_renders(data_dir, size):
     assert Image.open(out).size == size
     out = cards.render_card("map", "Saan 'to?", ["Nowhere"], size, data_dir / "n.png")  # falls back to PH overview
     assert Image.open(out).size == size
+
+
+def test_archive_uploads_finished_item_once(data_dir, monkeypatch):
+    from tfs import archive, config
+
+    r2 = FakeR2()
+    r2.put_object = lambda Bucket, Key, Body, **kw: r2.objects.__setitem__(Key, Body)
+    for k, v in {"B2_ENDPOINT": "https://b2", "B2_BUCKET": "arch", "B2_KEY_ID": "k", "B2_APP_KEY": "s"}.items():
+        monkeypatch.setenv(k, v)
+    monkeypatch.setattr(archive, "_client", lambda: r2)
+    d = config.item_dir("2026-09-27-vert0")
+    (d / "work").mkdir()
+    (d / "work" / "tmp.mp4").write_bytes(b"x")
+    (d / "video.mp4").write_bytes(b"v")
+    (d / "seo.json").write_text("{}")
+    item = {"id": "2026-09-27-vert0", "kind": "vertical", "anchor_at": "2026-09-27T07:30:00+08:00",
+            "status": "scheduled", "data": {"title": "t"}}
+    assert archive.archive_item(item) == 2
+    assert "2026/09/2026-09-27-vert0/video.mp4" in r2.objects
+    assert "2026/09/2026-09-27-vert0/item.json" in r2.objects
+    assert not any("work/" in k or "_archived" in k for k in r2.objects)
+    assert archive.archive_item(item) == 0              # nothing new

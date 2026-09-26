@@ -189,6 +189,8 @@ PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagra
 
 
 def _schedule(item: dict, **artifacts) -> None:
+    from . import archive
+
     if item["data"].get("sample"):                # `tfs sample`: finished, but never queued for posting
         db.set_status(item["id"], "sample", **artifacts)
         return
@@ -197,6 +199,7 @@ def _schedule(item: dict, **artifacts) -> None:
     db.set_status(item["id"], "scheduled", **artifacts)
     log.info("scheduled %s", item["id"])
     _notify_ready(db.get_item(item["id"]))
+    archive.archive_item(db.get_item(item["id"]))  # permanent copy in B2 (never blocks posting)
 
 
 def _notify_ready(item: dict) -> None:
@@ -441,6 +444,17 @@ def _weekly_analysis() -> None:
     (data_dir() / "last_analysis.txt").write_text(now().isoformat(timespec="seconds"))
 
 
+def _archive_pending() -> None:
+    """Retry B2 archiving for finished items this run has on disk (uploads only what's missing)."""
+    from . import archive
+
+    if not archive.enabled():
+        return
+    for item in db.items_with_status("scheduled"):
+        if (item_dir(item["id"]) / "seo.json").exists():
+            archive.archive_item(item)
+
+
 def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
     """Everything one triggered run does, with state restored from and saved back to R2.
 
@@ -488,6 +502,7 @@ def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
     finally:
         stop.set()
         thread.join(timeout=600)
+        _archive_pending()
         state.push()
         state.daily_backup()
         try:

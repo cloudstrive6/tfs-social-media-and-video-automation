@@ -82,6 +82,11 @@ def _r2() -> str:
     return f"bucket '{bucket}' read/write OK" + ("" if body == b"ok" else " (read mismatch!)") +         (", saved state present" if has_state else ", no state saved yet (first run creates it)")
 
 
+def _b2() -> str:
+    from . import archive
+    return archive.ping()
+
+
 def _telegram() -> str:
     r = requests.get(f"https://api.telegram.org/bot{env('TELEGRAM_BOT_TOKEN')}/getMe", timeout=20)
     r.raise_for_status()
@@ -95,6 +100,7 @@ CHECKS = [
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY_TIKTOK",), _postforme),
     ("Gemini images", ("GEMINI_API_KEY",), _gemini),
     ("Cloudflare R2 state", ("S3_ENDPOINT_URL", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_BACKUP_BUCKET"), _r2),
+    ("Backblaze B2 archive", ("B2_ENDPOINT", "B2_BUCKET", "B2_KEY_ID", "B2_APP_KEY"), _b2),
     ("Telegram", ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"), _telegram),
     ("Claude", ("CLAUDE_CODE_OAUTH_TOKEN",), _claude),
 ]
