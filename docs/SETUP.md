@@ -63,15 +63,15 @@ A private bucket for nightly database backups (`S3_ENDPOINT_URL`, `S3_ACCESS_KEY
 | Platform | How | Setup |
 |---|---|---|
 | YouTube + Shorts | direct, Google Cloud project `tfs-automation` | section 7 |
-| Facebook + Instagram | direct, Meta app **TFS Auto Poster** (created 2026-09-26; separate from TFS Publisher, which Post for Me uses) | section 6a |
+| Facebook + Instagram | direct, Meta app **TFS Content Creator** (App ID 2122587118630314, created 2026-09-26; separate from TFS Publisher, which Post for Me uses) | section 6a |
 | TikTok | Post for Me Quickstart project (approved TikTok app, public posts) | section 6b |
 
-### 6a. Meta app "TFS Auto Poster"
+### 6a. Meta app "TFS Content Creator"
 Do not touch **TFS Publisher**; it's connected to Post for Me.
 1. The app stays in **Development mode**. It's used only by you (an app admin) on your own Page and Instagram
    account, so no App Review or Live switch is needed.
 2. Get a Page token:
-   - In the Graph API Explorer (app TFS Auto Poster, User Token), add these permissions: `pages_show_list,
+   - In the Graph API Explorer (app TFS Content Creator, User Token), add these permissions: `pages_show_list,
      pages_read_engagement, pages_manage_posts, publish_video, instagram_basic, instagram_content_publish,
      instagram_manage_insights, read_insights, business_management`. Click Generate Access Token and approve for
      The Filipino Standard Page and Instagram account.

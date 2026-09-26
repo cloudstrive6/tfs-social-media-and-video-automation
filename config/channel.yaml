@@ -49,7 +49,7 @@ quality:
 
 # Who publishes. direct = our own API access:
 #   YouTube + Shorts -> Google Cloud project "tfs-automation" (YouTube Data API)
-#   Facebook + Instagram -> Meta app "TFS Auto Poster" (Graph API, Development mode)
+#   Facebook + Instagram -> Meta app "TFS Content Creator" (Graph API, Development mode)
 # postforme = Post for Me, used only for TikTok (its approved TikTok app posts publicly without our own audit).
 publishing:
   provider: direct

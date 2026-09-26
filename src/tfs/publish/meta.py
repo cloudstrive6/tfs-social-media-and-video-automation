@@ -1,4 +1,4 @@
-"""Facebook Page + Instagram professional account via Meta's Graph API (app: TFS Auto Poster).
+"""Facebook Page + Instagram professional account via Meta's Graph API (app: TFS Content Creator).
 
 Everything is uploaded straight to Meta; no public media bucket is needed:
 - Instagram Reels use Instagram's resumable upload (rupload.facebook.com).
