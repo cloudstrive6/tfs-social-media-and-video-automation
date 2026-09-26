@@ -17,8 +17,17 @@ For every frame, check:
    objects in Spanish-era scenes); no gore, nudity or anything that would get the post limited.
 6. **Appeal**: composition, contrast, colour, clarity. Would it stop a thumb?
 
-`blocking` = the piece must not go out with this frame (rules 1–5 when clearly visible). Minor imperfections
-are not blocking; list them as problems with `blocking: false`.
+`blocking: true` ONLY for these, when clearly visible:
+- a realistic face that could pass as a real, identifiable person;
+- garbled pseudo-text or fake lettering drawn inside an AI illustration;
+- broken anatomy (melted face or hands, extra or missing limbs, duplicated people) or a recurring character in
+  the wrong costume/colours (e.g. Kuya Standard in Tito Trapo's cream barong);
+- on-screen text (cards, captions) misspelled, cut off, or covering other text;
+- gore, nudity, or anything that would get the post limited; a clear anachronism.
+Everything else — composition, a weak frame, continuity nits, empty space, style variation — is
+`blocking: false`, however strongly you feel; list it as a problem and it will inform future videos.
+Frames marked `reused: true` intentionally repeat an earlier illustration (a callback or a replacement for a
+shot that failed review). Repetition is never a defect; judge only the frame itself.
 For a blocking AI illustration, write `fix_prompt`: a complete corrected image prompt (keep the subject and
 style, add what must change and what to avoid). Cards and captions are drawn by code: leave `fix_prompt` empty.
 Score `appeal_score` and `hook_frame_score` honestly; 7+ means genuinely scroll-stopping.

@@ -135,7 +135,7 @@ def _look(frames: list[tuple[str, Path, dict]], context: str) -> tuple[list, int
 
 
 def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: list[float], video: Path,
-                 thumbnail: Path | None, hook_text: str) -> ReviewReport:
+                 thumbnail: Path | None, hook_text: str, reused: set[int] | None = None) -> ReviewReport:
     frame_dir = d / "qa_frames"
     frame_dir.mkdir(exist_ok=True)
     total = duration(video)
@@ -160,6 +160,8 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
             info |= {"type": shot.kind if shot.kind != "card" else f"card:{shot.card_type}",
                      "style": shot.style if shot.kind != "card" else "",
                      "meant_to_show": (shot.image_prompt or f"{shot.card_title} {shot.card_lines}")[:350]}
+        if (shot and shot.kind == "reuse") or scene.id in (reused or set()):
+            info["reused"] = True
         t = (bounds[i] + bounds[i + 1]) / 2
         frames.append((f"scene {scene.id}", grab(video, t, frame_dir / f"scene{scene.id:03d}.jpg"), info))
     if thumbnail and thumbnail.exists():

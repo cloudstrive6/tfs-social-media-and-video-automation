@@ -297,8 +297,11 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     def review(built) -> ReviewReport:
         video, starts, thumb, _ = built
         shots = ShotList.model_validate_json((d / "shots.json").read_text(encoding="utf-8"))
+        dropped = {int(k) for k in _fixes(d)["drop"] if k.isdigit()}
+        reused = {s.scene_id for s in shots.shots
+                  if s.scene_id in dropped or (s.kind == "reuse" and s.reuse_of_scene in dropped)}
         return qa.review_video(kind, d, _voiced_script(script, d), shots, starts, video, thumb,
-                               hook.on_screen_hook_text)
+                               hook.on_screen_hook_text, reused)
 
     done = _reviewed(item, d, lambda: _build_video(item, d, script, hook), review,
                      lambda report: _apply_video_fixes(d, report))

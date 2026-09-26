@@ -22,7 +22,9 @@ caption (write numbers out, e.g. "limang punto limang bilyon"; spell acronyms "D
 leave `tts_text` empty (the scene is simply re-voiced).
 
 Severity for every NOT-ok scene:
-- `major`: a viewer would get a wrong fact or lose the meaning — wrong number, date or name; a skipped or
-  repeated phrase; a garbled or cut-off line; a cue read aloud.
+- `major`: ONLY when a viewer would come away with a wrong fact or a flipped meaning — a wrong number, date or
+  name; a word replaced by a different word that changes the sense ("Ilang" heard as "Bilang"); a whole phrase
+  skipped; a cue read aloud. Syllables clipped or merged at a scene boundary, accents, and anything Whisper
+  could plausibly have mis-transcribed are `minor`.
 - `minor`: noticeable but harmless — one word with an odd accent, slightly merged syllables, a flat delivery.
 Minor scenes are still re-voiced when possible, but only major problems can stop a video from posting.
