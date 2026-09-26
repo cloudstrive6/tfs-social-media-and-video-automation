@@ -10,7 +10,7 @@ from .config import env
 
 def _scrub(text: str) -> str:
     """Mask anything token-shaped (URLs can carry access_token=...)."""
-    text = re.sub(r"(access_token|key|client_secret|refresh_token)=[^&\s'\"]+", r"=***", text)
+    text = re.sub(r"(access_token|key|client_secret|refresh_token)=[^&\s'\"]+", r"\1=***", text)
     return re.sub(r"(EAA[A-Za-z0-9]{20,}|1//[A-Za-z0-9_-]{20,}|ya29\.[A-Za-z0-9_.-]+|sk-ant-[A-Za-z0-9_-]+|GOCSPX-[A-Za-z0-9_-]+)", "***", text)
 
 
