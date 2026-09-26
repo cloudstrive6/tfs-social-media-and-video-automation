@@ -174,3 +174,28 @@ def test_youtube_goes_direct_everything_else_via_postforme():
     assert _provider("youtube") == "direct" and _provider("youtube_shorts") == "direct"
     for platform in ("instagram_reel", "instagram_carousel", "facebook_reel", "facebook_post", "tiktok"):
         assert _provider(platform) == "postforme"
+
+
+def test_youtube_upload_confirmed_only_when_public(monkeypatch):
+    from datetime import timedelta
+
+    from tfs import db, pipeline
+    from tfs.config import now
+    from tfs.publish import youtube
+
+    alerts = []
+    monkeypatch.setattr(pipeline.notify, "send", alerts.append)
+    slot = db.iso(now() - timedelta(hours=3))
+    db.upsert_item("y1", "long_form", slot, "scheduled", {})
+    db.queue_post("y1", "youtube", slot)
+    post = db.queued_posts()[0]
+    db.finish_post(post["id"], "submitted", "vid123")
+
+    monkeypatch.setattr(youtube, "video_status", lambda vid: {"privacyStatus": "private"})
+    pipeline.reconcile()
+    assert db.posts_for_item("y1")[0]["status"] == "failed" and alerts
+
+    db.finish_post(post["id"], "submitted", "vid123")
+    monkeypatch.setattr(youtube, "video_status", lambda vid: {"privacyStatus": "public"})
+    pipeline.reconcile()
+    assert db.posts_for_item("y1")[0]["status"] == "published"

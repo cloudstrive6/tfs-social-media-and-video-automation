@@ -1,7 +1,7 @@
 """YouTube uploads (long form + Shorts) with native scheduling, thumbnails and AI disclosure.
 
-Quota: videos.insert = 1,600 units, thumbnails.set = 50. Six uploads/day = 9,900 of the default
-10,000 — request a quota increase before going to full volume (docs/SETUP.md).
+Quota (Sep 2026): uploads use their own "Video Uploads per day" bucket (100/day by default);
+thumbnails.set and videos.list use the regular 10,000 units/day. Our cadence (4 uploads/day) is far below both.
 """
 from __future__ import annotations
 
@@ -74,6 +74,11 @@ def upload(video: Path, title: str, description: str, tags: list[str], publish_a
     if thumbnail:
         api().thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(thumbnail))).execute()
     return video_id
+
+
+def video_status(video_id: str) -> dict:
+    items = api().videos().list(part="status", id=video_id).execute().get("items", [])
+    return items[0]["status"] if items else {}
 
 
 def update_title(video_id: str, title: str) -> None:

@@ -7,7 +7,7 @@ on a fixed daily schedule — then studies the analytics and retunes itself week
 
 - **What we're copying and why:** [docs/STYLE_BIBLE.md](docs/STYLE_BIBLE.md)
 - **Agents, flow, costs:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- **Accounts, keys, audits, go-live:** [docs/SETUP.md](docs/SETUP.md)
+- **Accounts, keys, go-live:** [docs/SETUP.md](docs/SETUP.md)
 
 ```
 config/     channel (brand, models, quality gates, voice, image style), schedule (PHT slots), sources

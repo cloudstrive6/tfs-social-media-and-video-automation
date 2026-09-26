@@ -232,7 +232,8 @@ def _publish_one(post: dict) -> tuple[str, str]:
     match platform:
         case "youtube" | "youtube_shorts":
             thumb = Path(data["thumbnail"]) if data.get("thumbnail") else None
-            return "published", youtube.upload(video, title, caption, seo.tags, slot, thumb)
+            # "submitted" until reconcile() confirms YouTube actually made it public at the slot
+            return "submitted", youtube.upload(video, title, caption, seo.tags, slot, thumb)
         case "instagram_reel":
             return "published", meta.ig_reel(storage.public_url(video, item["id"]), caption)
         case "facebook_reel":
@@ -246,13 +247,31 @@ def _publish_one(post: dict) -> tuple[str, str]:
     raise ValueError(f"unknown platform {platform}")
 
 
+def _confirm_youtube(post: dict, late: timedelta) -> None:
+    """A direct upload is only 'published' once YouTube reports it public. If it's still private well after
+    its publishAt, YouTube has most likely locked it (unaudited API project) — alert instead of assuming."""
+    from .publish import youtube
+
+    status = youtube.video_status(post["remote_id"])
+    if status.get("privacyStatus") == "public":
+        db.finish_post(post["id"], "published", post["remote_id"])
+    elif late > timedelta(hours=2):
+        db.finish_post(post["id"], "failed", post["remote_id"], f"still {status.get('privacyStatus')} after slot")
+        notify.send(f"⚠️ YouTube video {post['remote_id']} ({post['item_id']}) is still "
+                    f"{status.get('privacyStatus')} 2h after its slot — check YouTube Studio for a 'Locked' notice. "
+                    f"If YouTube is locking API uploads, set publishing.overrides.youtube: postforme.")
+
+
 def reconcile() -> None:
-    """Confirm Post for Me posts whose slot has passed; record the platform's own id for analytics."""
+    """Confirm posts whose slot has passed; record the platform's own id for analytics."""
     from .publish import postforme
 
     for post in db.posts_with_status("submitted"):
         late = now() - datetime.fromisoformat(post["slot_at"])
         if late < timedelta(minutes=20):
+            continue
+        if _provider(post["platform"]) == "direct" and post["platform"].startswith("youtube"):
+            _confirm_youtube(post, late)
             continue
         res = postforme.results(post["remote_id"], post["platform"])
         if not res:

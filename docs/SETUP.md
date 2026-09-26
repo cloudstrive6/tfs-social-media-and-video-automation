@@ -81,12 +81,13 @@ is configured, and it has an OAuth client "TFS Analytics (OAuth Playground)" (We
      `https://www.googleapis.com/auth/yt-analytics.readonly`.
    - Authorize as cloudstrive1688@gmail.com (the channel owner), then "Exchange authorization code for tokens".
    - Copy the refresh token → `YOUTUBE_REFRESH_TOKEN`.
-4. ⏳ **API compliance audit (required before videos can go public).** YouTube locks uploads from unaudited
-   API projects to *private*. Submit the "YouTube API Services — Audit and Quota Extension" form for project
-   `tfs-automation` now; approval typically takes days to a few weeks. Until then, uploads land as private
-   videos you can publish by hand in YouTube Studio.
-5. Quota: 1 long-form + 3 Shorts + 1 thumbnail ≈ 6,450 of the default 10,000 units/day, so no increase is
-   needed at the current cadence. Request one in the same audit form before scaling past ~5 uploads/day.
+4. No audit needed in practice. Google's docs say uploads from unaudited projects created after July 2020 are
+   locked as private, but a comparable project (External, In production, unverified, default quota) was checked
+   on 2026-09-26: 24 API uploads in 30 days were all public, with normal views. As a safeguard, the pipeline checks
+   each YouTube upload after its slot. If one is still private 2 h later, you get a Telegram alert and can switch
+   YouTube to Post for Me with `publishing.overrides.youtube: postforme` (and `youtube_shorts`).
+5. Quota: uploads use their own "Video Uploads per day" limit (100/day). Thumbnails and status checks use the
+   regular 10,000 units/day. 4 uploads/day is far below both.
 6. In YouTube Studio, enable advanced features (phone verification) so custom thumbnails and >15-minute
    videos work.
 
@@ -103,7 +104,6 @@ separate locks, so a long render never delays a post. Logs: provider console →
 
 ## 11. First run (before going public)
 From GitHub → Actions → **command** → Run workflow: `scout`, then `plan`, then `status`.
-Until the YouTube audit clears, uploads stay private anyway — use that week to review every output in
-YouTube Studio and on the other platforms.
+Watch the first week's uploads in YouTube Studio and on the other platforms before scaling up.
 Watch the first week's output personally. Tighten prompts, voice settings and schedule, *then* switch on
 the full cadence.
