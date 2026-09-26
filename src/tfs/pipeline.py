@@ -171,11 +171,49 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
     _schedule(item, title=car.slides[0].headline, slides=paths)
 
 
+PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
+                  "instagram_carousel": "IG Carousel", "facebook_reel": "FB Reel", "facebook_post": "FB Post",
+                  "tiktok": "TikTok"}
+
+
 def _schedule(item: dict, **artifacts) -> None:
     for platform, slot in item["data"]["platforms"].items():
         db.queue_post(item["id"], platform, slot)
     db.set_status(item["id"], "scheduled", **artifacts)
     log.info("scheduled %s", item["id"])
+    _notify_ready(db.get_item(item["id"]))
+
+
+def _notify_ready(item: dict) -> None:
+    """Telegram: the finished post itself (thumbnail / video / slides) + where and when it goes out."""
+    data = item["data"]
+    when = "\n".join(f"• {PLATFORM_LABEL.get(p, p)} — {datetime.fromisoformat(t).strftime('%a %d %b, %H:%M')} PHT"
+                     for p, t in sorted(data["platforms"].items(), key=lambda kv: kv[1]))
+    caption = f"✅ Ready: {data.get('title') or data.get('working_title')}\n{item['kind'].replace('_', ' ')}\n{when}"
+    if item["kind"] == "carousel":
+        notify.send_photos([Path(p) for p in data.get("slides", [])], caption)
+    elif item["kind"] == "vertical":
+        notify.send_video(Path(data["video"]), caption)
+    else:
+        thumb = Path(data["thumbnail"]) if data.get("thumbnail") else None
+        notify.send_photos([thumb] if thumb else [], caption)
+
+
+def _post_link(platform: str, remote_id: str) -> str:
+    if platform in ("youtube", "youtube_shorts"):
+        return f"https://youtu.be/{remote_id}"
+    if platform in ("facebook_reel", "facebook_post"):
+        return f"https://www.facebook.com/{remote_id}"
+    if platform in ("instagram_reel", "instagram_carousel"):
+        return "https://www.instagram.com/thefilipinostandard/"
+    return ""
+
+
+def _notify_live(post: dict, remote_id: str) -> None:
+    item = db.get_item(post["item_id"])
+    title = item["data"].get("title") or item["data"].get("working_title", "")
+    notify.send(f"🟢 Live on {PLATFORM_LABEL.get(post['platform'], post['platform'])}: {title}\n"
+                f"{_post_link(post['platform'], remote_id)}")
 
 
 def produce(item_id: str) -> None:
@@ -259,6 +297,7 @@ def _confirm_youtube(post: dict, late: timedelta) -> None:
     status = youtube.video_status(post["remote_id"])
     if status.get("privacyStatus") == "public":
         db.finish_post(post["id"], "published", post["remote_id"])
+        _notify_live(post, post["remote_id"])
     elif late > timedelta(hours=2):
         db.finish_post(post["id"], "failed", post["remote_id"], f"still {status.get('privacyStatus')} after slot")
         notify.send(f"⚠️ YouTube video {post['remote_id']} ({post['item_id']}) is still "
@@ -285,7 +324,9 @@ def reconcile() -> None:
             continue
         r = res[0]
         if r.get("success"):
-            db.finish_post(post["id"], "published", (r.get("platform_data") or {}).get("id") or post["remote_id"])
+            live_id = (r.get("platform_data") or {}).get("id") or post["remote_id"]
+            db.finish_post(post["id"], "published", live_id)
+            _notify_live(post, live_id)
         else:
             db.finish_post(post["id"], "failed", post["remote_id"], str(r.get("error")))
             notify.send(f"❌ Publish failed: {post['item_id']} → {post['platform']}: {r.get('error')}\n"
@@ -303,6 +344,8 @@ def publish_due() -> int:
         try:
             status, remote_id = _publish_one(post)
             db.finish_post(post["id"], status, remote_id)
+            if status == "published":
+                _notify_live(post, remote_id)
             done += 1
             log.info("%s %s → %s (%s)", status, post["item_id"], post["platform"], remote_id)
         except Exception as e:

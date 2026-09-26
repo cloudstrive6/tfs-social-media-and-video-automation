@@ -211,3 +211,28 @@ def test_every_module_imports():
 
     for mod in pkgutil.walk_packages(tfs.__path__, "tfs."):
         importlib.import_module(mod.name)
+
+
+def test_ready_notification_sends_the_posts_media(monkeypatch, data_dir):
+    from tfs import db, notify, pipeline
+
+    sent = []
+    monkeypatch.setattr(notify, "send_photos", lambda paths, caption: sent.append(("photos", len(paths), caption)))
+    monkeypatch.setattr(notify, "send_video", lambda path, caption, fallback_photo=None: sent.append(("video", path.name, caption)))
+    slides = []
+    for i in range(3):
+        p = data_dir / f"s{i}.jpg"
+        p.write_bytes(b"x")
+        slides.append(str(p))
+    platforms = {"instagram_carousel": "2026-09-28T11:00:00+08:00", "facebook_post": "2026-09-28T10:00:00+08:00"}
+    db.upsert_item("c1", "carousel", platforms["facebook_post"], "planned", {"platforms": platforms})
+    pipeline._schedule(db.get_item("c1"), title="Saan napunta ang ₱5.4B?", slides=slides)
+    kind, count, caption = sent[-1]
+    assert kind == "photos" and count == 3
+    assert "Saan napunta" in caption and caption.index("FB Post") < caption.index("IG Carousel")
+
+    db.upsert_item("v1", "vertical", platforms["facebook_post"], "planned", {"platforms": {"tiktok": "2026-09-28T12:00:00+08:00"}})
+    video = data_dir / "v.mp4"
+    video.write_bytes(b"x")
+    pipeline._schedule(db.get_item("v1"), title="Short", video=str(video))
+    assert sent[-1][0] == "video"
