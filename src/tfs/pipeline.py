@@ -399,9 +399,9 @@ def _publish_one(post: dict) -> tuple[str, str]:
 
     if _provider(platform) == "postforme":
         from .publish import postforme
-        media = slides if platform in ("instagram_carousel", "facebook_post") else [video]
+        files = slides if platform in ("instagram_carousel", "facebook_post") else [video]
         thumb = media(data["thumbnail"]) if platform == "youtube" and data.get("thumbnail") else None
-        pid = postforme.create_post(platform, caption, media, slot, title=title, description=caption,
+        pid = postforme.create_post(platform, caption, files, slot, title=title, description=caption,
                                     tags=seo.tags, thumbnail=thumb, external_id=f"{item['id']}:{platform}")
         return "submitted", pid
 

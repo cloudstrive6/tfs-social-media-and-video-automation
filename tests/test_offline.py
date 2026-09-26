@@ -418,3 +418,31 @@ def test_vertical_word_budget():
     from tfs.agents import writers
 
     assert 100 <= writers.max_words("vertical") <= 115
+
+
+@pytest.mark.parametrize("platform", ["youtube_shorts", "tiktok", "instagram_reel", "facebook_post"])
+def test_publish_one_reaches_each_provider(data_dir, monkeypatch, platform):
+    from datetime import timedelta
+
+    from tfs import db, pipeline
+    from tfs.config import item_dir, now
+    from tfs.models import SeoPack
+    from tfs.publish import meta, postforme, youtube
+
+    d = item_dir("2026-09-27-vert0")
+    (d / "video.mp4").write_bytes(b"v")
+    (d / "s0.jpg").write_bytes(b"j")
+    fields = {k: "x" for k in SeoPack.model_fields}
+    fields["tags"] = ["a"]
+    (d / "seo.json").write_text(SeoPack(**fields).model_dump_json())
+    slot = db.iso(now() + timedelta(hours=1))
+    db.upsert_item("2026-09-27-vert0", "vertical", slot, "scheduled",
+                   {"title": "t", "video": str(d / "video.mp4"), "slides": [str(d / "s0.jpg")]})
+    db.queue_post("2026-09-27-vert0", platform, slot)
+    calls = []
+    monkeypatch.setattr(youtube, "upload", lambda *a, **k: calls.append("yt") or "vid")
+    monkeypatch.setattr(postforme, "create_post", lambda *a, **k: calls.append("pfm") or "sp_1")
+    monkeypatch.setattr(meta, "ig_reel", lambda *a, **k: calls.append("ig") or "ig1")
+    monkeypatch.setattr(meta, "fb_photos", lambda *a, **k: calls.append("fb") or "fb1")
+    status, remote = pipeline._publish_one(db.queued_posts()[0])
+    assert remote in ("vid", "sp_1", "ig1", "fb1") and len(calls) == 1
