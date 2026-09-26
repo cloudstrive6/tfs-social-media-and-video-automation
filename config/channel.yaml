@@ -59,8 +59,8 @@ publishing:
 tts:
   provider: elevenlabs        # elevenlabs | fishaudio
   elevenlabs:
-    model_id: eleven_multilingual_v2      # best Taglish prosody; eleven_v3 for more expressive reads
-    voice_id: ""                          # set in .env (ELEVENLABS_VOICE_ID) — ideally a Professional Voice Clone
+    model_id: eleven_v3                   # expressive reads + [laugh]/[sarcastic] tags; eleven_multilingual_v2 = steadier fallback
+    voice_id: ""                          # ELEVENLABS_VOICE_ID = oqlKKpA3VREaqVHQKHNn ("Josh - Natural Narrator", Filipino)
     stability: 0.38
     similarity_boost: 0.8
     style: 0.35
