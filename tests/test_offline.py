@@ -446,3 +446,27 @@ def test_publish_one_reaches_each_provider(data_dir, monkeypatch, platform):
     monkeypatch.setattr(meta, "fb_photos", lambda *a, **k: calls.append("fb") or "fb1")
     status, remote = pipeline._publish_one(db.queued_posts()[0])
     assert remote in ("vid", "sp_1", "ig1", "fb1") and len(calls) == 1
+
+
+def test_captions_group_by_sentence_and_highlight_one_word_at_a_time(data_dir):
+    from tfs.media import render
+    from tfs.media.tts import Clip
+
+    words = [("Hindi", 0.0, 0.3), ("nagbago", 0.3, 0.7), ("ang", 0.7, 0.8), ("Konstitusyon.", 0.8, 1.4),
+             ("Nagbago", 1.6, 2.0), ("ang", 2.0, 2.1), ("bilang.", 2.1, 2.6)]
+    groups = [" ".join(w for w, _, _ in g) for g in render.caption_chunks(words)]
+    assert groups == ["Hindi nagbago ang", "Konstitusyon.", "Nagbago ang bilang."]   # never spans a sentence end
+
+    out = data_dir / "c.ass"
+    render.captions_ass([Clip(data_dir / "x.mp3", 2.6, words)], [0.0], (1080, 1920), "", out)
+    lines = [l for l in out.read_text(encoding="utf-8").splitlines() if l.startswith("Dialogue")]
+    assert len(lines) == len(words)                                   # one event per spoken word
+    assert all(l.count("\c&H0016D1FC&") == 1 for l in lines)         # exactly one highlighted word at a time
+    times = [(l.split(",")[1], l.split(",")[2]) for l in lines]
+    assert all(a[1] <= b[0] for a, b in zip(times, times[1:]))        # events never overlap
+
+
+def test_long_caption_words_shrink_to_stay_in_frame():
+    from tfs.media import render
+
+    assert render._fit_size("PINAKAMAHALAGANG PAGKAKAKILANLAN", 105, 1080 - 2 * 75) < 105

@@ -76,31 +76,85 @@ def _ass_time(t: float) -> str:
     return f"{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}"
 
 
+SENTENCE_END = (".", "?", "!", "…", "...")
+CLAUSE_END = (",", ";", ":", "—", "–")
+MAX_WORDS, MAX_CHARS = 3, 20
+
+
+def caption_chunks(words: list[tuple[str, float, float]]) -> list[list[tuple[str, float, float]]]:
+    """Group spoken words into on-screen caption groups: at most 3 words / 20 characters, and a group always ends
+    at the end of a sentence or clause, so the next sentence never shares the screen with the last one."""
+    chunks, cur = [], []
+    for w in words:
+        if cur and len(" ".join(x[0] for x in cur + [w])) > MAX_CHARS:
+            chunks.append(cur)                       # close before a word that would overflow the group
+            cur = []
+        cur.append(w)
+        token = w[0].rstrip("\"'”’)")
+        if len(cur) >= MAX_WORDS or token.endswith(SENTENCE_END + CLAUSE_END):
+            chunks.append(cur)
+            cur = []
+    if cur:
+        chunks.append(cur)
+    return chunks
+
+
+def _ass_escape(text: str) -> str:
+    return text.upper().replace("{", "").replace("}", "").replace("\\", "")
+
+
 def captions_ass(clips: list[Clip], starts: list[float], size: tuple[int, int], hook_text: str, out: Path) -> None:
-    """Big 1–3 word captions (vertical style) + the on-screen hook line for the first 3 seconds."""
+    """Vertical captions: 1–3 word groups, the word being spoken highlighted (karaoke), each group shrunk to fit
+    inside the frame, plus the on-screen hook line for the first 3 seconds."""
     w, h = size
     family = "Impact" if not font_path("display") or "impact" in font_path("display").lower() else \
         Path(font_path("display")).stem.split("-")[0]
+    base = int(h * 0.1)
+    margin = int(w * 0.07)
     header = (
         "[Script Info]\nScriptType: v4.00+\nPlayResX: {w}\nPlayResY: {h}\nWrapStyle: 0\n\n"
         "[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, "
         "Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, "
         "Alignment, MarginL, MarginR, MarginV, Encoding\n"
-        "Style: Cap,{f},{cs},&H00FFFFFF,&H0016D1FC,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,8,3,2,60,60,{mv},1\n"
-        "Style: Hook,{f},{hs},&H0016D1FC,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,9,3,8,60,60,{mt},1\n\n"
+        "Style: Cap,{f},{cs},&H00FFFFFF,&H0016D1FC,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,10,4,2,{m},{m},{mv},1\n"
+        "Style: Hook,{f},{hs},&H0016D1FC,&H00FFFFFF,&H00000000,&H64000000,-1,0,0,0,100,100,1,0,1,9,3,8,{m},{m},{mt},1\n\n"
         "[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
-    ).format(w=w, h=h, f=family, cs=int(h * 0.055), hs=int(h * 0.05), mv=int(h * 0.3), mt=int(h * 0.12))
+    ).format(w=w, h=h, f=family, cs=base, hs=int(h * 0.085), mv=int(h * 0.3), mt=int(h * 0.12), m=margin)
     events = []
     if hook_text:
-        events.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(3.0)},Hook,,0,0,0,,{hook_text.upper()}")
+        hook = _ass_escape(hook_text)
+        hsize = _fit_size(hook, int(h * 0.085), (w - 2 * margin) * 2)       # the hook may wrap to 2 lines
+        events.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(3.0)},Hook,,0,0,0,,{{\\fs{hsize}}}{hook}")
+    yellow, white = "&H0016D1FC&", "&H00FFFFFF&"
     for clip, start in zip(clips, starts):
-        words = clip.words
-        for i in range(0, len(words), 3):
-            chunk = words[i:i + 3]
-            text = " ".join(wd for wd, _, _ in chunk).upper().replace("{", "").replace("}", "")
-            events.append(f"Dialogue: 0,{_ass_time(start + chunk[0][1])},{_ass_time(start + chunk[-1][2] + 0.05)},"
-                          f"Cap,,0,0,0,,{text}")
+        groups = caption_chunks(clip.words)
+        for g, chunk in enumerate(groups):
+            texts = [_ass_escape(wd) for wd, _, _ in chunk]
+            size_fs = _fit_size(" ".join(texts), base, w - 2 * margin, grow=1.1)
+            nxt = groups[g + 1][0][1] if g + 1 < len(groups) else chunk[-1][2] + 0.25
+            for k, (_, ws, we) in enumerate(chunk):
+                t0 = start + (chunk[0][1] if k == 0 else ws)
+                t1 = start + (chunk[k + 1][1] if k + 1 < len(chunk) else min(nxt, chunk[-1][2] + 0.25))
+                if t1 <= t0:
+                    continue
+                parts = [(f"{{\\c{yellow}\\fscx110\\fscy110}}{t}{{\\c{white}\\fscx100\\fscy100}}" if i == k else t)
+                         for i, t in enumerate(texts)]
+                events.append(f"Dialogue: 0,{_ass_time(t0)},{_ass_time(t1)},Cap,,0,0,0,,{{\\fs{size_fs}}}"
+                              + " ".join(parts))
     out.write_text(header + "\n".join(events) + "\n", encoding="utf-8")
+
+
+def _fit_size(text: str, size: int, max_width: float, grow: float = 1.0) -> int:
+    """Largest ASS font size (<= size) at which `text` (highlighted word scaled by `grow`) fits the width.
+    libass treats Fontsize as the font's full line height (ascent+descent), so glyphs come out smaller than
+    PIL's em-based size by size/(ascent+descent); measure with that scale so the fit is exact, not timid."""
+    while size > 24:
+        f = font("display", size)
+        ascent, descent = f.getmetrics()
+        if f.getlength(text) * size / (ascent + descent) * grow + size * 0.3 <= max_width:
+            return size
+        size -= 2
+    return size
 
 
 def srt(clips: list[Clip], starts: list[float], out: Path) -> None:
