@@ -14,7 +14,12 @@ def run() -> None:
         return
     me = requests.get(f"https://api.telegram.org/bot{token}/getMe", timeout=20).json()
     print(f"Bot: @{me.get('result', {}).get('username')}")
-    updates = requests.get(f"https://api.telegram.org/bot{token}/getUpdates", timeout=20).json().get("result", [])
+    hook = requests.get(f"https://api.telegram.org/bot{token}/getWebhookInfo", timeout=20).json().get("result", {})
+    print(f"Webhook set: {bool(hook.get('url'))}  pending updates: {hook.get('pending_update_count')}")
+    resp = requests.get(f"https://api.telegram.org/bot{token}/getUpdates", timeout=20).json()
+    if not resp.get("ok"):
+        print(f"getUpdates error {resp.get('error_code')}: {resp.get('description')}")
+    updates = resp.get("result", [])
     chats = {}
     for u in updates:
         chat = (u.get("message") or u.get("channel_post") or u.get("my_chat_member") or {}).get("chat")
