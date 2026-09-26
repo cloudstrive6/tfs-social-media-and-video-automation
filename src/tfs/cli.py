@@ -23,6 +23,7 @@ def main() -> None:
     sub.add_parser("backup", help="copy the SQLite state to the private backup bucket")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
     sub.add_parser("preview-styles", help="generate one sample image per art style")
+    sub.add_parser("telegram-setup", help="print the chat id(s) that messaged the bot; send a test message")
     sub.add_parser("make-characters", help="generate the recurring cast's model sheets into assets/characters")
     for name in ("produce", "approve", "reject", "requeue"):
         sp = sub.add_parser(name)
@@ -55,6 +56,9 @@ def main() -> None:
         case "analyze":
             from .agents import analyst
             print(analyst.run().summary_markdown)
+        case "telegram-setup":
+            from .telegram_setup import run as tg
+            tg()
         case "make-characters":
             from .characters import run as make
             print("\n".join(make()))

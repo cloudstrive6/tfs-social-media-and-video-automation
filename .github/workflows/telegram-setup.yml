@@ -1,0 +1,18 @@
+# Actions -> telegram-setup -> Run workflow: prints your chat id (after you message the bot) and sends a test.
+name: telegram-setup
+on:
+  workflow_dispatch:
+jobs:
+  telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -e .
+      - name: Write .env from repository secrets
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: python scripts/write_env.py
+      - run: python -m tfs.cli telegram-setup
