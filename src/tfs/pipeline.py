@@ -109,6 +109,8 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
     img_dir = d / "img"
     img_dir.mkdir(exist_ok=True)
 
+    anchors: dict[str, Path] = {}                  # first illustration of each style anchors the rest
+
     def make(scene: Scene) -> render.Shot:
         shot = by_scene.get(scene.id)
         out = img_dir / f"{scene.id:03d}.png"
@@ -120,15 +122,34 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
         if shot and shot.kind == "reuse" and (img_dir / f"{shot.reuse_of_scene:03d}.png").exists():
             return render.Shot(img_dir / f"{shot.reuse_of_scene:03d}.png", shot.motion)
         prompt = fixed.get(str(scene.id)) or (shot.image_prompt if shot and shot.image_prompt else scene.visual)
+        style = shot.style if shot else "story"
         if not out.exists():
-            images.generate(prompt, out, aspect, style=shot.style if shot else "story")
+            anchor = anchors.get(style)
+            images.generate(prompt, out, aspect, style=style, anchor=anchor if anchor != out else None)
+        anchors.setdefault(style, out)
         return render.Shot(out, shot.motion if shot else "push_in")
 
-    # illustrations first (reuse shots point at them), in parallel
+    # the first illustration of each style is made first (it becomes the style anchor), then the rest in
+    # parallel; reuse shots point at earlier illustrations, so they come last
     first = [s for s in script.scenes if by_scene.get(s.id) is None or by_scene[s.id].kind != "reuse"]
+    made: dict[int, render.Shot] = {}
+    for sc in first:
+        shot = by_scene.get(sc.id)
+        style = shot.style if shot else "story"
+        if (shot is None or shot.kind == "illustration") and style not in anchors:
+            made[sc.id] = make(sc)
     with ThreadPoolExecutor(max_workers=4) as pool:
-        made = dict(zip([s.id for s in first], pool.map(make, first)))
-    return [made.get(s.id) or make(s) for s in script.scenes]
+        rest = [sc for sc in first if sc.id not in made]
+        made.update(dict(zip([sc.id for sc in rest], pool.map(make, rest))))
+    shots = [made.get(sc.id) or make(sc) for sc in script.scenes]
+
+    # cards get the nearest illustration (before, else after) as their blurred backdrop
+    art = [sh.image if not sh.card else None for sh in shots]
+    for i, sh in enumerate(shots):
+        if sh.card:
+            near = next((a for a in art[i::-1] if a), None) or next((a for a in art[i:] if a), None)
+            sh.card["backdrop"] = str(near) if near else None
+    return shots
 
 
 def _voiced(script: Script, d: Path) -> list[Scene]:

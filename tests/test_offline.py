@@ -455,7 +455,8 @@ def test_captions_group_by_sentence_and_highlight_one_word_at_a_time(data_dir):
     words = [("Hindi", 0.0, 0.3), ("nagbago", 0.3, 0.7), ("ang", 0.7, 0.8), ("Konstitusyon.", 0.8, 1.4),
              ("Nagbago", 1.6, 2.0), ("ang", 2.0, 2.1), ("bilang.", 2.1, 2.6)]
     groups = [" ".join(w for w, _, _ in g) for g in render.caption_chunks(words)]
-    assert groups == ["Hindi nagbago ang", "Konstitusyon.", "Nagbago ang bilang."]   # never spans a sentence end
+    # never spans a sentence end, never ends on a particle like "ang"
+    assert groups == ["Hindi nagbago", "ang Konstitusyon.", "Nagbago ang bilang."]
 
     out = data_dir / "c.ass"
     render.captions_ass([Clip(data_dir / "x.mp3", 2.6, words)], [0.0], (1080, 1920), "", out)
@@ -493,3 +494,13 @@ def test_count_up_keeps_number_format():
 
     assert _count("₱5.4B", 0.5) == "₱2.7B"
     assert _count("1,200 proyekto", 1.0) == "1,200 proyekto"
+
+
+def test_card_text_never_shows_source_tags_and_stays_off_the_button_strip(data_dir):
+    from tfs.media import motion
+
+    assert motion.tidy("R.A. 8042 — 7 Hunyo 1995 [S12][S13]") == "R.A. 8042 — 7 Hunyo 1995"
+    img = motion.still("document", "COA report", ["Isang napakahabang linya ng teksto para subukan ang layout"],
+                       (1080, 1920))
+    strip = img.crop((int(1080 * 0.87), int(1920 * 0.1), 1080, int(1920 * 0.55))).convert("L")
+    assert max(strip.getdata()) < 90                  # nothing bright (text/paper/stamp) under the side buttons

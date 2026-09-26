@@ -12,6 +12,8 @@ CAPTION_SAFE = 0.54   # vertical: card content stays in the top 54%; burned capt
 
 
 def render_card(card_type: str, title: str, lines: list[str], size: tuple[int, int], out: Path) -> Path:
+    from .motion import tidy
+    title, lines = tidy(title), [tidy(x) for x in lines if tidy(x)]
     if card_type == "map":                  # real geography: card_lines are the place names to highlight
         from .maps import render_map
         return render_map(title, lines or [title], size, out)

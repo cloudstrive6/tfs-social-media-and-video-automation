@@ -24,14 +24,14 @@ def _references(prompt: str) -> list[Image.Image]:
             if p.stem.replace("_", " ").lower() in lowered][:3]
 
 
-def _gemini(prompt: str, aspect: str) -> bytes:
+def _gemini(prompt: str, aspect: str, anchor: Path | None = None) -> bytes:
     from google import genai
     from google.genai import types
 
     client = genai.Client(api_key=require_env("GEMINI_API_KEY"))
     resp = client.models.generate_content(
         model=channel()["images"]["gemini_model"],
-        contents=[prompt, *_references(prompt)],
+        contents=[prompt, *_references(prompt), *([Image.open(anchor)] if anchor and anchor.exists() else [])],
         config=types.GenerateContentConfig(response_modalities=["IMAGE"],
                                            image_config=types.ImageConfig(aspect_ratio=aspect)),
     )
@@ -41,7 +41,7 @@ def _gemini(prompt: str, aspect: str) -> bytes:
     raise RuntimeError("Gemini returned no image (likely a safety block)")
 
 
-def _openai(prompt: str, aspect: str) -> bytes:
+def _openai(prompt: str, aspect: str, anchor: Path | None = None) -> bytes:
     from openai import OpenAI
 
     size = {"16:9": "1536x1024", "9:16": "1024x1536", "4:5": "1024x1536", "1:1": "1024x1024"}[aspect]
@@ -58,14 +58,21 @@ def full_prompt(prompt: str, style: str = "story") -> str:
     return f"{prompt}\n\nArt style: {style_text}\n{img['base']}\nNever: {img['never']}"
 
 
-def generate(prompt: str, out: Path, aspect: str = "16:9", style: str = "story", retries: int = 3) -> Path:
+ANCHOR_NOTE = ("The LAST attached image is this video's style anchor: match its art style, line weight, shading, "
+               "palette and the way people are drawn exactly (same round-headed cartoon cast, never semi-realistic). "
+               "Do not copy its composition.")
+
+
+def generate(prompt: str, out: Path, aspect: str = "16:9", style: str = "story", retries: int = 3,
+             anchor: Path | None = None) -> Path:
+    """`anchor`: an earlier illustration from the same video, so every shot keeps one consistent look."""
     if out.exists():
         return out
-    full = full_prompt(prompt, style)
+    full = full_prompt(prompt, style) + (f"\n{ANCHOR_NOTE}" if anchor else "")
     fn = _openai if channel()["images"]["provider"] == "openai" else _gemini
     for attempt in range(retries):
         try:
-            Image.open(io.BytesIO(fn(full, aspect))).convert("RGB").save(out)
+            Image.open(io.BytesIO(fn(full, aspect, anchor))).convert("RGB").save(out)
             return out
         except Exception as e:
             log.warning("image attempt %s failed: %s", attempt + 1, e)

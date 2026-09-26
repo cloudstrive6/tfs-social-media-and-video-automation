@@ -80,6 +80,9 @@ def _ass_time(t: float) -> str:
 SENTENCE_END = (".", "?", "!", "…", "...")
 CLAUSE_END = (",", ";", ":", "—", "–")
 MAX_WORDS, MAX_CHARS = 3, 20
+# never leave these dangling at the end of a caption group ("NG LABING-ANIM NA", "SA")
+PARTICLES = {"ng", "sa", "ang", "na", "at", "ay", "mga", "si", "ni", "kay", "nang", "para", "kung", "pag", "o",
+             "the", "of", "a", "an", "to", "and", "in", "on", "for", "at", "by", "with"}
 
 
 def caption_chunks(words: list[tuple[str, float, float]]) -> list[list[tuple[str, float, float]]]:
@@ -92,9 +95,16 @@ def caption_chunks(words: list[tuple[str, float, float]]) -> list[list[tuple[str
             cur = []
         cur.append(w)
         token = w[0].rstrip("\"'”’)")
-        if len(cur) >= MAX_WORDS or token.endswith(SENTENCE_END + CLAUSE_END):
+        if token.endswith(SENTENCE_END + CLAUSE_END):
             chunks.append(cur)
             cur = []
+        elif len(cur) >= MAX_WORDS:
+            carry = []
+            while len(cur) > 1 and (cur[-1][0].lower().strip("\"'“”‘’") in PARTICLES
+                                    or cur[-1][0][:1] in "\"“‘'"):
+                carry.insert(0, cur.pop())     # a particle or an opening quote starts the next group
+            chunks.append(cur)
+            cur = carry
     if cur:
         chunks.append(cur)
     return chunks
@@ -198,7 +208,7 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
             if shot.card:
                 from .motion import animate_card
                 animate_card(shot.card["card_type"], shot.card["title"], shot.card["lines"], size, fps,
-                             max(frames, 2), name)
+                             max(frames, 2), name, backdrop=shot.card.get("backdrop"))
             else:
                 shot_clip(shot.image, max(frames, 1), shot.motion, size, fps, name)
         names.append(name.name)
