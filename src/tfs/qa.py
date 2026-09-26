@@ -56,9 +56,22 @@ def _whisper():
     return WhisperModel(cfg().get("whisper_model", "small"), device="cpu", compute_type="int8")
 
 
-def transcribe(media: Path) -> list[tuple[str, float, float]]:
+def proper_nouns(script: Script) -> str:
+    """Names and places from the script, given to Whisper as hints so it spells a correctly-read name correctly
+    (otherwise Whisper's own mishearing of Filipino names looks like a narrator error)."""
+    names = set()
+    for scene in script.scenes:
+        for sentence in re.split(r"(?<=[.!?])\s+", clean(scene.text, False)):
+            for word in sentence.split()[1:]:                    # skip the capitalised first word
+                word = word.strip(",.;:!?\"'()“”‘’")
+                if word[:1].isupper():
+                    names.add(word)
+    return ", ".join(sorted(names))[:600]
+
+
+def transcribe(media: Path, hints: str = "") -> list[tuple[str, float, float]]:
     segments, _ = _whisper().transcribe(str(media), language=cfg().get("whisper_language") or None,
-                                        word_timestamps=True, beam_size=5)
+                                        word_timestamps=True, beam_size=5, hotwords=hints or None)
     return [(w.word.strip(), w.start, w.end) for seg in segments for w in (seg.words or [])]
 
 
@@ -76,7 +89,7 @@ def split_by_scene(heard: list[tuple[str, float, float]], bounds: list[float]) -
 
 def proofread(script: Script, starts: list[float], video: Path) -> tuple[dict[str, str], list[str], str]:
     total = duration(video)
-    heard = split_by_scene(transcribe(video), starts + [total])
+    heard = split_by_scene(transcribe(video, proper_nouns(script)), starts + [total])
     rows = []
     for scene, text in zip(script.scenes, heard):
         expected = clean(scene.text, keep_audio_tags=False)

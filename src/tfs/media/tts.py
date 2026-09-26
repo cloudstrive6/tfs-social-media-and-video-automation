@@ -70,7 +70,11 @@ def _elevenlabs(text: str, speaker: str, out: Path, prev_text: str, next_text: s
         "model_id": cfg["model_id"],
         "voice_settings": {"stability": cfg["stability"], "similarity_boost": cfg["similarity_boost"],
                            "style": cfg["style"], "use_speaker_boost": True, "speed": cfg["speed"]},
-    }  # no language_code: only Turbo/Flash v2.5 accept it; multilingual v2 / v3 auto-detect Taglish
+    }
+    # Josh is a Filipino voice; telling the model the text is Filipino ("tl") keeps names like "Contemplacion"
+    # and Tagalog words from being read the English way. multilingual_v2 rejects the field, so never send it there.
+    if cfg.get("language_code") and "multilingual_v2" not in cfg["model_id"]:
+        body["language_code"] = cfg["language_code"]
     if cfg["model_id"] != "eleven_v3":           # request stitching keeps prosody continuous across scenes
         body |= {"previous_text": prev_text[-300:], "next_text": next_text[:300]}
     r = requests.post(

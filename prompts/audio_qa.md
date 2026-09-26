@@ -6,6 +6,9 @@ script well, the script line (`expected`) and what Whisper heard (`heard`).
 Whisper is imperfect with Taglish: spelling variants ("talaga"/"tlaga"), English words written in Tagalog
 spelling, numbers written as digits vs words, merged or split words, and filler differences are NOT problems.
 Judge what a listener would actually hear.
+Whisper also mishears Filipino proper names on its own (it was given the script's names as hints, but can still
+slip). Flag a name only when the transcription shows a clearly different word pattern (e.g. an English phrase
+like "Floor Contemplation" for "Flor Contemplacion"), and never for spelling variants alone.
 
 Mark a scene NOT ok only for real problems a viewer would notice:
 - words or a whole phrase skipped, repeated, or cut off;

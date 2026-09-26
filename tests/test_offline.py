@@ -521,3 +521,31 @@ def test_parallax_moves_subject_more_than_background(data_dir, monkeypatch):
     assert abs(fx) > abs(bx) > 0 and zf != zb                  # parallax: the subject travels further
     monkeypatch.setattr(depth, "layers", lambda image: None)   # no clear subject -> caller uses Ken Burns
     assert depth.parallax_clip(data_dir / "x.png", 20, "push_in", (270, 480), 30, data_dir / "q.mp4") is False
+
+
+@pytest.mark.parametrize("model,expected", [("eleven_v3", "tl"), ("eleven_multilingual_v2", None)])
+def test_narrator_is_told_the_text_is_filipino(data_dir, monkeypatch, model, expected):
+    import base64
+
+    from tfs import config
+    from tfs.media import tts
+
+    sent = {}
+
+    class R:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"audio_base64": base64.b64encode(b"mp3").decode(),
+                    "alignment": {"characters": list("Flor"), "character_start_times_seconds": [0, .1, .2, .3],
+                                  "character_end_times_seconds": [.1, .2, .3, .4]}}
+
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "k")
+    monkeypatch.setenv("ELEVENLABS_VOICE_ID", "v")
+    real = config.channel()
+    cfg = {**real, "tts": {**real["tts"], "elevenlabs": {**real["tts"]["elevenlabs"], "model_id": model}}}
+    monkeypatch.setattr(tts, "channel", lambda: cfg)
+    monkeypatch.setattr(tts.requests, "post", lambda url, **kw: sent.update(kw["json"]) or R())
+    tts._elevenlabs("Flor Contemplacion", "NARRATOR", data_dir / "a.mp3", "", "")
+    assert sent.get("language_code") == expected
