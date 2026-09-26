@@ -34,7 +34,8 @@ def main() -> None:
     for name in ("produce", "approve", "reject", "requeue"):
         sp = sub.add_parser(name)
         sp.add_argument("item_id")
-    sub.add_parser("retry").add_argument("post_id", type=int)
+    sub.add_parser("retry", help="re-queue a failed post (id), or 'failed' = every failed post whose slot is ahead"
+                   ).add_argument("post_id")
     sub.add_parser("auth").add_argument("service", choices=["youtube"])
     a = p.parse_args()
 
@@ -60,7 +61,19 @@ def main() -> None:
         case "requeue":
             db.set_status(a.item_id, "planned")
         case "retry":
-            db.retry_post(a.post_id)
+            from datetime import datetime
+
+            from . import state
+            from .config import now
+            if state.enabled():
+                state.pull()
+            ids = ([p["id"] for p in db.posts_with_status("failed")
+                    if datetime.fromisoformat(p["slot_at"]) > now()] if a.post_id == "failed" else [int(a.post_id)])
+            for pid in ids:
+                db.retry_post(pid)
+            print(f"re-queued posts: {ids}")
+            if state.enabled():
+                state.push()
         case "analyze":
             from .agents import analyst
             print(analyst.run().summary_markdown)

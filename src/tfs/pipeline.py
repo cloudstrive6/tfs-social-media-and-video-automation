@@ -586,7 +586,7 @@ def reconcile() -> None:
         else:
             db.finish_post(post["id"], "failed", post["remote_id"], str(r.get("error")))
             notify.send(f"❌ Publish failed: {post['item_id']} → {post['platform']}: {r.get('error')}\n"
-                        f"Retry: tfs retry {post['id']}")
+                        f"Retry: GitHub → Actions → retry → {post['id']}")
 
 
 def publish_due() -> int:
@@ -613,7 +613,7 @@ def _publish_due() -> int:
             log.exception("publish failed")
             db.finish_post(post["id"], "failed", error=str(e))
             notify.send(f"❌ Publish failed: {post['item_id']} → {post['platform']}: {e}\n"
-                        f"Retry: tfs retry {post['id']}")
+                        f"Retry: GitHub → Actions → retry → {post['id']}")
     try:
         reconcile()
     except Exception:

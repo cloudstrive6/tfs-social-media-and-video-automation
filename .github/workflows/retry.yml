@@ -1,0 +1,19 @@
+# Actions -> retry -> Run workflow: re-queue a failed post (its id from the Telegram alert or `status`),
+# or "failed" for every failed post whose slot hasn't passed. The next run publishes them.
+name: retry
+on:
+  workflow_dispatch:
+    inputs:
+      post:
+        description: post id, or "failed"
+        required: true
+        default: failed
+concurrency:
+  group: tfs-state
+  cancel-in-progress: false
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: retry ${{ inputs.post }}
+    secrets: inherit
