@@ -523,7 +523,7 @@ def test_parallax_moves_subject_more_than_background(data_dir, monkeypatch):
     assert depth.parallax_clip(data_dir / "x.png", 20, "push_in", (270, 480), 30, data_dir / "q.mp4") is False
 
 
-@pytest.mark.parametrize("model,expected", [("eleven_v3", "tl"), ("eleven_multilingual_v2", None)])
+@pytest.mark.parametrize("model,expected", [("eleven_v3", "fil"), ("eleven_multilingual_v2", None)])
 def test_narrator_is_told_the_text_is_filipino(data_dir, monkeypatch, model, expected):
     import base64
 

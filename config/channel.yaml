@@ -74,7 +74,7 @@ tts:
   elevenlabs:
     model_id: eleven_v3                   # expressive reads + [laugh]/[sarcastic] tags; eleven_multilingual_v2 = steadier fallback
     voice_id: ""                          # ELEVENLABS_VOICE_ID = oqlKKpA3VREaqVHQKHNn ("Josh - Natural Narrator", Filipino)
-    language_code: tl                     # ISO 639-1 Filipino/Tagalog: Filipino pronunciation of names and Tagalog words
+    language_code: fil                    # eleven_v3 lists Filipino as "fil" (ISO 639-3); names and Tagalog words read the Filipino way
     stability: 0.38
     similarity_boost: 0.8
     style: 0.35

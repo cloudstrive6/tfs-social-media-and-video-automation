@@ -73,7 +73,7 @@ def _elevenlabs(text: str, speaker: str, out: Path, prev_text: str, next_text: s
         "voice_settings": {"stability": cfg["stability"], "similarity_boost": cfg["similarity_boost"],
                            "style": cfg["style"], "use_speaker_boost": True, "speed": cfg["speed"]},
     }
-    # Josh is a Filipino voice; telling the model the text is Filipino ("tl") keeps names like "Contemplacion"
+    # Josh is a Filipino voice; telling the model the text is Filipino ("fil") keeps names like "Contemplacion"
     # and Tagalog words from being read the English way. multilingual_v2 rejects the field, so never send it there.
     if cfg.get("language_code") and "multilingual_v2" not in cfg["model_id"]:
         body["language_code"] = cfg["language_code"]
