@@ -21,6 +21,8 @@
 | 15 | **Growth Analyst** | `analyst.md` | Weekly: YouTube Analytics + IG insights → what worked, standing notes appended to every agent's prompt, schedule retune, title swaps on low-CTR videos. | `analyst_notes/` |
 | 16 | **Proofreader** | `audio_qa.md` | Whisper (faster-whisper, `small`) transcribes the finished video. Each scene is word-matched against the script, and a Claude judge decides which differences are real: skipped words, wrong numbers or names, garbled audio. Scenes that fail are re-voiced, with a respelled line if pronunciation was the problem. | `qa_r*.json` |
 | 17 | **Visual QA** | `visual_qa.md` | Looks at a frame from every shot (plus the hook frame, thumbnail or carousel slides) next to the cast model sheets. It checks for wrong or deformed characters, real-person likeness, garbled AI text, misspelled or cut-off card text, captions under the platform buttons, anachronisms and appeal. Blocking frames get a corrected prompt and are regenerated and re-rendered, up to 2 rounds; if a problem remains, the piece is skipped. | `qa_r*.json`, `qa_fixes.json` |
+| 18 | **Narration Editor** (prevention) | `narration_editor.md` | Before any voice is recorded, makes the script safe to read aloud: numbers, dates, times and law numbers written as spoken; acronyms hyphenated; no emphasis hyphens or capitals; no word split across scenes. Meaning and length never change. | `narration.json` |
+| 19 | **Pre-flight Art Director** (prevention) | `preflight_art.md` | Before any image is generated, fixes the shot list: no readable text or exact figures in the art, recurring characters named with their exact outfits and neutral-clothed extras, no real people, no anachronisms, consistent places, 9:16 composition. Checks every card's facts against the script and dossier and its field layout. | `shots.json` (from `shots_draft.json`) |
 
 Every agent's system prompt = `docs/STYLE_BIBLE.md` + its role prompt + the analyst's standing notes
 (prompt-cached, so the shared prefix is billed at the cache rate).
@@ -60,6 +62,7 @@ flowchart LR
 ## Reliability
 
 - **Checkpointed**: every step writes its artifact to `TFS_DATA_DIR/items/<id>/`; a crash or approval pause resumes where it stopped.
+- **Prevent first, then review**: the Narration Editor and Pre-flight Art Director fix problems before anything is generated. The review team then blocks only safety/legal issues, garbled text, wrong on-screen facts and wrong or deformed characters. A narration flag blocks only when the same scene is flagged again after a re-voice; one-off flags appear as notes in the Telegram "Ready" message, which includes how to pull that post (`hold` workflow with the item id).
 - **Skip, don't ship junk**: failing the quality bar, a fact-check reject, or missing the first slot → the slot is skipped and you're notified.
 - **Publishing never waits for production**: inside each run, a publisher thread checks every minute. A run
   stays up for any Facebook/Instagram post due within 35 minutes, and runs never overlap (concurrency group).

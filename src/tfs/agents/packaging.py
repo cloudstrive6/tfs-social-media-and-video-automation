@@ -65,6 +65,16 @@ def shot_list(item: dict, script: Script) -> ShotList:
     )
 
 
+def preflight_shots(item: dict, script: Script, shots: ShotList, dossier: str) -> ShotList:
+    """Pre-flight Art Director: fixes the shot list against the house rules before any image is generated."""
+    return llm.structured(
+        "preflight_art",
+        f"Format: {item['kind']}\n\n# Script (final, fact-checked)\n{script.model_dump_json()}\n\n"
+        f"# Shot list to check\n{shots.model_dump_json()}\n\n# Dossier (for card facts)\n{dossier[:30000]}",
+        ShotList,
+    )
+
+
 def carousel(item: dict, dossier: str) -> Carousel:
     return llm.structured(
         "carousel_designer",

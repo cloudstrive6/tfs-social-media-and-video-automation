@@ -103,8 +103,30 @@ def _fixes(d: Path) -> dict:
     return {"images": {}, "audio": {}, "attempts": {}, "drop": [], **fixes}
 
 
+def _checked_shots(item: dict, script: Script, draft: ShotList, dossier: str) -> ShotList:
+    try:
+        checked = packaging.preflight_shots(item, script, draft, dossier)
+    except UsageLimitError:
+        raise
+    except Exception:
+        log.exception("pre-flight art check failed; using the Visual Director's list as is")
+        return draft
+    if sorted(s.scene_id for s in checked.shots) != sorted(s.scene_id for s in draft.shots):
+        log.warning("pre-flight returned different scene ids; using the draft")
+        return draft
+    return checked
+
+
 def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, int]) -> list[render.Shot]:
-    shot_list = cached(d / "shots.json", ShotList, lambda: packaging.shot_list(item, script))
+    shots_file = d / "shots.json"
+    if shots_file.exists():
+        shot_list = ShotList.model_validate_json(shots_file.read_text(encoding="utf-8"))
+    else:
+        draft = cached(d / "shots_draft.json", ShotList, lambda: packaging.shot_list(item, script))
+        dossier_file = d / "dossier.md"
+        dossier = dossier_file.read_text(encoding="utf-8") if dossier_file.exists() else ""
+        shot_list = cached(shots_file, ShotList,                   # pre-flight: fix before anything is drawn
+                           lambda: _checked_shots(item, script, draft, dossier))
     fixed = _fixes(d)["images"]
     by_scene = {s.scene_id: s for s in shot_list.shots}
     img_dir = d / "img"
@@ -248,27 +270,34 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
               fix: Callable[[ReviewReport], None]) -> tuple[T, ReviewReport | None] | None:
     """Build → review → fix, up to max_fix_rounds. Returns (build result, final report), or None if skipped."""
     rounds = qa.cfg().get("max_fix_rounds", 2) if qa.enabled() else 0
+    history: list[ReviewReport] = []
+
+    def repeated_major() -> bool:          # balanced: a one-off narration flag never blocks
+        return len(history) >= 2 and bool(set(history[-2].major_scenes) & set(history[-1].major_scenes))
+
     for rnd in range(rounds + 1):
         built = build()
         if not qa.enabled():
             return built, None
         report = cached(d / f"qa_r{rnd}.json", ReviewReport, lambda: qa.safe(review, built))
+        history.append(report)
         log.info("review r%d %s: %s", rnd, item["id"], report.summary)
         if report.passed:
             return built, report
         if rnd < rounds:
             fix(report)
     extra = rnd
-    while report.major_audio and not report.redo_images and extra < rounds + AUDIO_EXTRA_ROUNDS:
-        extra += 1                         # visuals are fine; only the narration needs another take
+    while repeated_major() and not report.redo_images and extra < rounds + AUDIO_EXTRA_ROUNDS:
+        extra += 1                         # visuals are fine; the same line keeps failing: another take
         fix(report)
         built = build()
         report = cached(d / f"qa_r{extra}.json", ReviewReport, lambda: qa.safe(review, built))
+        history.append(report)
         log.info("review r%d (voice only) %s: %s", extra, item["id"], report.summary)
         if report.passed:
             return built, report
-    if not report.redo_images and not report.major_audio:
-        log.info("review %s: only minor narration notes remain after %d rounds — accepted", item["id"], rounds)
+    if not report.redo_images and not repeated_major():
+        log.info("review %s: accepted with notes after %d rounds (no repeated narration problem)", item["id"], rounds)
         return built, report
     problems = "; ".join(report.warnings[:6])
     db.set_status(item["id"], "skipped", f"failed review after {rounds} fix rounds: {problems}"[:2000])
@@ -292,7 +321,7 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(script, dossier, kind))
     if not _gate(item, fc):
         return
-    script = fc.script
+    script = cached(d / "narration.json", Script, lambda: writers.narration_edit(fc.script))  # read-aloud safe
 
     def review(built) -> ReviewReport:
         video, starts, thumb, _ = built
@@ -393,6 +422,10 @@ def _notify_ready(item: dict) -> None:
     caption = f"✅ Ready: {data.get('title') or data.get('working_title')}\n{item['kind'].replace('_', ' ')}\n{when}"
     if data.get("qa"):
         caption += f"\n🔎 Review: {data['qa']['summary']}"
+        notes = [w for w in data["qa"].get("warnings", []) if w.startswith("voice")][:3]
+        if notes:
+            caption += "\n⚠️ Notes:\n• " + "\n• ".join(n[:160] for n in notes)
+            caption += f"\nTo pull this post: GitHub → Actions → hold → item {item['id']}"
     if item["kind"] == "carousel":
         notify.send_photos([media(p) for p in data.get("slides", [])], caption)
     elif item["kind"] == "vertical":

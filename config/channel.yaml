@@ -39,6 +39,8 @@ llm:
     carousel_designer: {model: claude-opus-5, effort: medium}
     analyst:          {model: claude-opus-5, effort: high}
     audio_qa:         {model: claude-opus-5, effort: medium}
+    narration_editor: {model: claude-opus-5, effort: medium}
+    preflight_art:    {model: claude-opus-5, effort: high}
     visual_qa:        {model: claude-opus-5, effort: high}
 
 # Quality gates: a slot is SKIPPED rather than filled with a weak piece.

@@ -23,6 +23,7 @@ For every frame, check:
 - broken anatomy (melted face or hands, extra or missing limbs, duplicated people) or a recurring character in
   the wrong costume/colours (e.g. Kuya Standard in Tito Trapo's cream barong);
 - on-screen text (cards, captions) misspelled, cut off, or covering other text;
+- a wrong on-screen fact: a card's number, date or name that contradicts the frame's narration line;
 - gore, nudity, or anything that would get the post limited; a clear anachronism.
 Everything else — composition, a weak frame, continuity nits, empty space, style variation — is
 `blocking: false`, however strongly you feel; list it as a problem and it will inform future videos.

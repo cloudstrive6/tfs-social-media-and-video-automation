@@ -15,7 +15,7 @@ from .config import now
 log = logging.getLogger(__name__)
 
 
-def run(reason: str = "held") -> list[str]:
+def run(reason: str = "held", item_id: str = "") -> list[str]:
     from .pipeline import _provider
 
     if not state.enabled():
@@ -23,9 +23,13 @@ def run(reason: str = "held") -> list[str]:
     state.pull()
     done = []
     for post in db.posts_with_status("queued"):
+        if item_id and post["item_id"] != item_id:
+            continue
         db.finish_post(post["id"], "skipped", error=reason)
         done.append(f"{post['item_id']} → {post['platform']}: not posted")
     for post in db.posts_with_status("submitted"):
+        if item_id and post["item_id"] != item_id:
+            continue
         if datetime.fromisoformat(post["slot_at"]) <= now():
             continue                                   # already due/live: leave it to reconcile
         try:

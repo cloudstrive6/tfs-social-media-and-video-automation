@@ -77,3 +77,12 @@ def fact_check(script: Script, dossier: str, kind: str = "") -> FactCheck:
         f"{fmt}# Dossier (the only evidence you may rely on)\n{dossier}\n\n# Script\n{script.model_dump_json()}",
         FactCheck,
     )
+
+
+def narration_edit(script: Script) -> Script:
+    """Narration Editor: numbers/dates/acronyms as spoken, no emphasis hyphens, no word split across scenes."""
+    edited = llm.structured("narration_editor", f"# Script\n{script.model_dump_json()}", Script)
+    ids = [s.id for s in script.scenes]
+    if [s.id for s in edited.scenes] != ids:        # must be the same scenes; otherwise keep the original
+        return script
+    return edited

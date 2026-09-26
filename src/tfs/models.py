@@ -200,6 +200,7 @@ class VisualQA(BaseModel):
 class ReviewReport(BaseModel):
     passed: bool
     major_audio: bool = False     # a wrong number/name/skipped phrase remains (minor slips never reject)
+    major_scenes: list[str] = []  # scene ids with a major narration problem this round
     redo_images: dict[str, str]   # "scene id" / "thumbnail" / "slide N" -> corrected prompt
     redo_audio: dict[str, str]    # scene id -> tts text ("" = just re-voice)
     warnings: list[str]

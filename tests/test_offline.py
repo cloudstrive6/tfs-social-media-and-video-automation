@@ -603,7 +603,7 @@ def test_minor_narration_notes_never_reject_a_piece(data_dir, monkeypatch):
     d.mkdir(parents=True)
     result = pipeline._reviewed(db.get_item("x"), d, lambda: "built", lambda b: report, lambda r: None)
     assert result == ("built", report)
-    major = report.model_copy(update={"major_audio": True})
+    major = report.model_copy(update={"major_audio": True, "major_scenes": ["3"]})   # same scene every round
     for f in d.glob("qa_r*.json"):
         f.unlink()
     monkeypatch.setattr(qa, "safe", lambda fn, built: major)
@@ -647,8 +647,8 @@ def test_voice_only_problems_get_extra_rounds(data_dir, monkeypatch):
     db.upsert_item("z", "vertical", "2026-09-27T07:30:00+08:00", "planned", {})
     d = data_dir / "items" / "z"
     d.mkdir(parents=True)
-    bad = ReviewReport(passed=False, major_audio=True, redo_images={}, redo_audio={"11": "Ilang"}, warnings=["x"],
-                       appeal=7, hook_frame=6, summary="s")
+    bad = ReviewReport(passed=False, major_audio=True, major_scenes=["11"], redo_images={}, redo_audio={"11": "Ilang"},
+                       warnings=["x"], appeal=7, hook_frame=6, summary="s")
     good = bad.model_copy(update={"passed": True, "major_audio": False, "redo_audio": {}})
     reports = iter([bad, bad, bad, good])
     monkeypatch.setattr(qa, "safe", lambda fn, built: next(reports))
@@ -662,3 +662,18 @@ def test_quote_card_keeps_source_lines_separate():
     frames = list(motion._quote("Hindi puwedeng basta-basta.", ["Senate President, 2026", "Rules, Sec. 5"],
                                 (540, 960), 2))
     assert frames
+
+
+def test_one_off_narration_flag_is_a_note_not_a_rejection(data_dir, monkeypatch):
+    from tfs import db, pipeline, qa
+    from tfs.models import ReviewReport
+
+    db.upsert_item("w", "vertical", "2026-09-27T07:30:00+08:00", "planned", {})
+    d = data_dir / "items" / "w"
+    d.mkdir(parents=True)
+    rounds = iter([ReviewReport(passed=False, major_audio=True, major_scenes=[k], redo_images={}, redo_audio={k: ""},
+                                warnings=[f"voice, scene {k} (major): x"], appeal=7, hook_frame=7, summary="s")
+                   for k in ("2", "5", "9")])                        # a different scene each round (judge noise)
+    monkeypatch.setattr(qa, "safe", lambda fn, built: next(rounds))
+    built, report = pipeline._reviewed(db.get_item("w"), d, lambda: "built", lambda b: None, lambda r: None)
+    assert built == "built" and report.major_scenes == ["9"]           # accepted; the flag becomes a note

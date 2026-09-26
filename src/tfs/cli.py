@@ -24,7 +24,8 @@ def main() -> None:
     sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
     sub.add_parser("sample", help="produce one piece now for review; never scheduled or posted").add_argument(
         "--kind", choices=["vertical", "carousel"], default="vertical")
-    sub.add_parser("hold", help="stop every post that hasn't gone live yet (skipped/private/cancelled, never deleted)")
+    sub.add_parser("hold", help="stop posts that haven't gone live yet (one item, or all); never deletes").add_argument(
+        "item_id", nargs="?", default="")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
     sub.add_parser("preview-styles", help="generate one sample image per art style")
     sub.add_parser("telegram-setup", help="print the chat id(s) that messaged the bot; send a test message")
@@ -76,7 +77,7 @@ def main() -> None:
             print(make_sample(a.kind))
         case "hold":
             from .hold import run as hold
-            print("\n".join(hold("held: made before the 26 Sep fixes")) or "nothing to hold")
+            print("\n".join(hold("held by request", a.item_id)) or "nothing to hold")
         case "verify":
             from .verify import run_all
             sys.exit(0 if run_all() else 1)
