@@ -315,3 +315,28 @@ def test_cloud_run_refuses_without_saved_state(monkeypatch):
     monkeypatch.delenv("S3_BACKUP_BUCKET", raising=False)
     with pytest.raises(SystemExit):
         pipeline.cloud_run()
+
+
+def test_map_places_resolve_to_real_geography(data_dir):
+    from tfs.media import maps
+
+    assert maps.resolve("Bulacan").kind == "area"
+    assert maps.resolve("Davao de Oro").polys                          # renamed province -> old data name
+    palawan = maps.resolve("Palawan").polys
+    assert len(palawan) > len(maps.resolve("Puerto Princesa").polys)  # province includes its HUC
+    lon, lat = maps.resolve("Scarborough Shoal").point
+    assert 117 < lon < 118.5 and 14.5 < lat < 15.8
+    assert maps.resolve("Mexico").foreign and not maps.resolve("Mindanao").foreign
+    assert maps.resolve("Atlantis") is None                           # unknown places are left off, never guessed
+
+
+@pytest.mark.parametrize("size", [(1920, 1080), (1080, 1920)])
+def test_map_card_renders(data_dir, size):
+    from PIL import Image
+
+    from tfs.media import cards
+
+    out = cards.render_card("map", "Galleon trade", ["Manila", "Acapulco"], size, data_dir / "m.png")
+    assert Image.open(out).size == size
+    out = cards.render_card("map", "Saan 'to?", ["Nowhere"], size, data_dir / "n.png")  # falls back to PH overview
+    assert Image.open(out).size == size

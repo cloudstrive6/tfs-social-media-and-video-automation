@@ -19,8 +19,14 @@ For each scene decide ONE visual type:
   expression, setting, camera (wide/medium/close, angle), lighting, and the continuity notes (which
   recurring character, what they're wearing). Never real people's faces.
 - `card` — programmatic motion-graphic: `stat` (big number + label), `quote` (sourced quote + attribution),
-  `timeline` (3–6 dated points), `document` (title of a report + highlighted line), `map` (place name to
-  highlight). These are cheap, sharp and always legible — use them for every key number or source.
+  `timeline` (3–6 dated points), `document` (title of a report + highlighted line), `map`.
+  For `map`: `card_title` is the on-screen headline (short, Taglish ok); `card_lines` are 1–4 place names to
+  highlight, most important first, written the way an atlas names them: provinces ("Bulacan", "Davao de Oro"),
+  cities ("Quezon City", "Tacloban"), regions or island groups ("Metro Manila", "Central Luzon", "BARMM",
+  "Visayas", "Mindanao", "Panay"), seas and features ("West Philippine Sea", "Scarborough Shoal", "Ayungin Shoal",
+  "Manila Bay", "Mayon Volcano"), or countries ("China", "Mexico", "Spain"). A foreign country or city switches
+  to a regional/world view with the Philippines shown for reference. Barangays and streets are too small: use
+  their city or province. These are cheap, sharp and always legible — use them for every key number or source.
 - `reuse` — repeat an earlier illustration id with a different camera move (saves cost; use for callbacks).
 
 Also choose the camera motion: `push_in`, `pull_out`, `pan_left`, `pan_right`, `shake` (impacts only), `static`.

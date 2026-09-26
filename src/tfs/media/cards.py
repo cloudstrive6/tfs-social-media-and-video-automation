@@ -9,6 +9,9 @@ from .design import BLUE, INK, PAPER, RED, WHITE, YELLOW, fit_text, font, glyphs
 
 
 def render_card(card_type: str, title: str, lines: list[str], size: tuple[int, int], out: Path) -> Path:
+    if card_type == "map":                  # real geography: card_lines are the place names to highlight
+        from .maps import render_map
+        return render_map(title, lines or [title], size, out)
     w, h = size
     pad = int(min(w, h) * 0.08)
     paper = card_type == "document"
@@ -77,7 +80,7 @@ def render_card(card_type: str, title: str, lines: list[str], size: tuple[int, i
             y += lh // 2
         d.text((w - pad, h - pad), "MAY RESIBO", font=font("display", int(h * 0.05)), fill=RED, anchor="rb")
 
-    else:  # map / place card
+    else:  # generic place card (no map data)
         tf, tl, tlh = fit_text(d, title.upper(), "display", w - 2 * pad, int(h * 0.3), start=int(h * 0.12))
         y = h * 0.45 - tlh * len(tl)
         for row in tl:
