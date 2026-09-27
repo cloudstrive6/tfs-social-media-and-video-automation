@@ -785,3 +785,29 @@ def test_instagram_copy_meets_reels_spec(data_dir):
     assert audio["codec_name"] == "aac" and audio["sample_rate"] == "48000" and int(audio["bit_rate"]) <= 136000
     assert video["codec_name"] == "h264" and video["pix_fmt"] == "yuv420p"
     assert b"elst" not in out.read_bytes()[:200000]            # no edit list
+
+
+def test_ig_reel_uses_a_signed_url_and_cleans_up(data_dir, monkeypatch):
+    from tfs.publish import meta
+
+    video = data_dir / "v.mp4"
+    video.write_bytes(b"v")
+    calls, deleted = [], []
+    monkeypatch.setenv("META_IG_USER_ID", "ig1")
+    monkeypatch.setattr(meta, "ig_ready", lambda v: v)
+    monkeypatch.setattr(meta, "_signed_url", lambda p: ("https://r2.example/signed", "tmp/ig/v.mp4"))
+    monkeypatch.setattr(meta, "_wait_ready", lambda c: None)
+
+    def fake_call(method, path, **kw):
+        calls.append((path, kw))
+        return {"id": "c1" if path.endswith("/media") else "post1"}
+    monkeypatch.setattr(meta, "_call", fake_call)
+
+    class S3:
+        def delete_object(self, Bucket, Key):
+            deleted.append(Key)
+    from tfs import state
+    monkeypatch.setattr(state, "_s3", lambda: S3())
+    monkeypatch.setattr(state, "_bucket", lambda: "b")
+    assert meta.ig_reel(video, "cap") == "post1"
+    assert calls[0][1]["video_url"] == "https://r2.example/signed" and deleted == ["tmp/ig/v.mp4"]

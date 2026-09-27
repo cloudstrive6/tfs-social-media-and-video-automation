@@ -80,9 +80,38 @@ def ig_ready(video: Path) -> Path:
     return out
 
 
+def _signed_url(path: Path, minutes: int = 60) -> tuple[str, str] | None:
+    """Put a copy in the private R2 bucket and return (1-hour signed GET URL, key), or None without R2."""
+    from .. import state
+
+    if not state.enabled():
+        return None
+    key = f"tmp/ig/{path.name}"
+    s3, bucket = state._s3(), state._bucket()
+    s3.upload_file(str(path), bucket, key, ExtraArgs={"ContentType": "video/mp4"})
+    url = s3.generate_presigned_url("get_object", Params={"Bucket": bucket, "Key": key}, ExpiresIn=minutes * 60)
+    return url, key
+
+
 def ig_reel(video: Path, caption: str) -> str:
+    """Instagram fetches the video from a short-lived signed URL (the rupload endpoint refuses Page tokens with
+    ProcessingFailedError); falls back to the resumable upload when there is no R2 bucket."""
     video = ig_ready(video)
     ig = require_env("META_IG_USER_ID")
+    hosted = _signed_url(video)
+    if hosted:
+        url, key = hosted
+        try:
+            container = _call("POST", f"{ig}/media", media_type="REELS", video_url=url, caption=caption,
+                              share_to_feed="true")["id"]
+            _wait_ready(container)
+            return _call("POST", f"{ig}/media_publish", creation_id=container)["id"]
+        finally:
+            from .. import state
+            try:
+                state._s3().delete_object(Bucket=state._bucket(), Key=key)
+            except Exception:
+                pass
     container = _call("POST", f"{ig}/media", media_type="REELS", upload_type="resumable",
                       caption=caption, share_to_feed="true")["id"]
     data = video.read_bytes()
