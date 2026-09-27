@@ -56,7 +56,7 @@ flowchart LR
 
 | Produced | Published as |
 |---|---|
-| 1 long-form (10–16 min, 16:9) — scale later by adding slots | 1 × YouTube long-form (18:00 PHT) |
+| 1 long-form (8–15 min, 16:9) — scale later by adding slots | 1 × YouTube long-form (18:00 PHT) |
 | 3 verticals (35–58 s, 9:16) | 3 × Shorts, 3 × IG Reels, 3 × FB Reels, 3 × TikTok — same master, staggered times, platform-native captions |
 | 2 carousels (1080×1350) | 2 × IG carousel, 2 × FB multi-photo post |
 
