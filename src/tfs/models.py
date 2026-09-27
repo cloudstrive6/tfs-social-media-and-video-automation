@@ -75,6 +75,7 @@ class FactCheck(BaseModel):
     script: Script
     issues: list[FactIssue]
     names_living_person_with_allegation: bool
+    on_screen_hook_text: str = ""  # the hook line shown on screen, corrected (numbers/claims must match)
 
 
 # ---------- Packaging ----------

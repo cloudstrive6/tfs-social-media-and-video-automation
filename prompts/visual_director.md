@@ -61,3 +61,6 @@ Aim for a new visual at least every 6–8 seconds in long form and every 2–3 s
 
 ## Written language: English
 Card text (`card_title`, `card_lines`) and any other on-screen text are translated from the Taglish script into English. Everything written (descriptions, captions, slide text, on-screen text, card text) is in clear, natural English. Keep Filipino proper nouns and well-known terms as they are (barangay, ayuda, Bayanihan, DPWH, ₱). The narration alone stays Taglish.
+
+## Reuse
+A `reuse` shot repeats an earlier illustration. In a vertical, one illustration may appear at most twice in total, and never in two consecutive shots. A video that keeps showing the same picture reads as static; make a new illustration (a new angle, pose or detail) instead.

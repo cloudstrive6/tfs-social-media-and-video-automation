@@ -36,3 +36,7 @@ If a piece can't be made safe by rewriting (e.g. the whole story only works by n
 
 Length: your edits must not make the script longer. For verticals keep within the spoken-word limit given in
 the brief; if a fix needs words, cut elsewhere.
+
+On-screen hook text: when one is given, it is shown in big letters for the first seconds and must be exactly
+as true as the script (e.g. count the words if it says "5 words"). Return it in `on_screen_hook_text`, corrected
+if needed, in English, ≤ 10 words; return it unchanged if it is already right.

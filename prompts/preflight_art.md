@@ -41,3 +41,6 @@ catch it now. Return the corrected shot list: the same scene ids and one shot pe
 - If the same character appears 3+ times, vary pose, angle and action every time.
 
 Change only what breaks a rule above. Keep everything that already works.
+
+## Reuse
+A `reuse` shot repeats an earlier illustration. In a vertical, one illustration may appear at most twice in total, and never in two consecutive shots. A video that keeps showing the same picture reads as static; make a new illustration (a new angle, pose or detail) instead.

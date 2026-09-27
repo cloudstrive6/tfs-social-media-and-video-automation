@@ -174,9 +174,13 @@ def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, 
                if str(sc.id) in dropped or (by_scene.get(sc.id) and by_scene[sc.id].kind == "reuse"
                                             and str(by_scene[sc.id].reuse_of_scene) in dropped)}
         good = [i for i, sh in enumerate(shots) if not sh.card and i not in bad]
+        uses: dict = {}
+        for sh in shots:
+            uses[sh.image] = uses.get(sh.image, 0) + 1
         for i in sorted(bad):
-            if good:
-                j = min(good, key=lambda g: (abs(g - i), g > i))
+            if good:                                   # least-used image first, then the nearest
+                j = min(good, key=lambda g: (uses.get(shots[g].image, 0), abs(g - i), g > i))
+                uses[shots[j].image] = uses.get(shots[j].image, 0) + 1
                 shots[i] = render.Shot(shots[j].image, "pull_out" if shots[j].motion != "pull_out" else "pan_left")
         log.info("replaced shots %s with neighbouring illustrations", [ids[i] for i in sorted(bad)])
 
@@ -338,9 +342,12 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     if not result:
         return
     script, hook = result
-    fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(script, dossier, kind))
+    fc = cached(d / "factcheck.json", FactCheck,
+                lambda: writers.fact_check(script, dossier, kind, hook.on_screen_hook_text))
     if not _gate(item, fc):
         return
+    if fc.on_screen_hook_text.strip():                                     # the checked version goes on screen
+        hook = hook.model_copy(update={"on_screen_hook_text": fc.on_screen_hook_text.strip()})
     script = cached(d / "narration.json", Script, lambda: writers.narration_edit(fc.script))  # read-aloud safe
 
     def review(built) -> ReviewReport:
