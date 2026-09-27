@@ -811,3 +811,26 @@ def test_ig_reel_uses_a_signed_url_and_cleans_up(data_dir, monkeypatch):
     monkeypatch.setattr(state, "_bucket", lambda: "b")
     assert meta.ig_reel(video, "cap") == "post1"
     assert calls[0][1]["video_url"] == "https://r2.example/signed" and deleted == ["tmp/ig/v.mp4"]
+
+
+def test_long_form_is_eight_to_fifteen_minutes():
+    from tfs.agents import writers
+
+    assert writers.min_words("long_form") == int(8 * 60 * writers.WORDS_PER_SECOND)
+    assert writers.max_words("long_form") == int(15 * 60 * writers.WORDS_PER_SECOND)
+    assert "8-15 minutes" in writers._length("long_form")
+
+
+def test_carousel_preflight_keeps_the_draft_if_slide_count_changes(monkeypatch):
+    from tfs import pipeline
+    from tfs.agents import packaging
+    from tfs.models import Carousel, Slide
+
+    slide = dict(layout="text", headline="h", body="b", source="s", theme="dark", image_prompt="p", style="story")
+    draft = Carousel(format="explainer", slides=[Slide(**slide) for _ in range(3)])
+    monkeypatch.setattr(packaging, "preflight_carousel",
+                        lambda item, car, dossier: Carousel(format="explainer", slides=[Slide(**slide)]))
+    assert pipeline._checked_carousel({"kind": "carousel"}, draft, "") is draft
+    fixed = Carousel(format="explainer", slides=[Slide(**{**slide, "image_prompt": "blank sign"}) for _ in range(3)])
+    monkeypatch.setattr(packaging, "preflight_carousel", lambda item, car, dossier: fixed)
+    assert pipeline._checked_carousel({"kind": "carousel"}, draft, "") is fixed

@@ -82,10 +82,16 @@ def _script(item: dict, d: Path, dossier: str) -> tuple[Script, HookReview] | No
         draft = cached(d / f"script_r{rnd}.json", Script,
                        lambda: writers.write_script(item, dossier, issue, feedback))
         hook = cached(d / f"hook_r{rnd}.json", HookReview, lambda: writers.hook_pass(item, draft))
-        n, limit = writers.spoken_words(hook.script), writers.max_words(item["kind"])
+        n, limit, floor = writers.spoken_words(hook.script), writers.max_words(item["kind"]), writers.min_words(item["kind"])
         if n > limit * 1.08:
             feedback = (f"TOO LONG: {n} spoken words; the hard limit is {limit}. Cut to {limit} words or fewer: "
                         "one idea, no second example, shortest possible setup.\n" + "\n".join(hook.fixes))
+            continue
+        if floor and n < floor * 0.95:
+            feedback = (f"TOO SHORT: {n} spoken words; long-form must be at least {floor} words "
+                        f"({channel()['video']['long_form']['target_minutes'][0]} minutes). Deepen it with another "
+                        "chapter, a historical root or a concrete case from the dossier — never padding.\n"
+                        + "\n".join(hook.fixes))
             continue
         if hook.hook_score >= q["min_hook_score"] and hook.retention_score >= q["min_script_score"]:
             return hook.script, hook
@@ -372,8 +378,24 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
 
 
 # ---------------------------------------------------------------- carousel
+def _checked_carousel(item: dict, draft: Carousel, dossier: str) -> Carousel:
+    try:
+        checked = packaging.preflight_carousel(item, draft, dossier)
+    except UsageLimitError:
+        raise
+    except Exception:
+        log.exception("carousel pre-flight failed; using the designer's slides as they are")
+        return draft
+    if len(checked.slides) != len(draft.slides):
+        log.warning("carousel pre-flight changed the slide count; using the draft")
+        return draft
+    return checked
+
+
 def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
-    car = cached(d / "carousel.json", Carousel, lambda: packaging.carousel(item, dossier))
+    draft = cached(d / "carousel_draft.json", Carousel, lambda: packaging.carousel(item, dossier))
+    car = cached(d / "carousel.json", Carousel,                        # pre-flight: fix before anything is drawn
+                 lambda: _checked_carousel(item, draft, dossier))
     as_script = Script(scenes=[Scene(id=i, chapter="slide", speaker="TEXT", text=f"{s.headline}\n{s.body}",
                                      visual=s.image_prompt) for i, s in enumerate(car.slides)],
                        sources=[s.source for s in car.slides if s.source])

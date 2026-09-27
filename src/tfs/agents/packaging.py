@@ -90,6 +90,18 @@ def sound_plan(item: dict, script: Script, shots: ShotList, library: str) -> "So
     )
 
 
+def preflight_carousel(item: dict, car: Carousel, dossier: str) -> Carousel:
+    """Pre-flight Art Director for carousels: image prompts + slide text checked before anything is drawn."""
+    return llm.structured(
+        "preflight_art",
+        "Format: carousel (Instagram/Facebook, 4:5 slides; slide 0 is the cover). Check every slide's "
+        "`image_prompt` with the illustration rules and every slide's `headline`, `body` and `source` with the "
+        "card rules (facts against the dossier, English, naming policy). Keep the same number of slides, in order."
+        f"\n\n# Slides to check\n{car.model_dump_json()}\n\n# Dossier\n{dossier[:30000]}",
+        Carousel,
+    )
+
+
 def carousel(item: dict, dossier: str) -> Carousel:
     return llm.structured(
         "carousel_designer",

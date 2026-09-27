@@ -18,10 +18,20 @@ WORDS_PER_SECOND = 1.8          # Josh at speed 1.1, Taglish with numbers writte
 
 
 def max_words(kind: str) -> int:
-    """Spoken-word ceiling for a format (None-like 10**6 for long form, which is bounded by minutes)."""
+    """Spoken-word ceiling for a format."""
+    v = channel()["video"]
     if kind == "vertical":
-        return int(channel()["video"]["vertical"]["target_seconds"][1] * WORDS_PER_SECOND)
+        return int(v["vertical"]["target_seconds"][1] * WORDS_PER_SECOND)
+    if kind == "long_form":
+        return int(v["long_form"]["target_minutes"][1] * 60 * WORDS_PER_SECOND)
     return 10 ** 6
+
+
+def min_words(kind: str) -> int:
+    """Spoken-word floor (long-form must reach its minimum length)."""
+    if kind == "long_form":
+        return int(channel()["video"]["long_form"]["target_minutes"][0] * 60 * WORDS_PER_SECOND)
+    return 0
 
 
 def spoken_words(script: Script) -> int:
@@ -33,7 +43,8 @@ def _length(kind: str) -> str:
     v = channel()["video"]
     if kind == "long_form":
         lo, hi = v["long_form"]["target_minutes"]
-        return f"long-form narration of {lo}-{hi} minutes (~{lo * 150}-{hi * 150} spoken words)"
+        return (f"long-form narration of {lo}-{hi} minutes: between {min_words(kind)} and {max_words(kind)} spoken "
+                f"words in total (the narrator reads ~{WORDS_PER_SECOND} words per second); both limits are hard")
     if kind == "vertical":
         lo, hi = v["vertical"]["target_seconds"]
         return (f"vertical video narration of {lo}-{hi} seconds: HARD LIMIT {max_words(kind)} spoken words in total "

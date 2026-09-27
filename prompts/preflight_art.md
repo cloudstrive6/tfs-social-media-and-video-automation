@@ -44,3 +44,13 @@ Change only what breaks a rule above. Keep everything that already works.
 
 ## Reuse
 A `reuse` shot repeats an earlier illustration. In a vertical, one illustration may appear at most twice in total, and never in two consecutive shots. A video that keeps showing the same picture reads as static; make a new illustration (a new angle, pose or detail) instead.
+
+## Carousels
+When the input is a carousel instead of a shot list, return the carousel with the same slides in the same
+order.
+- **Art:** apply the illustration rules above to each slide's `image_prompt`.
+- **Slide text:** apply the card rules to `headline`, `body` and `source`. That means correct facts, English,
+  no names the naming policy forbids, and no `[S#]` tags.
+- **Headlines and bubbles:** headline ≤ 10 words; body ≤ 35 words; speech-bubble lines on `panel` slides ≤ 12
+  words.
+- **Continuity:** a comic's recurring characters and setting stay identical from panel to panel.
