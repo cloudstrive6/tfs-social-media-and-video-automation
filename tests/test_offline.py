@@ -578,6 +578,10 @@ def test_rejected_language_code_retries_without_it(data_dir, monkeypatch):
 
     monkeypatch.setenv("ELEVENLABS_API_KEY", "k")
     monkeypatch.setenv("ELEVENLABS_VOICE_ID", "v")
+    from tfs import config
+    real = config.channel()
+    v3 = {**real, "tts": {**real["tts"], "elevenlabs": {**real["tts"]["elevenlabs"], "model_id": "eleven_v3"}}}
+    monkeypatch.setattr(tts, "channel", lambda: v3)
     monkeypatch.setattr(tts.requests, "post",
                         lambda url, **kw: bodies.append(dict(kw["json"])) or R(400 if "language_code" in kw["json"] else 200))
     tts._elevenlabs("a", "NARRATOR", data_dir / "a.mp3", "", "")
@@ -761,3 +765,23 @@ def test_out_of_elevenlabs_credits_pauses_instead_of_failing(data_dir, monkeypat
     monkeypatch.setattr(tts.requests, "post", lambda url, **kw: R())
     with pytest.raises(UsageLimitError):
         tts._elevenlabs("a", "NARRATOR", data_dir / "a.mp3", "", "")
+
+
+def test_instagram_copy_meets_reels_spec(data_dir):
+    import json
+    import subprocess
+
+    from tfs.publish.meta import ig_ready
+
+    src = data_dir / "v.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc=size=540x960:rate=30:duration=3",
+                    "-f", "lavfi", "-i", "sine=frequency=440:duration=3", "-c:v", "libx264", "-c:a", "aac",
+                    "-b:a", "192k", "-ar", "44100", "-shortest", str(src)], check=True)
+    out = ig_ready(src)
+    info = json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_streams", "-of", "json", str(out)],
+                                     capture_output=True, text=True).stdout)["streams"]
+    audio = next(s for s in info if s["codec_type"] == "audio")
+    video = next(s for s in info if s["codec_type"] == "video")
+    assert audio["codec_name"] == "aac" and audio["sample_rate"] == "48000" and int(audio["bit_rate"]) <= 136000
+    assert video["codec_name"] == "h264" and video["pix_fmt"] == "yuv420p"
+    assert b"elst" not in out.read_bytes()[:200000]            # no edit list

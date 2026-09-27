@@ -61,7 +61,27 @@ def _hosted_image_url(path: Path) -> str:
 
 
 # ---------- Instagram ----------
+def ig_ready(video: Path) -> Path:
+    """Instagram Reels spec (developers.facebook.com, IG User Media): MP4 with no edit lists and the moov atom
+    first; H.264 closed GOP, 4:2:0, 23-60 fps, <= 25 Mbps VBR; AAC <= 48 kHz, stereo, 128 kbps."""
+    import subprocess
+
+    out = video.with_name(video.stem + ".ig.mp4")
+    if out.exists() and out.stat().st_mtime >= video.stat().st_mtime:
+        return out
+    cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(video),
+           "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-maxrate", "20M", "-bufsize", "40M",
+           "-pix_fmt", "yuv420p", "-profile:v", "high", "-r", "30", "-g", "60", "-sc_threshold", "0",
+           "-c:a", "aac", "-b:a", "128k", "-ar", "48000", "-ac", "2",
+           "-movflags", "+faststart", "-use_editlist", "0", str(out)]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode:
+        raise RuntimeError(f"IG re-encode failed: {res.stderr[-500:]}")
+    return out
+
+
 def ig_reel(video: Path, caption: str) -> str:
+    video = ig_ready(video)
     ig = require_env("META_IG_USER_ID")
     container = _call("POST", f"{ig}/media", media_type="REELS", upload_type="resumable",
                       caption=caption, share_to_feed="true")["id"]

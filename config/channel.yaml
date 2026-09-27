@@ -4,7 +4,8 @@ channel:
   handle: "@TheFilipinoStandard"
   narrator_persona: Kuya Standard
   series_tag: "Standard Issue"          # said after every cold open: "Standard Issue #42."
-  language: taglish                     # taglish | tagalog | english
+  language: taglish                     # narration (spoken) language: taglish | tagalog | english
+  text_language: english                # everything WRITTEN: descriptions, captions, carousels, cards, thumbnails
   timezone: Asia/Manila
   links:
     youtube: https://www.youtube.com/@TheFilipinoStandard
@@ -75,7 +76,7 @@ publishing:
 tts:
   provider: elevenlabs        # elevenlabs | fishaudio
   elevenlabs:
-    model_id: eleven_v3                   # expressive reads + [laugh]/[sarcastic] tags; eleven_multilingual_v2 = steadier fallback
+    model_id: eleven_multilingual_v2      # steady long reads + scene-to-scene continuity; eleven_v3 dropped first words and broke down on long-form (27 Sep)
     voice_id: ""                          # ELEVENLABS_VOICE_ID = oqlKKpA3VREaqVHQKHNn ("Josh - Natural Narrator", Filipino)
     language_code: fil                    # eleven_v3 lists Filipino as "fil" (ISO 639-3); names and Tagalog words read the Filipino way
     stability: 0.38

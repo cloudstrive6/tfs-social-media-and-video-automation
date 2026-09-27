@@ -236,11 +236,12 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
         if font_path("display"):
             shutil.copy(font_path("display"), fonts)
         video = ["-filter_complex", f"[0:v]subtitles=captions.ass:fontsdir=fonts[v];{audio}", "-map", "[v]",
-                 "-c:v", "libx264", "-preset", "medium", "-crf", "19"]
+                 "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-maxrate", "20M", "-bufsize", "40M",
+                 "-pix_fmt", "yuv420p"]
     else:
         video = ["-filter_complex", audio, "-map", "0:v", "-c:v", "copy"]
 
-    ff([*inputs, *video, "-map", "[a]", "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+    ff([*inputs, *video, "-map", "[a]", "-c:a", "aac", "-b:a", "128k", "-ar", "48000", "-ac", "2", "-use_editlist", "0",
         "-movflags", "+faststart", "-t", f"{total:.3f}", "final.mp4"], cwd=work)
     shutil.move(work / "final.mp4", out)
     return out, starts

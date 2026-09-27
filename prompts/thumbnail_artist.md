@@ -16,3 +16,5 @@ The thumbnail must be readable at 168×94 px (phone feed). Design process:
 Output three concepts. For each: the moment, composition (foreground/background, camera angle), color plan,
 the full image-generation prompt (16:9, include the channel style prompt), and optional overlay text.
 Rank them by predicted CTR and explain why in one sentence.
+
+Any overlay text on the thumbnail is in English.

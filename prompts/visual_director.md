@@ -22,7 +22,7 @@ For each scene decide ONE visual type:
   themselves, maps fly in and fill): `stat` (big number + label), `bars` (a comparison: `card_lines` like
   "Kailangan dati: 16", "Kailangan ngayon: 14" — 2 to 5 bars, each "label: number"), `quote` (sourced quote + attribution),
   `timeline` (3–6 dated points), `document` (title of a report + highlighted line), `map`.
-  For `map`: `card_title` is the on-screen headline (short, Taglish ok); `card_lines` are 1–4 place names to
+  For `map`: `card_title` is the on-screen headline (short, English); `card_lines` are 1–4 place names to
   highlight, most important first, written the way an atlas names them: provinces ("Bulacan", "Davao de Oro"),
   cities ("Quezon City", "Tacloban"), regions or island groups ("Metro Manila", "Central Luzon", "BARMM",
   "Visayas", "Mindanao", "Panay"), seas and features ("West Philippine Sea", "Scarborough Shoal", "Ayungin Shoal",
@@ -58,3 +58,6 @@ For each scene decide ONE visual type:
 
 Also choose the camera motion: `push_in`, `pull_out`, `pan_left`, `pan_right`, `shake` (impacts only), `static`.
 Aim for a new visual at least every 6–8 seconds in long form and every 2–3 seconds in verticals.
+
+## Written language: English
+Card text (`card_title`, `card_lines`) and any other on-screen text are translated from the Taglish script into English. Everything written (descriptions, captions, slide text, on-screen text, card text) is in clear, natural English. Keep Filipino proper nouns and well-known terms as they are (barangay, ayuda, Bayanihan, DPWH, ₱). The narration alone stays Taglish.

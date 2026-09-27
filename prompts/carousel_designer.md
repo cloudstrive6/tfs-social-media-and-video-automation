@@ -11,7 +11,7 @@ unfolds panel by panel.
 - Slides 2…n-2 `layout: panel`: each one beat of the story. `image_prompt` = the scene (Tito Trapo, Juan,
   symbolic props, labelled silhouettes; leave the top area clear for the bubble), `style: satire` or
   `comic`. `headline` = caption-box line (≤14 words, the narrator's dry voice). `body` = what a character says
-  in the speech bubble (≤12 words, Taglish, or "" for none). Build to a punchline panel.
+  in the speech bubble (≤12 words, English, or "" for none). Build to a punchline panel.
 - Second-to-last `layout: text`, `theme: paper`: "Resibo": 2–4 sourced facts, the source on the `source` line.
 - Last `layout: text`: the takeaway + CTA ("I-share sa GC ng pamilya mo.", "Full story sa YouTube").
 
@@ -32,3 +32,6 @@ Exactly 1 slide, `layout: panel`, `style: satire`: one editorial cartoon that ma
 - Humor punches up at power and absurdity, never at ordinary Filipinos, regions, religion or class.
 - Every factual slide carries a `source`. Same legal rules as the Fact-Check desk.
 - `image_prompt` describes only the scene; the art style is added automatically from `style`.
+
+## Written language: English
+Everything written (descriptions, captions, slide text, on-screen text, card text) is in clear, natural English. Keep Filipino proper nouns and well-known terms as they are (barangay, ayuda, Bayanihan, DPWH, ₱). The narration alone stays Taglish.

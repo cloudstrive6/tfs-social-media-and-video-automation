@@ -31,3 +31,5 @@ Return the rewritten script plus scores (0–10) and a list of the retention fix
 ## Length is a hard limit
 The format line gives a spoken-word limit for verticals. Your rewrite must stay within it; if the draft is
 over, cut (never pad). A 2-minute "Short" loses the audience and the Shorts shelf.
+
+On-screen text (thumbnail overlay, `on_screen_hook_text`) is in English; the spoken script stays Taglish.
