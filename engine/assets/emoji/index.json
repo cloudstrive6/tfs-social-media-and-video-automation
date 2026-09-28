@@ -7,20 +7,12 @@
   "name": "Money with wings",
   "group": "money"
  },
- "dollar_banknote": {
-  "name": "Dollar banknote",
-  "group": "money"
- },
  "coin": {
   "name": "Coin",
   "group": "money"
  },
  "credit_card": {
   "name": "Credit card",
-  "group": "money"
- },
- "heavy_dollar_sign": {
-  "name": "Heavy dollar sign",
   "group": "money"
  },
  "bank": {
@@ -1126,5 +1118,9 @@
  "rolling_on_the_floor_laughing": {
   "name": "Rolling on the floor laughing",
   "group": "symbols"
+ },
+ "peso_banknote": {
+  "name": "Peso banknote",
+  "group": "money"
  }
 }

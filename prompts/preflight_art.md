@@ -51,6 +51,9 @@ order.
 - **Art:** apply the illustration rules above to each slide's `image_prompt`.
 - **Slide text:** apply the card rules to `headline`, `body` and `source`. That means correct facts, English,
   no names the naming policy forbids, and no `[S#]` tags.
-- **Headlines and bubbles:** headline ≤ 10 words; body ≤ 35 words; speech-bubble lines on `panel` slides ≤ 12
-  words.
+- **Headlines and bubbles:** cover headline ≤ 8 words and body ≤ 18 words; other headlines ≤ 10 words and
+  body ≤ 30 words; speech-bubble lines on `panel` slides ≤ 10 words. Trim, never cram.
+- **Art briefs are for our cartoon engine:** each `image_prompt` may only use the sets, cast, poses,
+  expressions and emoji props in the vocabulary. Rewrite anything else into something it can draw.
+  Money is pesos (`money_bag`, `money_with_wings`, `peso_banknote`).
 - **Continuity:** a comic's recurring characters and setting stay identical from panel to panel.

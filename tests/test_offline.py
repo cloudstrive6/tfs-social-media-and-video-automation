@@ -915,3 +915,31 @@ def test_vector_staging_keeps_adults_the_same_height_and_apart():
     out = vector._stage([a("kuya_standard", 0.45, 0.55), a("juan", 0.6, 0.32), a("child", 0.8, 0.5)], True)
     assert [x.scale for x in out[:2]] == [0.55, 0.55] and out[2].scale < 0.4
     assert sorted(x.x for x in out) == [0.2, 0.5, 0.8]
+
+
+def test_money_props_show_pesos():
+    from tfs.media import vector
+
+    vector.emoji_index.cache_clear()
+    idx = vector.emoji_index()
+    assert "peso_banknote" in idx and "dollar_banknote" not in idx and "heavy_dollar_sign" not in idx
+    for key in ("money_bag", "money_with_wings", "peso_banknote"):
+        assert "₱</text>" in vector.emoji_svg(key)
+
+
+def test_carousel_slides_keep_text_off_the_art(tmp_path):
+    from PIL import Image
+
+    from tfs.media import compose
+
+    art = tmp_path / "art.png"
+    Image.new("RGB", compose.band_size("text"), (0, 200, 0)).save(art)
+    out = compose.slide(2, 8, "A headline", "Some body text for the slide.", "Source", "dark", art,
+                        tmp_path / "s.jpg", "@h")
+    img = Image.open(out).convert("RGB")
+    band_bottom = compose.TOP + compose.BAND["text"]
+    assert img.size == (1080, 1350)
+    # the band is the art at full strength (no wash), and nothing below it is art-coloured
+    assert img.getpixel((540, band_bottom - 20))[1] > 180
+    assert all(img.getpixel((x, band_bottom + 200))[1] < 150 or img.getpixel((x, band_bottom + 200))[0] > 150
+               for x in range(0, 1080, 60))

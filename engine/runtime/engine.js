@@ -14,8 +14,11 @@
   const { background, GROUND } = window.TFS_BACKGROUNDS;
   const stage = document.getElementById("stage");
   const tl = gsap.timeline({ paused: true });
-  const SCALE = Math.max(W, H) / 1000;                      // background box -> pixels ("xMidYMax slice")
-  const GROUND_PX = H - (1000 - GROUND) * SCALE;
+  const SCALE = Math.max(W, H) / 1000;                      // background box (1000x1000) -> pixels
+  // the ground line sits at 80% of the frame when the set allows it (wide frames would otherwise be 40% floor);
+  // tall frames keep the set's own ground. The set is placed so its ground lands exactly there.
+  const GROUND_PX = Math.max(H - (1000 - GROUND) * SCALE, Math.min(H * 0.8, GROUND * SCALE));
+  const BG_BOX = `position:absolute;left:${(W - 1000 * SCALE) / 2}px;top:${GROUND_PX - GROUND * SCALE}px`;
   const SAFE = VERTICAL ? { x0: 0.05 * W, x1: 0.85 * W, y0: 0.07 * H, y1: 0.58 * H }   // clear of UI + captions
                         : { x0: 0.05 * W, x1: 0.95 * W, y0: 0.06 * H, y1: 0.94 * H };
   const esc = (t) => String(t || "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
@@ -331,7 +334,7 @@
     scene.appendChild(inner);
     const bgName = sc.background || "plain";
     const bg = background(bgName).replace(/id="sky"/g, `id="sky${i}"`).replace(/url\(#sky\)/g, `url(#sky${i})`);
-    inner.innerHTML = `<svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMax slice" width="${W}" height="${H}" style="position:absolute;inset:0">${bg}</svg>`;
+    inner.innerHTML = `<svg viewBox="0 0 1000 1000" width="${1000 * SCALE}" height="${1000 * SCALE}" style="${BG_BOX}">${bg}</svg>`;
     stage.appendChild(scene);
     if (sc.kind === "card") {
       inner.querySelector("svg").style.filter = `blur(${Math.round(W * 0.012)}px)`;   // the set, softened, behind the card

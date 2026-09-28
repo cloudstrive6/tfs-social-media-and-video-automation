@@ -1,4 +1,5 @@
-"""Thumbnail Artist, Title Writer, SEO & Discovery Writer, Visual Director, Carousel Designer."""
+"""Thumbnail Artist, Title Writer, SEO & Discovery Writer, Carousel Designer, Motion Designer, Visual Critic
+(and the older Visual Director / Pre-flight Art Director)."""
 from __future__ import annotations
 
 import json
@@ -13,6 +14,11 @@ def _style_kit() -> str:
     img = channel()["images"]
     styles = "\n".join(f"- {name}: {text}" for name, text in img["styles"].items())
     return f"Style kit (pick one per image):\n{styles}\nShared rules: {img['base']}\nNever: {img['never']}"
+
+
+def _vocabulary() -> str:
+    from ..media import vector
+    return vector.vocabulary()
 
 
 def _ctx(item: dict, script: Script | None = None) -> str:
@@ -179,6 +185,7 @@ def preflight_carousel(item: dict, car: Carousel, dossier: str) -> Carousel:
         "Format: carousel (Instagram/Facebook, 4:5 slides; slide 0 is the cover). Check every slide's "
         "`image_prompt` with the illustration rules and every slide's `headline`, `body` and `source` with the "
         "card rules (facts against the dossier, English, naming policy). Keep the same number of slides, in order."
+        f"\n\n# What the cartoon engine can draw\n{_vocabulary()}"
         f"\n\n# Slides to check\n{car.model_dump_json()}\n\n# Dossier\n{dossier[:30000]}",
         Carousel,
     )
@@ -187,8 +194,7 @@ def preflight_carousel(item: dict, car: Carousel, dossier: str) -> Carousel:
 def carousel(item: dict, dossier: str) -> Carousel:
     return llm.structured(
         "carousel_designer",
-        f"Language: {channel()['channel']['language']}\n{_style_kit()}\n"
-        "For slide art, describe the scene only and set `style`.\n\n"
-        f"{_ctx(item)}\n\n# Dossier\n{dossier}",
+        f"Language: {channel()['channel']['language']}\n\n# What the cartoon engine can draw (slide art)\n"
+        f"{_vocabulary()}\n\n{_ctx(item)}\n\n# Dossier\n{dossier}",
         Carousel,
     )

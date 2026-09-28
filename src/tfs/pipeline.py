@@ -532,13 +532,32 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
                 if s.image_prompt and str(i) not in drop and not (slide_dir / f"art{i:02d}.png").exists()]
         if not need:
             return
-        briefs = [car.slides[i].image_prompt + (f"\nReviewer's correction: {fixed[str(i)]}" if str(i) in fixed else "")
-                  for i in need]
-        pngs = _vector_stills(item, briefs, "Instagram carousel slide art, 4:5 stills. No speech bubbles: the slide "
-                              "adds its own text", (1080, 1350), d / "work_slides")
-        for i, png in zip(need, pngs):
-            shutil.copy(png, slide_dir / f"art{i:02d}.png")
-            (slide_dir / f"slide{i:02d}.jpg").unlink(missing_ok=True)
+        purposes = {
+            "cover": "carousel cover art, one wide still: the hook as a single bold image, big characters, "
+                     "full colour, no speech bubble (the headline goes under it)",
+            "text": "carousel slide art, one wide still: the slide's idea as one clear image, big characters, "
+                    "no speech bubble (the text goes under it)",
+            "panel": "comic panel, one still: the beat of the story; if a speech bubble line is given, put it in "
+                     "a bubble on the character who says it, word for word",
+        }
+        for layout, purpose in purposes.items():
+            group = [i for i in need if (car.slides[i].layout if i else "cover") == layout
+                     or (layout == "text" and i and car.slides[i].layout not in purposes)]
+            if not group:
+                continue
+            briefs = []
+            for i in group:
+                s = car.slides[i]
+                brief = s.image_prompt
+                if layout == "panel" and s.body.strip():
+                    brief += f'\nSpeech bubble (exact words): "{s.body.strip()}"'
+                if str(i) in fixed:
+                    brief += f"\nReviewer's correction: {fixed[str(i)]}"
+                briefs.append(brief)
+            pngs = _vector_stills(item, briefs, purpose, compose.band_size(layout), d / f"work_slides_{layout}")
+            for i, png in zip(group, pngs):
+                shutil.copy(png, slide_dir / f"art{i:02d}.png")
+                (slide_dir / f"slide{i:02d}.jpg").unlink(missing_ok=True)
 
     def build() -> list[str]:
         if _engine() == "vector":
@@ -556,7 +575,8 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
                 art = art_path
             if not out.exists():
                 if s.layout == "panel":
-                    compose.panel_slide(i, len(car.slides), headline, body, s.source, art, out, handle)
+                    compose.panel_slide(i, len(car.slides), headline, "" if art and _engine() == "vector" else body,
+                                        s.source, art, out, handle)          # the engine drew the bubble
                 else:
                     compose.slide(i, len(car.slides), headline, body, s.source, s.theme, art, out, handle)
             paths.append(str(out))

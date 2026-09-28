@@ -41,57 +41,88 @@ def thumbnail(image: Path, overlay_text: str, out: Path) -> Path:
     return out
 
 
+# Vector-engine art sits in its own band at full colour; the words sit on a solid panel under it (never on
+# top of the characters). The engine draws each still at exactly its band's size.
+SLIDE = (1080, 1350)
+TOP = 22                                     # flag stripes
+BAND = {"cover": 840, "text": 620, "panel": 1000}
+
+
+def band_size(layout: str) -> tuple[int, int]:
+    return SLIDE[0], BAND.get(layout, BAND["text"])
+
+
+def _stripes(d: ImageDraw.ImageDraw) -> None:
+    d.rectangle([0, 0, SLIDE[0], 14], fill=BLUE)
+    d.rectangle([0, 14, SLIDE[0], TOP], fill=RED)
+
+
+def _band(canvas: Image.Image, art: Path, height: int, accent) -> int:
+    """Paste the art full-width under the stripes; returns the y where the text panel starts."""
+    img = cover(Image.open(art).convert("RGB"), (SLIDE[0], height)).convert("RGBA")
+    canvas.alpha_composite(img, (0, TOP))
+    y = TOP + height
+    ImageDraw.Draw(canvas).rectangle([0, y, SLIDE[0], y + 8], fill=accent)
+    return y + 8
+
+
+def _footer(d: ImageDraw.ImageDraw, index: int, total: int, source: str, handle: str, colour, pad: int,
+            swipe: bool) -> int:
+    """Source line, handle, page number (and SWIPE on the cover). Returns the top of the footer."""
+    top = SLIDE[1] - 50
+    if source:
+        sf, slines, slh = fit_text(d, "Source: " + source, "body", SLIDE[0] - 2 * pad, 64, start=24, min_size=18)
+        top = SLIDE[1] - 92 - slh * (len(slines) - 1)
+        y = top
+        for line in slines:
+            d.text((pad, y), line, font=sf, fill=colour)
+            y += slh
+    d.text((pad, SLIDE[1] - 40), handle, font=font("body", 26), fill=colour, anchor="ls")
+    d.text((SLIDE[0] // 2, SLIDE[1] - 40), f"{index + 1}/{total}", font=font("body", 26), fill=colour, anchor="ms")
+    if swipe:
+        d.text((SLIDE[0] - pad, SLIDE[1] - 40), "SWIPE >", font=font("display", 40), fill=YELLOW, anchor="rs")
+    return top - 16
+
+
 def slide(index: int, total: int, headline: str, body: str, source: str, theme: str,
           background: Path | None, out: Path, handle: str) -> Path:
-    """1080x1350 (4:5) carousel slide."""
-    size, pad = (1080, 1350), 84
+    """1080x1350 (4:5) carousel slide: art band on top (if any), then headline + body on a solid panel."""
+    pad = 72
     bg, head_c, body_c, accent = THEMES.get(theme, THEMES["dark"])
-    canvas = Image.new("RGBA", size, (*bg, 255))
+    canvas = Image.new("RGBA", SLIDE, (*bg, 255))
     is_cover = index == 0
-
-    if background:
-        art = cover(Image.open(background).convert("RGB"), size).convert("RGBA")
-        canvas.alpha_composite(art)
-        canvas.alpha_composite(vertical_gradient(size, 40 if is_cover else 120, 235, bg))
-
     d = ImageDraw.Draw(canvas)
-    d.rectangle([0, 0, size[0], 14], fill=BLUE)
-    d.rectangle([0, 14, size[0], 22], fill=RED)
+    _stripes(d)
+    y = _band(canvas, background, BAND["cover" if is_cover else "text"], accent) + 28 if background else 90
+    d = ImageDraw.Draw(canvas)
+    bottom = _footer(d, index, total, source, handle, body_c, pad, is_cover)
 
-    if is_cover:
-        fnt, lines, lh = fit_text(d, headline.upper(), "display", size[0] - 2 * pad, 560, start=150, min_size=64)
-        y = size[1] - pad - 190 - lh * len(lines)
-        for line in lines:
-            d.text((pad, y), line, font=fnt, fill=head_c, stroke_width=4, stroke_fill=(0, 0, 0))
-            y += lh
-        bf, blines, blh = fit_text(d, body, "body", size[0] - 2 * pad, 150, start=46)
-        y += 20
-        for line in blines:
-            d.text((pad, y), line, font=bf, fill=accent)
-            y += blh
-        d.text((size[0] - pad, size[1] - 60), "SWIPE >", font=font("display", 44), fill=WHITE, anchor="rs")
-    else:
-        d.text((pad, 90), f"{index + 1:02d}", font=font("display", 96), fill=accent)
-        hf, hlines, hlh = fit_text(d, headline, "display", size[0] - 2 * pad, 420, start=104, min_size=54)
-        y = 240
-        for line in hlines:
-            d.text((pad, y), line, font=hf, fill=head_c)
-            y += hlh
-        bf, blines, blh = fit_text(d, body, "body", size[0] - 2 * pad, size[1] - y - 260, start=50, min_size=30)
-        y += 40
-        for line in blines:
-            d.text((pad, y), line, font=bf, fill=body_c)
-            y += blh
-
-    if source:
-        sf, slines, slh = fit_text(d, "Source: " + source, "body", size[0] - 2 * pad, 80, start=26, min_size=18)
-        y = size[1] - 110 - slh * (len(slines) - 1)
-        for line in slines:
-            d.text((pad, y), line, font=sf, fill=body_c)
-            y += slh
-    d.text((pad, size[1] - 50), handle, font=font("body", 28), fill=body_c, anchor="ls")
-    d.text((size[0] // 2, size[1] - 50), f"{index + 1}/{total}", font=font("body", 28), fill=body_c,
-           anchor="ms")
+    if not is_cover:
+        num = f"{index + 1:02d}"
+        if background:                                  # a badge on the art, not a line of its own
+            nf = font("display", 64)
+            w = d.textlength(num, font=nf) + 44
+            d.rounded_rectangle([pad - 20, TOP + 26, pad - 20 + w, TOP + 116], radius=18, fill=(*bg, 255))
+            d.text((pad + 2, TOP + 71), num, font=nf, fill=accent, anchor="lm")
+        else:
+            d.text((pad, y), num, font=font("display", 96), fill=accent)
+            y += 130
+    room = bottom - y
+    head_h = int(room * (0.62 if is_cover else 0.42 if background else 0.5)) if body else room
+    hf, hlines, hlh = fit_text(d, headline.upper() if is_cover else headline, "display", SLIDE[0] - 2 * pad, head_h,
+                               start=132 if is_cover or not background else 96, min_size=48)
+    bf, blines, blh = (fit_text(d, body, "body", SLIDE[0] - 2 * pad, room - hlh * len(hlines) - 18,
+                                start=46 if is_cover else 44 if background else 58, min_size=28)
+                       if body else (None, [], 0))
+    if not background and not is_cover:              # a text-only slide: the block sits in the middle
+        y += max(0, (room - hlh * len(hlines) - 18 - blh * len(blines)) // 2 - 40)
+    for line in hlines:
+        d.text((pad, y), line, font=hf, fill=head_c, stroke_width=3 if is_cover else 0, stroke_fill=(0, 0, 0))
+        y += hlh
+    y += 18
+    for line in blines:
+        d.text((pad, y), line, font=bf, fill=accent if is_cover else body_c)
+        y += blh
     _logo(canvas, 56, "tr")
     canvas.convert("RGB").save(out, "JPEG", quality=92)
     return out
@@ -99,45 +130,49 @@ def slide(index: int, total: int, headline: str, body: str, source: str, theme: 
 
 def panel_slide(index: int, total: int, caption: str, speech: str, source: str, art: Path | None,
                 out: Path, handle: str) -> Path:
-    """Comic/satire carousel panel: full-bleed art, speech bubble up top, caption box at the bottom."""
-    size, pad = (1080, 1350), 56
-    canvas = Image.new("RGBA", size, (*PAPER_RGB, 255))
-    if art:
-        canvas.alpha_composite(cover(Image.open(art).convert("RGB"), size).convert("RGBA"))
+    """Comic/satire panel: the art (with its speech bubble, drawn by the engine on the speaker) in a bordered
+    frame on top, the narrator's caption box below it. `speech` is drawn here only when there's no art."""
+    pad = 56
+    canvas = Image.new("RGBA", SLIDE, (*PAPER_RGB, 255))
     d = ImageDraw.Draw(canvas)
-    # comic border
-    d.rectangle([18, 18, size[0] - 18, size[1] - 18], outline=INK_RGB, width=10)
-
-    if speech:
-        sf, slines, slh = fit_text(d, speech, "body", size[0] - 2 * pad - 120, 300, start=52, min_size=30)
+    _stripes(d)
+    y = TOP
+    if art:
+        y = _band(canvas, art, BAND["panel"], INK_RGB)
+        d = ImageDraw.Draw(canvas)
+        d.rectangle([0, TOP, SLIDE[0] - 1, y - 1], outline=INK_RGB, width=8)
+    elif speech:
+        sf, slines, slh = fit_text(d, speech, "body", SLIDE[0] - 2 * pad - 120, 300, start=52, min_size=30)
         bw = max(d.textlength(line, font=sf) for line in slines) + 80
         bh = slh * len(slines) + 60
-        x0, y0 = pad + 20, pad + 40
-        tail = [(x0 + 90, y0 + bh - 20), (x0 + 150, y0 + bh - 20), (x0 + 100, y0 + bh + 70)]
-        d.polygon(tail, fill=WHITE)
-        d.line([tail[0], tail[2], tail[1]], fill=INK_RGB, width=6)
+        x0, y0 = pad + 20, pad + 60
         d.rounded_rectangle([x0, y0, x0 + bw, y0 + bh], radius=46, fill=WHITE, outline=INK_RGB, width=6)
-        d.polygon([(x0 + 96, y0 + bh - 8), (x0 + 144, y0 + bh - 8), (x0 + 101, y0 + bh + 58)], fill=WHITE)
-        y = y0 + 30
+        yy = y0 + 30
         for line in slines:
-            d.text((x0 + 40, y), line, font=sf, fill=INK_RGB)
-            y += slh
+            d.text((x0 + 40, yy), line, font=sf, fill=INK_RGB)
+            yy += slh
+        y = y0 + bh + 40
 
     if caption:
-        cf, clines, clh = fit_text(d, caption.upper(), "display", size[0] - 2 * pad - 60, 330, start=74, min_size=36)
-        box_h = clh * len(clines) + 56 + (40 if source else 0)
-        y0 = size[1] - pad - 40 - box_h
-        d.rectangle([pad, y0, size[0] - pad, y0 + box_h], fill=YELLOW, outline=INK_RGB, width=6)
-        y = y0 + 26
+        box_top = y + 24
+        box_bottom = SLIDE[1] - 70
+        cf, clines, clh = fit_text(d, caption.upper(), "display", SLIDE[0] - 2 * pad - 60,
+                                   box_bottom - box_top - 56 - (34 if source else 0), start=64, min_size=32)
+        d.rectangle([pad, box_top, SLIDE[0] - pad, box_bottom], fill=YELLOW, outline=INK_RGB, width=6)
+        yy = box_top + 24
         for line in clines:
-            d.text((pad + 30, y), line, font=cf, fill=INK_RGB)
-            y += clh
+            d.text((pad + 30, yy), line, font=cf, fill=INK_RGB)
+            yy += clh
         if source:
-            srcf = font("body", 22)
-            d.text((pad + 30, y + 4), "Source: " + source, font=srcf, fill=INK_RGB)
+            sf, slines, slh = fit_text(d, "Source: " + source, "body", SLIDE[0] - 2 * pad - 60, 60, start=22,
+                                       min_size=16)
+            yy = box_bottom - 18 - slh * len(slines)
+            for line in slines:
+                d.text((pad + 30, yy), line, font=sf, fill=INK_RGB)
+                yy += slh
 
-    d.text((pad, size[1] - 34), handle, font=font("body", 24), fill=INK_RGB, anchor="ls")
-    d.text((size[0] - pad, size[1] - 34), f"{index + 1}/{total}", font=font("body", 24), fill=INK_RGB, anchor="rs")
+    d.text((pad, SLIDE[1] - 28), handle, font=font("body", 24), fill=INK_RGB, anchor="ls")
+    d.text((SLIDE[0] - pad, SLIDE[1] - 28), f"{index + 1}/{total}", font=font("body", 24), fill=INK_RGB, anchor="rs")
     _logo(canvas, 56, "tr")
     canvas.convert("RGB").save(out, "JPEG", quality=92)
     return out
