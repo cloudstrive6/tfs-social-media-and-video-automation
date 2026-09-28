@@ -64,7 +64,26 @@ def _clamp(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, v))
 
 
-def sanitize(plan: MotionPlan, scene_ids: list[int]) -> MotionPlan:
+def _stage(actors: list[Actor], vertical: bool) -> list[Actor]:
+    """Adults share the lead's height (the engine draws the back row smaller), children are two thirds of it,
+    and nobody overlaps: figures closer than a body width apart are spread evenly across the frame."""
+    if not actors:
+        return actors
+    adults = [a.scale for a in actors if a.who != "child"] or [a.scale for a in actors]
+    lead = _clamp(max(adults), 0.4 if vertical else 0.35, 0.6 if vertical else 0.7)
+    actors = [a.model_copy(update={"scale": round(lead * (0.66 if a.who == "child" else 1), 3)}) for a in actors]
+    gap = lead * (0.62 if vertical else 0.3)         # body width as a share of frame width
+    xs = sorted(a.x for a in actors)
+    if len(actors) > 1 and min(b - a for a, b in zip(xs, xs[1:])) < gap:
+        slots = {2: [0.27, 0.73], 3: [0.2, 0.5, 0.8]}[len(actors)]
+        order = sorted(range(len(actors)), key=lambda k: actors[k].x)
+        actors = list(actors)
+        for slot, k in zip(slots, order):
+            actors[k] = actors[k].model_copy(update={"x": slot})
+    return actors
+
+
+def sanitize(plan: MotionPlan, scene_ids: list[int], vertical: bool = True) -> MotionPlan:
     """One scene per script scene, in script order, with every number inside what the engine can draw."""
     by_id = {s.scene_id: s for s in plan.scenes}
     out = []
@@ -80,11 +99,12 @@ def sanitize(plan: MotionPlan, scene_ids: list[int]) -> MotionPlan:
         actors = [a.model_copy(update={"x": _clamp(a.x, 0.1, 0.9), "scale": _clamp(a.scale, 0.2, 0.7),
                                        "holds": a.holds if a.holds and emoji_svg(a.holds) else ""})
                   for a in sp.actors[:3]]
+        actors = _stage(actors, vertical)
         props = [p.model_copy(update={"x": _clamp(p.x, 0.05, 0.95), "y": _clamp(p.y, 0.05, 0.9),
                                       "size": _clamp(p.size, 0.05, 0.4), "count": int(_clamp(p.count, 1, 16)),
-                                      "at": _clamp(p.at, 0, 0.8)})
+                                      "at": _clamp(p.at, 0, 0.5)})
                  for p in sp.props[:5] if emoji_svg(p.emoji)]
-        bubbles = [b.model_copy(update={"at": _clamp(b.at, 0, 0.6)}) for b in sp.bubbles
+        bubbles = [b.model_copy(update={"at": _clamp(b.at, 0, 0.35)}) for b in sp.bubbles
                    if 0 <= b.actor < len(actors) and b.text.strip()][:1]
         out.append(sp.model_copy(update={"actors": actors, "props": props, "bubbles": bubbles}))
     return MotionPlan(look=plan.look, scenes=out)

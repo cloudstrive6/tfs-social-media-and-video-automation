@@ -227,13 +227,14 @@ def _motion(item: dict, d: Path, script: Script, size: tuple[int, int], clips: l
     """Motion Designer plans every shot; the Visual Critic checks a still of each scene and the designer fixes what
     it flags, all before the full render. Review-team notes on a finished render re-plan only those scenes."""
     ids = [sc.id for sc in script.scenes]
+    vertical = size[1] > size[0]
     dossier = _dossier(d)
     plan_file = d / "motion.json"
     if plan_file.exists():
         plan = MotionPlan.model_validate_json(plan_file.read_text(encoding="utf-8"))
     else:
         draft = cached(d / "motion_draft.json", MotionPlan, lambda: packaging.motion_plan(item, script, dossier))
-        plan = vector.sanitize(draft, ids)
+        plan = vector.sanitize(draft, ids, vertical)
         rounds = qa.cfg().get("critic_rounds", 2) if qa.enabled() else 0
         for rnd in range(rounds):
             spec = vector.spec_from_plan(plan, starts, total, clips, size)
@@ -245,7 +246,7 @@ def _motion(item: dict, d: Path, script: Script, size: tuple[int, int], clips: l
                 log.info("visual critic r%d %s: %d of %d scenes flagged", rnd, item["id"], len(notes), len(ids))
                 if not notes:
                     break
-                plan = vector.sanitize(packaging.motion_revise(item, script, plan, notes, dossier), ids)
+                plan = vector.sanitize(packaging.motion_revise(item, script, plan, notes, dossier), ids, vertical)
             except UsageLimitError:
                 raise
             except Exception:
@@ -259,7 +260,7 @@ def _motion(item: dict, d: Path, script: Script, size: tuple[int, int], clips: l
     pending = {int(k): [note] for k, note in fixes["images"].items()
                if k.isdigit() and k not in dropped and fixes["attempts"].get(k, 0) > done.get(k, 0)}
     if pending:                                       # the review team flagged scenes of a finished render
-        plan = vector.sanitize(packaging.motion_revise(item, script, plan, pending, dossier), ids)
+        plan = vector.sanitize(packaging.motion_revise(item, script, plan, pending, dossier), ids, vertical)
         done.update({str(k): fixes["attempts"][str(k)] for k in pending})
         (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
     if dropped:                                       # still failing after a re-plan: the host explains instead
@@ -294,7 +295,7 @@ def _vector_video(item: dict, d: Path, script: Script, hook: HookReview, size: t
 
 def _vector_stills(item: dict, briefs: list[str], purpose: str, size: tuple[int, int], work: Path) -> list[Path]:
     """Single images (thumbnail, carousel art) drawn by the vector engine from short briefs."""
-    plan = vector.sanitize(packaging.motion_stills(item, briefs, purpose), list(range(len(briefs))))
+    plan = vector.sanitize(packaging.motion_stills(item, briefs, purpose), list(range(len(briefs))), size[1] > size[0])
     return vector.stills(plan, size, work, work / "stills")
 
 

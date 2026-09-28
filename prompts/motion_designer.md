@@ -39,21 +39,23 @@ use only those names.
 - `facing` points the actor toward whoever or whatever they react to. `enter` brings a character in on
   their first appearance (`slide_left`, `slide_right`, `pop`, `drop`); after that use `none`.
 - `holds` puts an emoji in the hand (a money bag, a document, a phone), or "".
-- Placement: `x` from 0 to 1 is the centre of the figure. Keep x in 0.2–0.8 on verticals, and never place two
-  actors closer than 0.25. `scale` is figure height as a share of frame height: 0.45–0.6 for the main actor,
-  0.3–0.4 for others. `row: back` for people further away.
+- Placement: `x` from 0 to 1 is the centre of the figure. On verticals use at most 2 actors, at about x 0.27
+  and 0.73; a single actor sits at 0.4–0.6. `scale` is figure height as a share of frame height, 0.45–0.55 on
+  verticals. Every adult in a scene is the same height: the engine draws `row: back` smaller for distance and
+  a `child` smaller by itself, so never shrink a grown-up to show they matter less.
 
 ## Props (Fluent Emoji keys from the library)
 - Props carry the idea: `money_with_wings` raining over Juan, `classical_building` for government,
   `balance_scale` for courts, `cloud_with_rain` and `water_wave` for floods.
 - `motion`: `float` (gentle bob), `spin`, `shake` (alarm), `pulse` (emphasis), `rain` (falling copies:
   `count` is the number of drops, 6–14). Otherwise `count` is 1–3 copies in a row.
-- `x`, `y` place the centre (0–1). Keep props off faces. On verticals keep y in 0.1–0.55, above the caption
-  zone. `size` is 0.08–0.3 of the frame's short side. `at` (0–1) is when the prop appears in the scene.
+- `x`, `y` place the centre (0–1). Keep props off faces and actors. On verticals keep x in 0.1–0.85 and y in
+  0.12–0.55, above the caption zone. `size` is 0.08–0.3 of the frame's short side. `at` (0–1) is when the prop appears in the scene.
 
 ## Speech bubbles
 At most one per scene, ≤10 English words, spoken by `actor` (an index into `actors`). On a vertical the hook line owns the top of the screen for the first 3 seconds, so a bubble in the opening scene appears after it. Use them for punchlines
-and for skit dialogue, never to repeat the narration word for word (captions already do that). `at` is 0–1.
+and for skit dialogue, never to repeat the narration word for word (captions already do that). `at` is
+0.05–0.3, so the bubble is up while the line is still being said.
 
 ## Rhythm
 - Verticals: the first scene is always a `scene`, never a card. At least 2 of every 3 are `scene`s, never two

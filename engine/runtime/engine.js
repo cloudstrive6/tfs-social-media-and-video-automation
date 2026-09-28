@@ -39,15 +39,21 @@
 
   // ------------------------------------------------------------------ actors
   function placeActor(scene, a, i, layer) {
-    const hPx = a.scale * H * (a.row === "back" ? 0.78 : 1);
+    // the back row is a step further away: a little smaller and higher, still clearly a grown-up
+    const hPx = a.scale * H * (a.row === "back" ? 0.9 : 1);
     const wPx = hPx / 2;
-    const bottom = GROUND_PX - (a.row === "back" ? 0.035 * H : 0) + 0.01 * H;
+    const bottom = GROUND_PX - (a.row === "back" ? 0.03 * H : 0) + 0.01 * H;
     const x = a.x * W - wPx / 2;
     const flip = a.facing === "left" ? "scale(-1 1) translate(-300 0)" : "";
     const box = el("div", { class: "actor", style: `position:absolute;left:${x}px;top:${bottom - hPx}px;width:${wPx}px;height:${hPx}px;` +
       `z-index:${a.row === "back" ? 2 : 3}` });
     box.innerHTML = `<svg viewBox="0 0 300 600" width="${wPx}" height="${hPx}" overflow="visible"><g transform="${flip}">` +
-      puppet({ who: a.who, expression: a.expression, seed: a.seed || (i + 1) * 7, label: a.label }) + `</g></svg>`;
+      puppet({ who: a.who, expression: a.expression, seed: a.seed || (i + 1) * 7, label: "" }) + `</g></svg>`;
+    if (a.label) {                                          // never mirrored with the figure, never off-frame
+      const fs = Math.max(14, wPx * 0.085);
+      box.appendChild(el("div", { class: "tag", style: `position:absolute;left:${-wPx * 0.1}px;width:${wPx * 1.2}px;top:${hPx * 0.44}px;` +
+        `text-align:center;font:800 ${fs}px Montserrat, Arial, sans-serif;line-height:1.1;color:#FCD116;text-transform:uppercase` }, esc(a.label)));
+    }
     if (a.holds && S.emoji[a.holds]) {                      // prop in the viewer-right hand
       const hold = el("div", { style: `position:absolute;width:${wPx * 0.55}px;left:${a.facing === "left" ? -wPx * 0.2 : wPx * 0.65}px;top:${hPx * 0.42}px` },
         S.emoji[a.holds]);
@@ -132,7 +138,8 @@
       const y = p.motion === "rain" ? -size : p.y * H - size / 2 - k * size * 0.12;
       const box = el("div", { class: "prop", style: `position:absolute;left:${x}px;top:${y}px;width:${size}px;height:${size}px;z-index:4` }, svg);
       layer.appendChild(box);
-      const at = t0 + Math.min(dur * 0.8, Math.max(0, (p.at || 0) * dur)) + k * 0.08;
+      let at = t0 + Math.min(dur * 0.5, Math.max(0, (p.at || 0) * dur)) + k * 0.08;
+      if (S.hookUntil && at < S.hookUntil && p.motion !== "rain" && p.y > 0.04 && p.y < 0.34) at = S.hookUntil + 0.1 + k * 0.08;
       if (p.motion === "rain") {
         tl.set(box, { opacity: 0 }, t0);
         tl.to(box, { opacity: 1, duration: 0.01 }, at + k * 0.15);
@@ -171,7 +178,7 @@
       `bottom:${-fs * 0.9}px;width:0;height:0;border-left:${fs * 0.5}px solid transparent;border-right:${fs * 0.5}px solid transparent;` +
       `border-top:${fs}px solid #111` });
     box.appendChild(tail);
-    let at = t0 + Math.min(dur * 0.6, Math.max(0.1, (b.at || 0.1) * dur));
+    let at = t0 + Math.min(dur * 0.35, Math.max(0.1, (b.at || 0.1) * dur));
     if (S.hookUntil && at < S.hookUntil + 0.1) at = S.hookUntil + 0.1;   // the on-screen hook owns the top until then
     if (at > t0 + dur - 0.6) { box.remove(); return; }                  // too late to be read: no bubble
     tl.set(box, { scale: 0, opacity: 0, transformOrigin: "50% 100%" }, t0);
@@ -259,7 +266,7 @@
       const s = el("div", { style: `color:#FCD116;font-weight:800;font-size:${fsBody * 0.75}px;margin-top:${fsBody * 0.6}px` }, esc("— " + src.join(" · ")));
       area.appendChild(s); tl.from(s, { opacity: 0, duration: 0.3 }, t0 + dur * 0.6);
     } else if (type === "document") {
-      const sheet = el("div", { style: `background:#F2EAD6;color:#111;border-radius:${fsBody * 0.2}px;padding:${fsBody}px;box-shadow:0 ${fsBody * 0.3}px 0 rgba(0,0,0,.35);position:relative` });
+      const sheet = el("div", { style: `background:#F2EAD6;color:#111;border-radius:${fsBody * 0.2}px;padding:${fsBody}px;padding-bottom:${fsBody + fsTitle * 1.3}px;box-shadow:0 ${fsBody * 0.3}px 0 rgba(0,0,0,.35);position:relative` });
       sheet.appendChild(el("div", { style: `font:400 ${fsTitle * 0.8}px Anton, Impact, sans-serif;margin-bottom:${fsBody * 0.5}px` }, esc(c.title)));
       (c.lines || []).slice(0, 4).forEach((x, k) => {
         const line = el("div", { style: `position:relative;font-weight:800;font-size:${fsBody * 0.9}px;margin:${fsBody * 0.35}px 0;padding:0 ${fsBody * 0.2}px` });
@@ -267,8 +274,9 @@
           tl.from(hl, { scaleX: 0, duration: 0.5, ease: "power2.out" }, t0 + dur * 0.3); }
         const tx = el("span", { style: "position:relative;z-index:1" }, esc(x)); line.appendChild(tx); sheet.appendChild(line);
       });
-      const stamp = el("div", { style: `position:absolute;left:50%;bottom:${-fsBody * 0.6}px;transform:translateX(-50%) rotate(-8deg);color:#CE1126;` +
-        `border:${Math.max(3, fsBody * 0.12)}px solid #CE1126;padding:0 ${fsBody * 0.4}px;font:400 ${fsTitle * 0.75}px Anton, Impact, sans-serif` }, "MAY RESIBO");
+      // the stamp gets its own strip under the text (never over a line); written text is English
+      const stamp = el("div", { style: `position:absolute;right:${fsBody}px;bottom:${fsBody * 0.6}px;transform:rotate(-8deg);color:#CE1126;` +
+        `border:${Math.max(3, fsBody * 0.12)}px solid #CE1126;padding:0 ${fsBody * 0.4}px;font:400 ${fsTitle * 0.75}px Anton, Impact, sans-serif` }, "RECEIPTS");
       sheet.appendChild(stamp); area.appendChild(sheet);
       tl.from(sheet, { y: H * 0.3, opacity: 0, duration: 0.45, ease: "power3.out" }, t0);
       tl.from(stamp, { scale: 2.4, opacity: 0, duration: 0.18, ease: "power4.in" }, t0 + dur * 0.62);
@@ -305,8 +313,10 @@
 
   // ------------------------------------------------------------------ camera
   function camera(inner, move, t0, dur) {
-    const to = { push_in: { scale: 1.08 }, pull_out: { scale: 1 }, pan_left: { x: -W * 0.04 }, pan_right: { x: W * 0.04 }, static: { scale: 1.02 } }[move] || { scale: 1.03 };
-    const from = { pull_out: { scale: 1.08 } }[move] || {};
+    // pans and shakes stay zoomed in (1.1 covers a 4% slide each way), so the edge of the set never shows
+    const to = { push_in: { scale: 1.08 }, pull_out: { scale: 1 }, pan_left: { x: -W * 0.04, scale: 1.1 }, pan_right: { x: W * 0.04, scale: 1.1 },
+                 shake: { scale: 1.05 }, static: { scale: 1.02 } }[move] || { scale: 1.03 };
+    const from = { pull_out: { scale: 1.08 }, pan_left: { scale: 1.1 }, pan_right: { scale: 1.1 }, shake: { scale: 1.05 } }[move] || {};
     tl.set(inner, Object.assign({ scale: 1, x: 0 }, from), t0);
     tl.to(inner, Object.assign({ duration: dur, ease: "sine.inOut" }, to), t0);
     if (move === "shake") for (let t = 0; t < 0.5; t += 0.05) tl.to(inner, { x: (t * 100 % 2 ? 1 : -1) * W * 0.008, duration: 0.05 }, t0 + t);
