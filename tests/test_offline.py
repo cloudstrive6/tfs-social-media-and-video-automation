@@ -1090,3 +1090,14 @@ def test_creative_director_notes_reach_the_designers(data_dir, monkeypatch):
     assert "documents float" in seen["user"]
     assert "Props go in hands." in config.load_prompt("motion_designer")
     assert not (creative.notes_dir() / "scriptwriter.md").exists() and not creative.due()
+
+
+def test_post_now_requests_are_picked_up_by_the_run(monkeypatch):
+    from tfs import pipeline, post_now, state
+
+    queued = [{"type": "post-now", "kind": "carousel", "topic": "Permits", "note": "Reddit"}]
+    monkeypatch.setattr(state, "take_requests", lambda: [queued.pop()] if queued else [])
+    made = []
+    monkeypatch.setattr(post_now, "make", lambda kind, topic, note: made.append((kind, topic, note)) or "ok")
+    assert pipeline._owner_requests() and made == [("carousel", "Permits", "Reddit")]
+    assert not pipeline._owner_requests()                       # nothing left: the run carries on as usual

@@ -957,6 +957,29 @@ def _weekly_analysis() -> None:
     (data_dir() / "last_analysis.txt").write_text(now().isoformat(timespec="seconds"))
 
 
+def _owner_requests() -> bool:
+    """Make and publish any post-now requests waiting in R2. Returns True if one was handled."""
+    from . import post_now, state
+    try:
+        requests_ = state.take_requests()
+    except Exception:
+        log.exception("could not read owner requests")
+        return False
+    for req in requests_:
+        if req.get("type") != "post-now":
+            continue
+        try:
+            result = post_now.make(req.get("kind", "carousel"), req.get("topic", ""), req.get("note", ""))
+            log.info("post-now: %s", result)
+        except UsageLimitError:
+            state.add_request(req)                   # try again once the usage window reopens
+            raise
+        except Exception as e:
+            log.exception("post-now request failed")
+            notify.send(f"❌ Post-now request failed: {req.get('topic', '')[:120]}: {e}")
+    return bool(requests_)
+
+
 def _creative_review() -> None:
     """Creative Director, twice a day: recurring review notes become standing notes for the designers."""
     from .agents import creative
@@ -1015,6 +1038,8 @@ def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
                 tick(max_produce=0)                  # scout if stale, plan upcoming slots, expire stale
                 state.push()
                 last_tick = now()
+            if _owner_requests():                    # post-now requests jump the queue, between pieces
+                continue
             todo = [i for i in db.items_with_status("planned", "approved") if i["id"] not in tried]
             if todo and now() - started < budget:
                 tried.add(todo[0]["id"])

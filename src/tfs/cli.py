@@ -31,6 +31,7 @@ def main() -> None:
     pn.add_argument("--kind", choices=["vertical", "carousel"], default=os.environ.get("TFS_KIND") or "carousel")
     pn.add_argument("--topic", default=os.environ.get("TFS_SAMPLE_TOPIC", ""))
     pn.add_argument("--note", default=os.environ.get("TFS_NOTE", ""), help="extra guidance for the editor and researcher")
+    pn.add_argument("--here", action="store_true", help="make it in this process instead of queueing it for a run")
     sub.add_parser("hold", help="stop posts that haven't gone live yet (one item, or all); never deletes").add_argument(
         "item_id", nargs="?", default="")
     sub.add_parser("build-sound-library", help="one-time: generate music beds + sound effects with ElevenLabs into R2")
@@ -106,8 +107,8 @@ def main() -> None:
             from .sample import run as make_sample
             print(make_sample(a.kind))
         case "post-now":
-            from .post_now import run as post_now
-            print(post_now(a.kind, a.topic, a.note))
+            from . import post_now
+            print(post_now.run(a.kind, a.topic, a.note) if a.here else post_now.request(a.kind, a.topic, a.note))
         case "hold":
             from .hold import run as hold
             print("\n".join(hold("held by request", a.item_id)) or "nothing to hold")

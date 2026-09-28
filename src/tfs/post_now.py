@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 
-from . import db, pipeline, state
+from . import db, notify, pipeline, state
 from .agents import editor
 from .config import now, schedule
 from .slots import Unit
@@ -16,19 +16,29 @@ from .slots import Unit
 log = logging.getLogger(__name__)
 
 
-def run(kind: str, topic: str, note: str = "") -> str:
+def request(kind: str, topic: str, note: str = "") -> str:
+    """Queue the request (no concurrency lock): a production run that's going picks it up between pieces,
+    otherwise the next run starts with it (runs start every 30 minutes)."""
     if not state.enabled():
         raise SystemExit("post-now: no R2 state bucket configured")
     if not topic.strip():
         raise SystemExit("post-now: a topic is required")
-    state.pull()
+    key = state.add_request({"type": "post-now", "kind": kind, "topic": topic.strip(), "note": note.strip()})
+    notify.send(f"📥 Post-now request queued ({kind}): {topic.strip()[:200]}\n"
+                "It's made at the next production run (within about 30 minutes, or right after the piece "
+                "being made now) and published everywhere as soon as it passes review.")
+    return key
+
+
+def make(kind: str, topic: str, note: str = "") -> str:
+    """Inside a run (state already pulled): plan, produce and publish one requested piece."""
     request = f"Owner request, published immediately. {note}".strip()
     db.add_topics([{"title": topic.strip(), "momentum_score": 100, "why_now": request}])
     at = now()
     unit = Unit(id=f"{at:%Y-%m-%d}-now-{kind}-{at:%H%M}", kind=kind, index=0,
                 platforms={p: at for p in schedule()["platforms"][kind]})
     if not editor.plan([unit]):
-        raise SystemExit("post-now: the editor did not plan the piece")
+        return f"{unit.id}: the editor did not plan the piece"
     item = db.get_item(unit.id)
     db.set_status(unit.id, item["status"], owner_request=request)
     state.push()
@@ -42,3 +52,13 @@ def run(kind: str, topic: str, note: str = "") -> str:
     posts = {p["platform"]: f"{p['status']} {p.get('remote_id') or p.get('error') or ''}".strip()
              for p in db.posts_for_item(unit.id)}
     return f"{unit.id}: " + "; ".join(f"{k} {v}" for k, v in sorted(posts.items()))
+
+
+def run(kind: str, topic: str, note: str = "") -> str:
+    """Standalone (holds the state itself): make and publish one piece now."""
+    if not state.enabled():
+        raise SystemExit("post-now: no R2 state bucket configured")
+    if not topic.strip():
+        raise SystemExit("post-now: a topic is required")
+    state.pull()
+    return make(kind, topic, note)

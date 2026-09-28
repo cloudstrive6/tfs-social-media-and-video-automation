@@ -4,7 +4,8 @@ Each run starts on a blank machine: `pull()` restores the SQLite DB, analyst not
 media of items that are still being produced or waiting to be posted; `push()` uploads whatever changed.
 Only one run touches the state at a time (GitHub `concurrency` group), so no locking is needed here.
 
-Bucket layout:  state/<path under TFS_DATA_DIR>   backups/tfs-YYYYMMDD.sqlite3
+Bucket layout:  state/<path under TFS_DATA_DIR>   backups/tfs-YYYYMMDD.sqlite3   requests/<id>.json
+(owner requests such as `post-now`, dropped without the concurrency lock and picked up by the next run)
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ log = logging.getLogger(__name__)
 PREFIX = "state/"
 DB = "tfs.sqlite3"
 SKIP_DIRS = {"work", "style_preview"}           # render scratch; never needed by a later run
+REQUESTS = "requests/"
 KEEP_MEDIA_DAYS = 10                             # after that only an item's text files stay in R2
 _lock = threading.Lock()
 _seen: dict[str, tuple[int, float]] = {}         # rel path -> (size, mtime) as of the last pull/push
@@ -133,8 +135,10 @@ def push() -> int:
         s3.upload_file(str(_snapshot()), bucket, f"{PREFIX}{DB}")
         for path in data_dir().rglob("*"):
             rel = _rel(path)
+            folders = rel.split("/")[:-1]
             if (not path.is_file() or rel == DB or path.name.startswith(".")
-                    or SKIP_DIRS & set(rel.split("/")[:-1])):
+                    or SKIP_DIRS & set(folders) or any(f.startswith("work_") or f.endswith(".prepolish")
+                                                       for f in folders)):
                 continue
             st = path.stat()
             if _seen.get(rel) == (st.st_size, st.st_mtime):
@@ -143,6 +147,29 @@ def push() -> int:
             _seen[rel] = (st.st_size, st.st_mtime)
             sent += 1
     return sent
+
+
+def add_request(request: dict) -> str:
+    """Queue an owner request (e.g. post-now) for the next run. Needs no lock: it's its own object."""
+    import json
+    key = f"{REQUESTS}{now():%Y%m%d-%H%M%S}.json"
+    _s3().put_object(Bucket=_bucket(), Key=key, Body=json.dumps(request).encode("utf-8"),
+                     ContentType="application/json")
+    return key
+
+
+def take_requests() -> list[dict]:
+    """Owner requests waiting, oldest first; each is removed as it's taken."""
+    import json
+    out = []
+    for key in sorted(_keys(REQUESTS)):
+        body = _s3().get_object(Bucket=_bucket(), Key=key)["Body"].read()
+        _s3().delete_object(Bucket=_bucket(), Key=key)
+        try:
+            out.append(json.loads(body))
+        except ValueError:
+            log.warning("unreadable request %s dropped", key)
+    return out
 
 
 def daily_backup() -> None:
