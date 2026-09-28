@@ -431,7 +431,7 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
         history.append(report)
         log.info("review r%d %s: %s", rnd, item["id"], report.summary)
         if report.passed:
-            return built, report
+            return _polish(item, d, build, review, fix, built, report)
         if rnd < rounds:
             fix(report)
     extra = rnd
@@ -451,6 +451,59 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
     db.set_status(item["id"], "skipped", f"failed review after {rounds} fix rounds: {problems}"[:2000])
     notify.send(f"⛔ {item['id']} skipped by the review team after {rounds} fix rounds:\n{problems}")
     return None
+
+
+def _polish(item: dict, d: Path, build: Callable[[], T], review: Callable[[T], ReviewReport],
+            fix: Callable[[ReviewReport], None], built: T, report: ReviewReport) -> tuple[T, ReviewReport]:
+    """A piece that passed but looks ordinary (appeal below `min_appeal`) gets one improvement pass on the frames
+    the reviewers had notes on. The pass is kept only if it still passes review; appeal never blocks a post."""
+    cfg = qa.cfg()
+    if not report.improve or not report.appeal or report.appeal >= cfg.get("min_appeal", 7) \
+            or (d / "qa_polish.json").exists():
+        return built, report
+    targets = dict(sorted(report.improve.items(), key=lambda kv: -len(kv[1]))[:cfg.get("polish_max_frames", 5)])
+    log.info("polish %s: appeal %d/10, improving %s", item["id"], report.appeal, sorted(targets))
+    snapshot = _snapshot(d)                           # the reviewed version, restored if the pass goes wrong
+    try:
+        fix(report.model_copy(update={"redo_images": targets, "redo_audio": {}}))
+        polished = build()
+        after = cached(d / "qa_polish.json", ReviewReport, lambda: qa.safe(review, polished))
+    except UsageLimitError:
+        _restore(d, snapshot)
+        raise
+    except Exception:
+        log.exception("polish pass failed; posting the reviewed version")
+        _restore(d, snapshot)
+        return built, report
+    keep = after.passed and after.appeal >= report.appeal
+    log.info("polish %s: appeal %d -> %d/10, %s", item["id"], report.appeal, after.appeal,
+             "kept" if keep else "reverted to the reviewed version")
+    if keep:
+        shutil.rmtree(snapshot, ignore_errors=True)
+        return polished, after
+    _restore(d, snapshot)
+    return built, report
+
+
+POLISH_SKIP = ("work", "work_thumb", "qa_frames", "critic", "audio")   # big or unchanged by a polish pass
+
+
+def _snapshot(d: Path) -> Path:
+    snap = d.parent / f"{d.name}.prepolish"
+    shutil.rmtree(snap, ignore_errors=True)
+    shutil.copytree(d, snap, ignore=lambda folder, names: [n for n in names if Path(folder) == d and
+                                                           (n in POLISH_SKIP or n.startswith("work_"))])
+    return snap
+
+
+def _restore(d: Path, snap: Path) -> None:
+    """Put the snapshot's files back (the polish pass's replacements are overwritten)."""
+    for src in snap.rglob("*"):
+        if src.is_file():
+            dst = d / src.relative_to(snap)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+    shutil.rmtree(snap, ignore_errors=True)
 
 
 def _qa_note(report: ReviewReport | None) -> dict:
@@ -904,6 +957,19 @@ def _weekly_analysis() -> None:
     (data_dir() / "last_analysis.txt").write_text(now().isoformat(timespec="seconds"))
 
 
+def _creative_review() -> None:
+    """Creative Director, twice a day: recurring review notes become standing notes for the designers."""
+    from .agents import creative
+    if not creative.due():
+        return
+    try:
+        creative.run()
+    except UsageLimitError:
+        raise
+    except Exception:
+        log.exception("creative director failed; trying again next pass")
+
+
 def _archive_pending() -> None:
     """Retry B2 archiving for finished items this run has on disk (uploads only what's missing)."""
     from . import archive
@@ -945,6 +1011,7 @@ def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
         while now() - started < HARD_STOP:
             if not last_tick or now() - last_tick >= timedelta(minutes=30):
                 _weekly_analysis()
+                _creative_review()
                 tick(max_produce=0)                  # scout if stale, plan upcoming slots, expire stale
                 state.push()
                 last_tick = now()

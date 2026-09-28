@@ -182,11 +182,17 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
         "16:9 YouTube long-form"
     verdicts, appeal, hook_score, notes = _look(frames, f"Format: {fmt}.")
 
-    redo_images, warnings = {}, list(notes)
+    redo_images, warnings, improve = {}, list(notes), {}
     for v in verdicts:
         for p in v.problems:
             warnings.append(f"{v.frame}: {p}")
         if not v.blocking:
+            m = re.search(r"\d+", v.frame)
+            if v.problems and m and v.frame.startswith("scene") and by_scene.get(int(m.group())):
+                sid = int(m.group())
+                improve[str(source.get(sid, sid))] = "; ".join(v.problems)
+            elif v.problems and v.frame == "thumbnail":
+                improve["thumbnail"] = "; ".join(v.problems)
             continue
         if v.frame == "thumbnail" and (v.fix_prompt or (_vector() and v.problems)):
             redo_images["thumbnail"] = v.fix_prompt or "; ".join(v.problems)
@@ -205,7 +211,7 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
     redo_audio, voice_warnings, voice_summary, major = proofread(script, starts, voice if voice.exists() else video)
     warnings += voice_warnings
     return ReviewReport(passed=not redo_images and not redo_audio, major_audio=bool(major), major_scenes=major,
-                        redo_images=redo_images,
+                        redo_images=redo_images, improve=improve,
                         redo_audio=redo_audio,
                         warnings=warnings, appeal=appeal, hook_frame=hook_score,
                         summary=f"visual appeal {appeal}/10, hook frame {hook_score}/10; {voice_summary}")
@@ -216,16 +222,18 @@ def review_slides(slides: list[Path], prompts: list[str]) -> ReviewReport:
               for i, p in enumerate(slides)]
     verdicts, appeal, hook_score, notes = _look(
         frames, "Format: Instagram/Facebook carousel, 4:5 slides; slide 0 is the cover (it is the hook frame).")
-    redo, warnings = {}, list(notes)
+    redo, warnings, improve = {}, list(notes), {}
     for v in verdicts:
         warnings += [f"{v.frame}: {p}" for p in v.problems]
         m = re.search(r"\d+", v.frame)
+        if not v.blocking and v.problems and m and int(m.group()) < len(prompts) and prompts[int(m.group())]:
+            improve[m.group()] = "; ".join(v.problems)
         if v.blocking and m:
             if v.fix_prompt and int(m.group()) < len(prompts) and prompts[int(m.group())]:
                 redo[m.group()] = v.fix_prompt
             else:
                 warnings.append(f"{v.frame}: blocking but not auto-fixable (text layout) — {'; '.join(v.problems)}")
-    return ReviewReport(passed=not redo, redo_images=redo, redo_audio={}, warnings=warnings, appeal=appeal,
+    return ReviewReport(passed=not redo, redo_images=redo, redo_audio={}, warnings=warnings, appeal=appeal, improve=improve,
                         hook_frame=hook_score, summary=f"visual appeal {appeal}/10, cover {hook_score}/10")
 
 

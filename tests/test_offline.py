@@ -1033,3 +1033,60 @@ def test_post_now_publishes_on_every_carousel_platform(data_dir, monkeypatch):
     assert sorted(published) == ["facebook_post", "instagram_carousel", "threads_carousel", "tiktok_carousel"]
     item = db.items_with_status("scheduled")[0]
     assert "now-carousel" in item["id"] and "Reddit" in item["data"]["owner_request"] and out.startswith(item["id"])
+
+
+def _report(appeal, passed=True, improve=None):
+    from tfs.models import ReviewReport
+    return ReviewReport(passed=passed, redo_images={}, redo_audio={}, warnings=[], appeal=appeal, hook_frame=appeal,
+                        summary="", improve=improve or {})
+
+
+def test_polish_keeps_a_better_version_and_reverts_a_worse_one(data_dir):
+    from tfs import pipeline
+
+    for after_appeal, expected in ((8, "polished"), (5, "original")):
+        d = data_dir / f"item{after_appeal}"
+        (d / "slides").mkdir(parents=True)
+        art = d / "slides" / "art01.png"
+        art.write_text("original")
+
+        def fix(report, art=art):
+            assert report.redo_images == {"1": "props float"}
+            art.write_text("polished")
+
+        out = pipeline._polish({"id": "x"}, d, lambda art=art: art.read_text(),
+                               lambda built, a=after_appeal: _report(a), fix, "original",
+                               _report(6, improve={"1": "props float"}))
+        assert out[0] == expected and art.read_text() == expected
+        assert not (d.parent / f"{d.name}.prepolish").exists()
+    # a good piece is left alone
+    assert pipeline._polish({"id": "y"}, data_dir, lambda: "b", lambda b: _report(9), lambda r: None, "a",
+                            _report(8, improve={"1": "x"}))[0] == "a"
+
+
+def test_creative_director_notes_reach_the_designers(data_dir, monkeypatch):
+    from tfs import config, db
+    from tfs.agents import creative
+    from tfs.models import AgentNote, CreativeNotes
+
+    for i in range(2):
+        db.upsert_item(f"c{i}", "carousel", "2026-09-28T08:30:00+08:00", "scheduled", {"title": f"t{i}"})
+        d = config.item_dir(f"c{i}")
+        d.mkdir(parents=True, exist_ok=True)
+        rep = _report(6)
+        rep.warnings = ["slide 2: documents float beside the head"]
+        (d / "qa_r0.json").write_text(rep.model_dump_json())
+    seen = {}
+
+    def fake(agent, user, schema):
+        seen["user"] = user
+        return CreativeNotes(summary="Floating props keep coming up.",
+                             agent_notes=[AgentNote(agent="motion_designer", notes=["Props go in hands."]),
+                                          AgentNote(agent="scriptwriter", notes=["not ours to edit"])])
+
+    monkeypatch.setattr(creative.llm, "structured", fake)
+    monkeypatch.setattr(creative.notify, "send", lambda text: None)
+    assert creative.due() and creative.run()
+    assert "documents float" in seen["user"]
+    assert "Props go in hands." in config.load_prompt("motion_designer")
+    assert not (creative.notes_dir() / "scriptwriter.md").exists() and not creative.due()

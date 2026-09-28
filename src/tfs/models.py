@@ -162,6 +162,11 @@ class SlotChange(BaseModel):
     slots: list[str]                                      # HH:MM PHT, one per daily piece
 
 
+class CreativeNotes(BaseModel):
+    summary: str                  # what the review team keeps flagging, in two or three sentences
+    agent_notes: list[AgentNote]  # standing notes per design agent (replaces that agent's previous notes)
+
+
 class AnalystReport(BaseModel):
     summary_markdown: str
     agent_notes: list[AgentNote]
@@ -208,6 +213,7 @@ class ReviewReport(BaseModel):
     appeal: int
     hook_frame: int
     summary: str
+    improve: dict[str, str] = {}  # not blocking, but worth another pass when appeal is low: key -> what to improve
 
 
 # ---------- Sound ----------

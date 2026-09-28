@@ -22,6 +22,7 @@ def main() -> None:
     sub.add_parser("plan", help="plan upcoming slots now")
     sub.add_parser("analyze", help="weekly growth analysis + agent notes + schedule retune")
     sub.add_parser("status", help="show items and posts")
+    sub.add_parser("creative-review", help="Creative Director now: review notes -> standing notes for the designers")
     sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
     sub.add_parser("sample", help="produce one piece now for review; never scheduled or posted").add_argument(
         "--kind", choices=["vertical", "carousel"], default="vertical")
@@ -78,6 +79,15 @@ def main() -> None:
             for pid in ids:
                 db.retry_post(pid)
             print(f"re-queued posts: {ids}")
+            if state.enabled():
+                state.push()
+        case "creative-review":
+            from . import state
+            from .agents import creative
+            if state.enabled():
+                state.pull()
+            result = creative.run(force=True)
+            print(result.summary if result else "no reviewed pieces yet")
             if state.enabled():
                 state.push()
         case "analyze":

@@ -85,6 +85,10 @@ def load_prompt(agent: str) -> str:
     notes = data_dir() / "analyst_notes" / f"{agent}.md"
     if notes.exists():
         prompt += "\n\n## Standing notes from the Growth Analyst\n" + notes.read_text(encoding="utf-8")
+    creative = data_dir() / "creative_notes" / f"{agent}.md"
+    if creative.exists() and creative.read_text(encoding="utf-8").strip():
+        prompt += ("\n\n## Standing notes from the Creative Director (from recent reviews; follow them)\n"
+                   + creative.read_text(encoding="utf-8"))
     return prompt
 
 
