@@ -1,0 +1,1130 @@
+{
+ "money_bag": {
+  "name": "Money bag",
+  "group": "money"
+ },
+ "money_with_wings": {
+  "name": "Money with wings",
+  "group": "money"
+ },
+ "dollar_banknote": {
+  "name": "Dollar banknote",
+  "group": "money"
+ },
+ "coin": {
+  "name": "Coin",
+  "group": "money"
+ },
+ "credit_card": {
+  "name": "Credit card",
+  "group": "money"
+ },
+ "heavy_dollar_sign": {
+  "name": "Heavy dollar sign",
+  "group": "money"
+ },
+ "bank": {
+  "name": "Bank",
+  "group": "money"
+ },
+ "receipt": {
+  "name": "Receipt",
+  "group": "money"
+ },
+ "chart_increasing": {
+  "name": "Chart increasing",
+  "group": "money"
+ },
+ "chart_decreasing": {
+  "name": "Chart decreasing",
+  "group": "money"
+ },
+ "bar_chart": {
+  "name": "Bar chart",
+  "group": "money"
+ },
+ "gem_stone": {
+  "name": "Gem stone",
+  "group": "money"
+ },
+ "balance_scale": {
+  "name": "Balance scale",
+  "group": "money"
+ },
+ "abacus": {
+  "name": "Abacus",
+  "group": "money"
+ },
+ "red_envelope": {
+  "name": "Red envelope",
+  "group": "money"
+ },
+ "wrapped_gift": {
+  "name": "Wrapped gift",
+  "group": "money"
+ },
+ "envelope_with_arrow": {
+  "name": "Envelope with arrow",
+  "group": "money"
+ },
+ "shopping_cart": {
+  "name": "Shopping cart",
+  "group": "money"
+ },
+ "shopping_bags": {
+  "name": "Shopping bags",
+  "group": "money"
+ },
+ "page_facing_up": {
+  "name": "Page facing up",
+  "group": "documents"
+ },
+ "page_with_curl": {
+  "name": "Page with curl",
+  "group": "documents"
+ },
+ "clipboard": {
+  "name": "Clipboard",
+  "group": "documents"
+ },
+ "memo": {
+  "name": "Memo",
+  "group": "documents"
+ },
+ "newspaper": {
+  "name": "Newspaper",
+  "group": "documents"
+ },
+ "scroll": {
+  "name": "Scroll",
+  "group": "documents"
+ },
+ "ledger": {
+  "name": "Ledger",
+  "group": "documents"
+ },
+ "file_folder": {
+  "name": "File folder",
+  "group": "documents"
+ },
+ "open_file_folder": {
+  "name": "Open file folder",
+  "group": "documents"
+ },
+ "file_cabinet": {
+  "name": "File cabinet",
+  "group": "documents"
+ },
+ "card_index": {
+  "name": "Card index",
+  "group": "documents"
+ },
+ "books": {
+  "name": "Books",
+  "group": "documents"
+ },
+ "open_book": {
+  "name": "Open book",
+  "group": "documents"
+ },
+ "closed_book": {
+  "name": "Closed book",
+  "group": "documents"
+ },
+ "notebook": {
+  "name": "Notebook",
+  "group": "documents"
+ },
+ "envelope": {
+  "name": "Envelope",
+  "group": "documents"
+ },
+ "incoming_envelope": {
+  "name": "Incoming envelope",
+  "group": "documents"
+ },
+ "package": {
+  "name": "Package",
+  "group": "documents"
+ },
+ "label": {
+  "name": "Label",
+  "group": "documents"
+ },
+ "bookmark_tabs": {
+  "name": "Bookmark tabs",
+  "group": "documents"
+ },
+ "pushpin": {
+  "name": "Pushpin",
+  "group": "documents"
+ },
+ "round_pushpin": {
+  "name": "Round pushpin",
+  "group": "documents"
+ },
+ "paperclip": {
+  "name": "Paperclip",
+  "group": "documents"
+ },
+ "pencil": {
+  "name": "Pencil",
+  "group": "documents"
+ },
+ "fountain_pen": {
+  "name": "Fountain pen",
+  "group": "documents"
+ },
+ "pen": {
+  "name": "Pen",
+  "group": "documents"
+ },
+ "ballot_box_with_ballot": {
+  "name": "Ballot box with ballot",
+  "group": "documents"
+ },
+ "identification_card": {
+  "name": "Identification card",
+  "group": "documents"
+ },
+ "calendar": {
+  "name": "Calendar",
+  "group": "documents"
+ },
+ "spiral_calendar": {
+  "name": "Spiral calendar",
+  "group": "documents"
+ },
+ "magnifying_glass_tilted_left": {
+  "name": "Magnifying glass tilted left",
+  "group": "documents"
+ },
+ "link": {
+  "name": "Link",
+  "group": "documents"
+ },
+ "chains": {
+  "name": "Chains",
+  "group": "documents"
+ },
+ "locked": {
+  "name": "Locked",
+  "group": "documents"
+ },
+ "unlocked": {
+  "name": "Unlocked",
+  "group": "documents"
+ },
+ "old_key": {
+  "name": "Old key",
+  "group": "documents"
+ },
+ "key": {
+  "name": "Key",
+  "group": "documents"
+ },
+ "locked_with_key": {
+  "name": "Locked with key",
+  "group": "documents"
+ },
+ "inbox_tray": {
+  "name": "Inbox tray",
+  "group": "documents"
+ },
+ "outbox_tray": {
+  "name": "Outbox tray",
+  "group": "documents"
+ },
+ "wastebasket": {
+  "name": "Wastebasket",
+  "group": "documents"
+ },
+ "placard": {
+  "name": "Placard",
+  "group": "documents"
+ },
+ "classical_building": {
+  "name": "Classical building",
+  "group": "law_power"
+ },
+ "oncoming_police_car": {
+  "name": "Oncoming police car",
+  "group": "law_power"
+ },
+ "police_car_light": {
+  "name": "Police car light",
+  "group": "law_power"
+ },
+ "crown": {
+  "name": "Crown",
+  "group": "law_power"
+ },
+ "military_medal": {
+  "name": "Military medal",
+  "group": "law_power"
+ },
+ "1st_place_medal": {
+  "name": "1st place medal",
+  "group": "law_power"
+ },
+ "trophy": {
+  "name": "Trophy",
+  "group": "law_power"
+ },
+ "crossed_swords": {
+  "name": "Crossed swords",
+  "group": "law_power"
+ },
+ "dagger": {
+  "name": "Dagger",
+  "group": "law_power"
+ },
+ "shield": {
+  "name": "Shield",
+  "group": "law_power"
+ },
+ "megaphone": {
+  "name": "Megaphone",
+  "group": "law_power"
+ },
+ "loudspeaker": {
+  "name": "Loudspeaker",
+  "group": "law_power"
+ },
+ "microphone": {
+  "name": "Microphone",
+  "group": "law_power"
+ },
+ "studio_microphone": {
+  "name": "Studio microphone",
+  "group": "law_power"
+ },
+ "speaking_head": {
+  "name": "Speaking head",
+  "group": "law_power"
+ },
+ "bust_in_silhouette": {
+  "name": "Bust in silhouette",
+  "group": "law_power"
+ },
+ "busts_in_silhouette": {
+  "name": "Busts in silhouette",
+  "group": "law_power"
+ },
+ "handshake": {
+  "name": "Handshake",
+  "group": "law_power"
+ },
+ "house": {
+  "name": "House",
+  "group": "places"
+ },
+ "houses": {
+  "name": "Houses",
+  "group": "places"
+ },
+ "house_with_garden": {
+  "name": "House with garden",
+  "group": "places"
+ },
+ "derelict_house": {
+  "name": "Derelict house",
+  "group": "places"
+ },
+ "hut": {
+  "name": "Hut",
+  "group": "places"
+ },
+ "office_building": {
+  "name": "Office building",
+  "group": "places"
+ },
+ "hospital": {
+  "name": "Hospital",
+  "group": "places"
+ },
+ "school": {
+  "name": "School",
+  "group": "places"
+ },
+ "church": {
+  "name": "Church",
+  "group": "places"
+ },
+ "mosque": {
+  "name": "Mosque",
+  "group": "places"
+ },
+ "hotel": {
+  "name": "Hotel",
+  "group": "places"
+ },
+ "convenience_store": {
+  "name": "Convenience store",
+  "group": "places"
+ },
+ "department_store": {
+  "name": "Department store",
+  "group": "places"
+ },
+ "factory": {
+  "name": "Factory",
+  "group": "places"
+ },
+ "building_construction": {
+  "name": "Building construction",
+  "group": "places"
+ },
+ "construction": {
+  "name": "Construction",
+  "group": "places"
+ },
+ "bridge_at_night": {
+  "name": "Bridge at night",
+  "group": "places"
+ },
+ "cityscape": {
+  "name": "Cityscape",
+  "group": "places"
+ },
+ "cityscape_at_dusk": {
+  "name": "Cityscape at dusk",
+  "group": "places"
+ },
+ "night_with_stars": {
+  "name": "Night with stars",
+  "group": "places"
+ },
+ "sunrise": {
+  "name": "Sunrise",
+  "group": "places"
+ },
+ "sunrise_over_mountains": {
+  "name": "Sunrise over mountains",
+  "group": "places"
+ },
+ "mountain": {
+  "name": "Mountain",
+  "group": "places"
+ },
+ "volcano": {
+  "name": "Volcano",
+  "group": "places"
+ },
+ "desert_island": {
+  "name": "Desert island",
+  "group": "places"
+ },
+ "beach_with_umbrella": {
+  "name": "Beach with umbrella",
+  "group": "places"
+ },
+ "national_park": {
+  "name": "National park",
+  "group": "places"
+ },
+ "statue_of_liberty": {
+  "name": "Statue of liberty",
+  "group": "places"
+ },
+ "stadium": {
+  "name": "Stadium",
+  "group": "places"
+ },
+ "fountain": {
+  "name": "Fountain",
+  "group": "places"
+ },
+ "tent": {
+  "name": "Tent",
+  "group": "places"
+ },
+ "camping": {
+  "name": "Camping",
+  "group": "places"
+ },
+ "motorway": {
+  "name": "Motorway",
+  "group": "places"
+ },
+ "railway_track": {
+  "name": "Railway track",
+  "group": "places"
+ },
+ "bus_stop": {
+  "name": "Bus stop",
+  "group": "places"
+ },
+ "fuel_pump": {
+  "name": "Fuel pump",
+  "group": "places"
+ },
+ "world_map": {
+  "name": "World map",
+  "group": "places"
+ },
+ "globe_with_meridians": {
+  "name": "Globe with meridians",
+  "group": "places"
+ },
+ "compass": {
+  "name": "Compass",
+  "group": "places"
+ },
+ "bus": {
+  "name": "Bus",
+  "group": "transport"
+ },
+ "oncoming_bus": {
+  "name": "Oncoming bus",
+  "group": "transport"
+ },
+ "minibus": {
+  "name": "Minibus",
+  "group": "transport"
+ },
+ "automobile": {
+  "name": "Automobile",
+  "group": "transport"
+ },
+ "oncoming_automobile": {
+  "name": "Oncoming automobile",
+  "group": "transport"
+ },
+ "taxi": {
+  "name": "Taxi",
+  "group": "transport"
+ },
+ "oncoming_taxi": {
+  "name": "Oncoming taxi",
+  "group": "transport"
+ },
+ "delivery_truck": {
+  "name": "Delivery truck",
+  "group": "transport"
+ },
+ "pickup_truck": {
+  "name": "Pickup truck",
+  "group": "transport"
+ },
+ "motorcycle": {
+  "name": "Motorcycle",
+  "group": "transport"
+ },
+ "motor_scooter": {
+  "name": "Motor scooter",
+  "group": "transport"
+ },
+ "bicycle": {
+  "name": "Bicycle",
+  "group": "transport"
+ },
+ "ambulance": {
+  "name": "Ambulance",
+  "group": "transport"
+ },
+ "fire_engine": {
+  "name": "Fire engine",
+  "group": "transport"
+ },
+ "airplane": {
+  "name": "Airplane",
+  "group": "transport"
+ },
+ "airplane_departure": {
+  "name": "Airplane departure",
+  "group": "transport"
+ },
+ "airplane_arrival": {
+  "name": "Airplane arrival",
+  "group": "transport"
+ },
+ "passenger_ship": {
+  "name": "Passenger ship",
+  "group": "transport"
+ },
+ "ferry": {
+  "name": "Ferry",
+  "group": "transport"
+ },
+ "motor_boat": {
+  "name": "Motor boat",
+  "group": "transport"
+ },
+ "canoe": {
+  "name": "Canoe",
+  "group": "transport"
+ },
+ "sailboat": {
+  "name": "Sailboat",
+  "group": "transport"
+ },
+ "ship": {
+  "name": "Ship",
+  "group": "transport"
+ },
+ "anchor": {
+  "name": "Anchor",
+  "group": "transport"
+ },
+ "metro": {
+  "name": "Metro",
+  "group": "transport"
+ },
+ "train": {
+  "name": "Train",
+  "group": "transport"
+ },
+ "tractor": {
+  "name": "Tractor",
+  "group": "transport"
+ },
+ "vertical_traffic_light": {
+  "name": "Vertical traffic light",
+  "group": "transport"
+ },
+ "cloud_with_rain": {
+  "name": "Cloud with rain",
+  "group": "nature_weather"
+ },
+ "cloud_with_lightning_and_rain": {
+  "name": "Cloud with lightning and rain",
+  "group": "nature_weather"
+ },
+ "tornado": {
+  "name": "Tornado",
+  "group": "nature_weather"
+ },
+ "water_wave": {
+  "name": "Water wave",
+  "group": "nature_weather"
+ },
+ "droplet": {
+  "name": "Droplet",
+  "group": "nature_weather"
+ },
+ "umbrella_with_rain_drops": {
+  "name": "Umbrella with rain drops",
+  "group": "nature_weather"
+ },
+ "fire": {
+  "name": "Fire",
+  "group": "nature_weather"
+ },
+ "collision": {
+  "name": "Collision",
+  "group": "nature_weather"
+ },
+ "sun": {
+  "name": "Sun",
+  "group": "nature_weather"
+ },
+ "sun_behind_cloud": {
+  "name": "Sun behind cloud",
+  "group": "nature_weather"
+ },
+ "rainbow": {
+  "name": "Rainbow",
+  "group": "nature_weather"
+ },
+ "palm_tree": {
+  "name": "Palm tree",
+  "group": "nature_weather"
+ },
+ "coconut": {
+  "name": "Coconut",
+  "group": "nature_weather"
+ },
+ "seedling": {
+  "name": "Seedling",
+  "group": "nature_weather"
+ },
+ "herb": {
+  "name": "Herb",
+  "group": "nature_weather"
+ },
+ "sheaf_of_rice": {
+  "name": "Sheaf of rice",
+  "group": "nature_weather"
+ },
+ "ear_of_corn": {
+  "name": "Ear of corn",
+  "group": "nature_weather"
+ },
+ "deciduous_tree": {
+  "name": "Deciduous tree",
+  "group": "nature_weather"
+ },
+ "fallen_leaf": {
+  "name": "Fallen leaf",
+  "group": "nature_weather"
+ },
+ "rock": {
+  "name": "Rock",
+  "group": "nature_weather"
+ },
+ "wood": {
+  "name": "Wood",
+  "group": "nature_weather"
+ },
+ "brick": {
+  "name": "Brick",
+  "group": "nature_weather"
+ },
+ "fish": {
+  "name": "Fish",
+  "group": "nature_weather"
+ },
+ "chicken": {
+  "name": "Chicken",
+  "group": "nature_weather"
+ },
+ "pig": {
+  "name": "Pig",
+  "group": "nature_weather"
+ },
+ "water_buffalo": {
+  "name": "Water buffalo",
+  "group": "nature_weather"
+ },
+ "rat": {
+  "name": "Rat",
+  "group": "nature_weather"
+ },
+ "snake": {
+  "name": "Snake",
+  "group": "nature_weather"
+ },
+ "crocodile": {
+  "name": "Crocodile",
+  "group": "nature_weather"
+ },
+ "mosquito": {
+  "name": "Mosquito",
+  "group": "nature_weather"
+ },
+ "cockroach": {
+  "name": "Cockroach",
+  "group": "nature_weather"
+ },
+ "monkey": {
+  "name": "Monkey",
+  "group": "nature_weather"
+ },
+ "eagle": {
+  "name": "Eagle",
+  "group": "nature_weather"
+ },
+ "cooked_rice": {
+  "name": "Cooked rice",
+  "group": "food_home"
+ },
+ "rice_ball": {
+  "name": "Rice ball",
+  "group": "food_home"
+ },
+ "bowl_with_spoon": {
+  "name": "Bowl with spoon",
+  "group": "food_home"
+ },
+ "pot_of_food": {
+  "name": "Pot of food",
+  "group": "food_home"
+ },
+ "cooking": {
+  "name": "Cooking",
+  "group": "food_home"
+ },
+ "bread": {
+  "name": "Bread",
+  "group": "food_home"
+ },
+ "egg": {
+  "name": "Egg",
+  "group": "food_home"
+ },
+ "banana": {
+  "name": "Banana",
+  "group": "food_home"
+ },
+ "mango": {
+  "name": "Mango",
+  "group": "food_home"
+ },
+ "pineapple": {
+  "name": "Pineapple",
+  "group": "food_home"
+ },
+ "shallow_pan_of_food": {
+  "name": "Shallow pan of food",
+  "group": "food_home"
+ },
+ "teacup_without_handle": {
+  "name": "Teacup without handle",
+  "group": "food_home"
+ },
+ "hot_beverage": {
+  "name": "Hot beverage",
+  "group": "food_home"
+ },
+ "baby_bottle": {
+  "name": "Baby bottle",
+  "group": "food_home"
+ },
+ "basket": {
+  "name": "Basket",
+  "group": "food_home"
+ },
+ "bucket": {
+  "name": "Bucket",
+  "group": "food_home"
+ },
+ "broom": {
+  "name": "Broom",
+  "group": "food_home"
+ },
+ "soap": {
+  "name": "Soap",
+  "group": "food_home"
+ },
+ "chair": {
+  "name": "Chair",
+  "group": "food_home"
+ },
+ "bed": {
+  "name": "Bed",
+  "group": "food_home"
+ },
+ "door": {
+  "name": "Door",
+  "group": "food_home"
+ },
+ "window": {
+  "name": "Window",
+  "group": "food_home"
+ },
+ "toilet": {
+  "name": "Toilet",
+  "group": "food_home"
+ },
+ "candle": {
+  "name": "Candle",
+  "group": "food_home"
+ },
+ "light_bulb": {
+  "name": "Light bulb",
+  "group": "food_home"
+ },
+ "electric_plug": {
+  "name": "Electric plug",
+  "group": "food_home"
+ },
+ "battery": {
+  "name": "Battery",
+  "group": "food_home"
+ },
+ "low_battery": {
+  "name": "Low battery",
+  "group": "food_home"
+ },
+ "television": {
+  "name": "Television",
+  "group": "food_home"
+ },
+ "radio": {
+  "name": "Radio",
+  "group": "food_home"
+ },
+ "mobile_phone": {
+  "name": "Mobile phone",
+  "group": "food_home"
+ },
+ "laptop": {
+  "name": "Laptop",
+  "group": "food_home"
+ },
+ "desktop_computer": {
+  "name": "Desktop computer",
+  "group": "food_home"
+ },
+ "satellite_antenna": {
+  "name": "Satellite antenna",
+  "group": "food_home"
+ },
+ "pill": {
+  "name": "Pill",
+  "group": "health"
+ },
+ "syringe": {
+  "name": "Syringe",
+  "group": "health"
+ },
+ "stethoscope": {
+  "name": "Stethoscope",
+  "group": "health"
+ },
+ "microbe": {
+  "name": "Microbe",
+  "group": "health"
+ },
+ "face_with_medical_mask": {
+  "name": "Face with medical mask",
+  "group": "health"
+ },
+ "drop_of_blood": {
+  "name": "Drop of blood",
+  "group": "health"
+ },
+ "dna": {
+  "name": "Dna",
+  "group": "health"
+ },
+ "test_tube": {
+  "name": "Test tube",
+  "group": "health"
+ },
+ "thermometer": {
+  "name": "Thermometer",
+  "group": "health"
+ },
+ "adhesive_bandage": {
+  "name": "Adhesive bandage",
+  "group": "health"
+ },
+ "tooth": {
+  "name": "Tooth",
+  "group": "health"
+ },
+ "brain": {
+  "name": "Brain",
+  "group": "health"
+ },
+ "lungs": {
+  "name": "Lungs",
+  "group": "health"
+ },
+ "anatomical_heart": {
+  "name": "Anatomical heart",
+  "group": "health"
+ },
+ "warning": {
+  "name": "Warning",
+  "group": "symbols"
+ },
+ "no_entry": {
+  "name": "No entry",
+  "group": "symbols"
+ },
+ "prohibited": {
+  "name": "Prohibited",
+  "group": "symbols"
+ },
+ "cross_mark": {
+  "name": "Cross mark",
+  "group": "symbols"
+ },
+ "check_mark_button": {
+  "name": "Check mark button",
+  "group": "symbols"
+ },
+ "check_mark": {
+  "name": "Check mark",
+  "group": "symbols"
+ },
+ "red_question_mark": {
+  "name": "Red question mark",
+  "group": "symbols"
+ },
+ "exclamation_question_mark": {
+  "name": "Exclamation question mark",
+  "group": "symbols"
+ },
+ "double_exclamation_mark": {
+  "name": "Double exclamation mark",
+  "group": "symbols"
+ },
+ "hundred_points": {
+  "name": "Hundred points",
+  "group": "symbols"
+ },
+ "eyes": {
+  "name": "Eyes",
+  "group": "symbols"
+ },
+ "bomb": {
+  "name": "Bomb",
+  "group": "symbols"
+ },
+ "hourglass_not_done": {
+  "name": "Hourglass not done",
+  "group": "symbols"
+ },
+ "hourglass_done": {
+  "name": "Hourglass done",
+  "group": "symbols"
+ },
+ "alarm_clock": {
+  "name": "Alarm clock",
+  "group": "symbols"
+ },
+ "stopwatch": {
+  "name": "Stopwatch",
+  "group": "symbols"
+ },
+ "stop_sign": {
+  "name": "Stop sign",
+  "group": "symbols"
+ },
+ "bell": {
+  "name": "Bell",
+  "group": "symbols"
+ },
+ "gear": {
+  "name": "Gear",
+  "group": "symbols"
+ },
+ "hammer": {
+  "name": "Hammer",
+  "group": "symbols"
+ },
+ "hammer_and_wrench": {
+  "name": "Hammer and wrench",
+  "group": "symbols"
+ },
+ "wrench": {
+  "name": "Wrench",
+  "group": "symbols"
+ },
+ "scissors": {
+  "name": "Scissors",
+  "group": "symbols"
+ },
+ "balloon": {
+  "name": "Balloon",
+  "group": "symbols"
+ },
+ "party_popper": {
+  "name": "Party popper",
+  "group": "symbols"
+ },
+ "confetti_ball": {
+  "name": "Confetti ball",
+  "group": "symbols"
+ },
+ "firecracker": {
+  "name": "Firecracker",
+  "group": "symbols"
+ },
+ "fireworks": {
+  "name": "Fireworks",
+  "group": "symbols"
+ },
+ "sparkles": {
+  "name": "Sparkles",
+  "group": "symbols"
+ },
+ "star": {
+  "name": "Star",
+  "group": "symbols"
+ },
+ "glowing_star": {
+  "name": "Glowing star",
+  "group": "symbols"
+ },
+ "heart_on_fire": {
+  "name": "Heart on fire",
+  "group": "symbols"
+ },
+ "broken_heart": {
+  "name": "Broken heart",
+  "group": "symbols"
+ },
+ "skull": {
+  "name": "Skull",
+  "group": "symbols"
+ },
+ "ghost": {
+  "name": "Ghost",
+  "group": "symbols"
+ },
+ "clown_face": {
+  "name": "Clown face",
+  "group": "symbols"
+ },
+ "face_with_steam_from_nose": {
+  "name": "Face with steam from nose",
+  "group": "symbols"
+ },
+ "face_with_rolling_eyes": {
+  "name": "Face with rolling eyes",
+  "group": "symbols"
+ },
+ "thinking_face": {
+  "name": "Thinking face",
+  "group": "symbols"
+ },
+ "face_with_monocle": {
+  "name": "Face with monocle",
+  "group": "symbols"
+ },
+ "lying_face": {
+  "name": "Lying face",
+  "group": "symbols"
+ },
+ "shushing_face": {
+  "name": "Shushing face",
+  "group": "symbols"
+ },
+ "face_screaming_in_fear": {
+  "name": "Face screaming in fear",
+  "group": "symbols"
+ },
+ "face_with_open_mouth": {
+  "name": "Face with open mouth",
+  "group": "symbols"
+ },
+ "grimacing_face": {
+  "name": "Grimacing face",
+  "group": "symbols"
+ },
+ "loudly_crying_face": {
+  "name": "Loudly crying face",
+  "group": "symbols"
+ },
+ "smirking_face": {
+  "name": "Smirking face",
+  "group": "symbols"
+ },
+ "face_with_raised_eyebrow": {
+  "name": "Face with raised eyebrow",
+  "group": "symbols"
+ },
+ "nerd_face": {
+  "name": "Nerd face",
+  "group": "symbols"
+ },
+ "sleeping_face": {
+  "name": "Sleeping face",
+  "group": "symbols"
+ },
+ "exploding_head": {
+  "name": "Exploding head",
+  "group": "symbols"
+ },
+ "face_with_hand_over_mouth": {
+  "name": "Face with hand over mouth",
+  "group": "symbols"
+ },
+ "pouting_face": {
+  "name": "Pouting face",
+  "group": "symbols"
+ },
+ "grinning_face_with_sweat": {
+  "name": "Grinning face with sweat",
+  "group": "symbols"
+ },
+ "rolling_on_the_floor_laughing": {
+  "name": "Rolling on the floor laughing",
+  "group": "symbols"
+ }
+}

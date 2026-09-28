@@ -834,3 +834,71 @@ def test_carousel_preflight_keeps_the_draft_if_slide_count_changes(monkeypatch):
     fixed = Carousel(format="explainer", slides=[Slide(**{**slide, "image_prompt": "blank sign"}) for _ in range(3)])
     monkeypatch.setattr(packaging, "preflight_carousel", lambda item, car, dossier: fixed)
     assert pipeline._checked_carousel({"kind": "carousel"}, draft, "") is fixed
+
+
+# ---------------------------------------------------------------- vector engine
+def _scene(sid, **kw):
+    from tfs.models import Actor, Bubble, Prop, ScenePlan
+
+    base = dict(scene_id=sid, kind="scene", background="street", camera="push_in",
+                actors=[Actor(who="juan", label="", x=1.4, scale=0.5, row="front", pose="shrug", expression="sad",
+                              speaking=True, facing="right", enter="pop", holds="not_an_emoji")],
+                props=[Prop(emoji="money_with_wings", x=0.5, y=0.2, size=0.2, enter="drop", motion="rain", count=40,
+                            at=0.1),
+                       Prop(emoji="not_an_emoji", x=0.5, y=0.2, size=0.2, enter="pop", motion="none", count=1, at=0)],
+                bubbles=[Bubble(actor=3, text="nobody", at=0.2), Bubble(actor=0, text="Where did it go?", at=0.9)],
+                card_type="none", card_title="", card_lines=[])
+    return ScenePlan(**(base | kw))
+
+
+def test_vector_sanitize_orders_clamps_and_fills_gaps():
+    from tfs.media import vector
+    from tfs.models import MotionPlan
+
+    plan = MotionPlan(look="flat", scenes=[_scene(2), _scene(0),
+                                           _scene(5, kind="card", card_type="stat", card_title="", card_lines=[])])
+    out = vector.sanitize(plan, [0, 1, 2, 5])
+    assert [s.scene_id for s in out.scenes] == [0, 1, 2, 5]
+    assert out.scenes[1].actors[0].who == "kuya_standard"            # missing scene -> host fallback
+    assert out.scenes[3].kind == "scene"                              # empty card -> host fallback
+    s0 = out.scenes[0]
+    assert s0.actors[0].x == 0.9 and s0.actors[0].holds == ""
+    assert [p.emoji for p in s0.props] == ["money_with_wings"] and s0.props[0].count == 16
+    assert [b.text for b in s0.bubbles] == ["Where did it go?"] and s0.bubbles[0].at == 0.6
+
+
+def test_vector_spec_and_project(tmp_path):
+    from types import SimpleNamespace
+
+    from tfs.media import vector
+    from tfs.models import MotionPlan
+
+    plan = vector.sanitize(MotionPlan(look="doodle", scenes=[
+        _scene(0), _scene(1, kind="card", card_type="stat", card_title="Flood budget", card_lines=["₱5.4B"],
+                          actors=[], props=[], bubbles=[])]), [0, 1])
+    clips = [SimpleNamespace(words=[("Saan", 0.1, 0.4), ("napunta?", 0.45, 1.0)]), SimpleNamespace(words=[])]
+    spec = vector.spec_from_plan(plan, [0.0, 3.0], 6.0, clips, (1080, 1920))
+    assert spec["scenes"][0]["mouth"] == [[0.1, 0.4], [0.45, 1.0]]
+    assert spec["scenes"][1]["card"]["lines"] == ["₱5.4B"] and "money_with_wings" in spec["emoji"]
+    assert all(sc["start"] < t < sc["start"] + sc["dur"] for sc, t in zip(spec["scenes"], vector.still_times(spec)))
+    html = vector.build_project(spec, tmp_path / "p").read_text(encoding="utf-8")
+    assert 'data-composition-id="main"' in html and "window.__timelines[" in html and "window.SPEC" in html
+    assert html.count("<script>") == 1                                # SPEC + runtime inline, in order
+    shots = vector.as_shots(plan)
+    assert [s.kind for s in shots.shots] == ["illustration", "card"] and "juan" in shots.shots[0].image_prompt
+
+
+def test_visual_qa_notes_replan_vector_cards(monkeypatch):
+    from tfs import qa
+
+    monkeypatch.setattr(qa, "_vector", lambda: True)
+    assert qa._cast() == qa.CAST_VECTOR and len(qa.CAST_VECTOR) == 3
+
+
+def test_paid_images_are_off():
+    from tfs.config import channel
+    from tfs.media import images
+
+    assert channel()["video"]["engine"] == "vector" and channel()["video"]["fps_vector"] == 60
+    with pytest.raises(RuntimeError, match="vector engine"):
+        images.generate("anything", __import__("pathlib").Path("never.png"))

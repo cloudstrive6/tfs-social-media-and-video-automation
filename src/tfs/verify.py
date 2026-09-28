@@ -75,14 +75,6 @@ def _claude() -> str:
     return "Claude Code signed in with the Max subscription token and answering"
 
 
-def _gemini() -> str:
-    r = requests.get("https://generativelanguage.googleapis.com/v1beta/models", timeout=20,
-                     headers={"x-goog-api-key": env("GEMINI_API_KEY")}, params={"pageSize": 200})
-    r.raise_for_status()
-    names = [m["name"] for m in r.json().get("models", [])]
-    image = [n for n in names if "image" in n]
-    return f"API key OK, {len(names)} models" + (f" incl. {image[0].split('/')[-1]}" if image else "")
-
 
 def _r2() -> str:
     from . import state
@@ -110,7 +102,6 @@ CHECKS = [
     ("Facebook + Instagram", ("META_PAGE_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID"), _meta),
     ("ElevenLabs", ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"), _elevenlabs),
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY_TIKTOK",), _postforme),
-    ("Gemini images", ("GEMINI_API_KEY",), _gemini),
     ("Cloudflare R2 state", ("S3_ENDPOINT_URL", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_BACKUP_BUCKET"), _r2),
     ("Backblaze B2 archive", ("B2_ENDPOINT", "B2_BUCKET", "B2_KEY_ID", "B2_APP_KEY"), _b2),
     ("Telegram", ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"), _telegram),

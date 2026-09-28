@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from .. import llm
 from ..config import channel
@@ -88,6 +89,87 @@ def sound_plan(item: dict, script: Script, shots: ShotList, library: str) -> "So
         f"Format: {item['kind']}\nLibrary: {library}\n\n# Scenes\n" + json.dumps(brief, ensure_ascii=False),
         SoundPlan,
     )
+
+
+def _format_note(kind: str) -> str:
+    if kind == "vertical":
+        return ("Format: vertical 9:16 (Shorts/Reels/TikTok). Faces, bubbles and props sit in the top 58% of the "
+                "frame: captions and platform buttons cover the rest.")
+    if kind == "long_form":
+        return "Format: YouTube long-form, 16:9."
+    return f"Format: {kind}."
+
+
+def motion_plan(item: dict, script: Script, dossier: str) -> "MotionPlan":
+    """Motion Designer: every scene as a set, cast, props, bubble or animated card for the vector engine."""
+    from ..media import vector
+    from ..models import MotionPlan
+
+    return llm.structured(
+        "motion_designer",
+        f"{_format_note(item['kind'])}\n\n# Vocabulary\n{vector.vocabulary()}\n\n{_ctx(item)}\n\n"
+        f"# Script (final, fact-checked; one ScenePlan per scene id)\n{script.model_dump_json()}\n\n"
+        f"# Dossier (for card facts)\n{dossier[:30000]}",
+        MotionPlan,
+    )
+
+
+def motion_revise(item: dict, script: Script, plan: "MotionPlan", notes: dict[int, list[str]],
+                  dossier: str) -> "MotionPlan":
+    """Motion Designer, second pass: fix the scenes the Visual Critic (or the review team) flagged."""
+    from ..media import vector
+    from ..models import MotionPlan
+
+    flagged = "\n".join(f"- scene {sid}: " + " / ".join(p) for sid, p in sorted(notes.items()))
+    return llm.structured(
+        "motion_designer",
+        f"{_format_note(item['kind'])}\n\n# Vocabulary\n{vector.vocabulary()}\n\n"
+        f"# Script\n{script.model_dump_json()}\n\n# Current plan\n{plan.model_dump_json()}\n\n"
+        f"# Critic notes: fix these scenes, keep every other scene exactly as it is\n{flagged}\n\n"
+        f"# Dossier (for card facts)\n{dossier[:20000]}",
+        MotionPlan,
+    )
+
+
+def motion_stills(item: dict, briefs: list[str], purpose: str) -> "MotionPlan":
+    """Motion Designer for single images (thumbnail, carousel art): one ScenePlan per brief, scene_id = index."""
+    from ..media import vector
+    from ..models import MotionPlan
+
+    listing = "\n".join(f"- scene_id {i}: {b}" for i, b in enumerate(briefs))
+    return llm.structured(
+        "motion_designer",
+        f"Format: {purpose}. Each scene is ONE still image, not a video: pick the single most telling moment, "
+        "use `kind: scene` (no cards), `enter: none`, and a bubble only if the brief quotes one. Keep the "
+        f"subject large and clear.\n\n# Vocabulary\n{vector.vocabulary()}\n\n{_ctx(item)}\n\n"
+        f"# Stills to design\n{listing}",
+        MotionPlan,
+    )
+
+
+def visual_critique(item: dict, script: Script, plan: "MotionPlan", stills: list, dossier: str) -> "VisualCritique":
+    """Visual Critic: one mid-scene still per scene, checked before the full render. Batched, in parallel."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from ..media import vector
+    from ..models import VisualCritique
+
+    lines = {sc.id: sc.text for sc in script.scenes}
+    batches = [list(zip(plan.scenes, stills))[i:i + 10] for i in range(0, len(plan.scenes), 10)]
+
+    def look(batch) -> VisualCritique:
+        brief = [{"scene_id": sp.scene_id, "file": Path(img).name, "line": lines.get(sp.scene_id, ""),
+                  "plan": sp.model_dump(exclude={"scene_id"})} for sp, img in batch]
+        return llm.structured_with_images(
+            "visual_critic",
+            f"{_format_note(item['kind'])}\n\n# What the engine can draw\n{vector.vocabulary()}\n\n"
+            "# Stills (answer once per scene_id)\n" + json.dumps(brief, ensure_ascii=False, indent=1)
+            + f"\n\n# Dossier (for card facts)\n{dossier[:15000]}",
+            [img for _, img in batch], VisualCritique)
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        parts = list(pool.map(look, batches))
+    return VisualCritique(scenes=[s for p in parts for s in p.scenes], notes=[n for p in parts for n in p.notes])
 
 
 def preflight_carousel(item: dict, car: Carousel, dossier: str) -> Carousel:

@@ -80,6 +80,8 @@ def generate(prompt: str, out: Path, aspect: str = "16:9", style: str = "story",
     """`anchor`: an earlier illustration from the same video, so every shot keeps one consistent look."""
     if out.exists():
         return out
+    if channel()["images"]["provider"] == "none":
+        raise RuntimeError("paid AI images are off (images.provider: none); the vector engine draws everything")
     full = full_prompt(prompt, style) + (f"\n{ANCHOR_NOTE}" if anchor else "")
     fn = _openai if channel()["images"]["provider"] == "openai" else _gemini
     for attempt in range(retries):

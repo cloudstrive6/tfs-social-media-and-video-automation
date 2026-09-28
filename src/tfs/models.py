@@ -225,3 +225,74 @@ class SfxCue(BaseModel):
 class SoundPlan(BaseModel):
     music: list[MusicCue]
     sfx: list[SfxCue]
+
+
+# ---------- Vector engine (Motion Designer / Visual Critic) ----------
+Who = Literal["kuya_standard", "juan", "tito_trapo", "official", "senator", "judge", "police", "citizen", "woman",
+              "elder", "child", "farmer", "vendor", "ofw", "student", "nurse", "worker", "silhouette"]
+Pose = Literal["stand", "wave", "point", "shrug", "arms_up", "think", "facepalm", "hands_on_hips", "hold", "walk",
+               "cheer", "cross_arms"]
+Expression = Literal["neutral", "happy", "worried", "angry", "shocked", "smug", "sad", "confused"]
+Enter = Literal["none", "pop", "slide_left", "slide_right", "drop", "fade"]
+Background = Literal["plain", "spotlight", "office", "senate", "courtroom", "street", "barangay_hall", "province",
+                     "city_night", "flood", "newsroom", "kitchen", "airport", "classroom", "history_spanish"]
+
+
+class Actor(BaseModel):
+    who: Who
+    label: str                    # silhouettes/roles only, e.g. "SENATOR" ("" otherwise)
+    x: float                      # 0..1 across the frame (centre of the figure)
+    scale: float                  # figure height as a fraction of frame height (0.25–0.6)
+    row: Literal["front", "back"]
+    pose: Pose
+    expression: Expression
+    speaking: bool                # lip-flap on the narration (only the on-screen speaker)
+    facing: Literal["left", "right"]
+    enter: Enter
+    holds: str                    # emoji key held in hand, or ""
+
+
+class Prop(BaseModel):
+    emoji: str                    # key from the emoji library
+    x: float
+    y: float                      # 0..1 (centre)
+    size: float                   # fraction of the short side (0.08–0.35)
+    enter: Enter
+    motion: Literal["none", "float", "spin", "shake", "pulse", "rain"]
+    count: int                    # copies (stack/row; for rain the number of drops)
+    at: float                     # 0..1 of the scene when it appears
+
+
+class Bubble(BaseModel):
+    actor: int                    # index into actors
+    text: str                     # English, <= 10 words
+    at: float
+
+
+class ScenePlan(BaseModel):
+    scene_id: int
+    kind: Literal["scene", "card"]
+    background: Background
+    camera: Literal["push_in", "pull_out", "pan_left", "pan_right", "shake", "static"]
+    actors: list[Actor]
+    props: list[Prop]
+    bubbles: list[Bubble]
+    card_type: Literal["stat", "bars", "quote", "timeline", "document", "map", "none"]
+    card_title: str
+    card_lines: list[str]
+
+
+class MotionPlan(BaseModel):
+    look: Literal["flat", "doodle"]
+    scenes: list[ScenePlan]
+
+
+class SceneCritique(BaseModel):
+    scene_id: int
+    ok: bool
+    problems: list[str]           # what is wrong in the still, concretely
+
+
+class VisualCritique(BaseModel):
+    scenes: list[SceneCritique]
+    notes: list[str]

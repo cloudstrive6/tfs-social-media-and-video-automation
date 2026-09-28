@@ -40,7 +40,6 @@ jobs:
       ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
       ELEVENLABS_VOICE_JUAN: ${{ secrets.ELEVENLABS_VOICE_JUAN }}
       ELEVENLABS_VOICE_TITO_TRAPO: ${{ secrets.ELEVENLABS_VOICE_TITO_TRAPO }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
       YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
       YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
@@ -64,6 +63,8 @@ jobs:
       REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
       REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
       TFS_COMMAND: ${{ inputs.command }}
+      HYPERFRAMES_NO_TELEMETRY: "1"
+      DO_NOT_TRACK: "1"
       TFS_SAMPLE_TOPIC: ${{ inputs.topic }}
     steps:
       - uses: actions/checkout@v4
@@ -81,6 +82,25 @@ jobs:
             ~/.u2net
             ~/.rembg
           key: models-whisper-rembg-v1
+      # vector engine: GSAP + HyperFrames (headless Chrome) render every frame
+      - if: inputs.needs_media
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: engine/package-lock.json
+      - if: inputs.needs_media
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/hyperframes
+            ~/.cache/puppeteer
+          key: hyperframes-chrome-${{ hashFiles('engine/package-lock.json') }}
+      - if: inputs.needs_media
+        env:
+          HYPERFRAMES_NO_TELEMETRY: "1"
+          DO_NOT_TRACK: "1"
+        run: npm ci --prefix engine --no-audit --no-fund && npx --prefix engine hyperframes browser ensure
       - if: inputs.needs_claude
         run: curl -fsSL https://claude.ai/install.sh | bash && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: pip install -q -e .

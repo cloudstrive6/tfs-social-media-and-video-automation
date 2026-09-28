@@ -18,6 +18,7 @@ from .tts import Clip, duration
 
 log = logging.getLogger(__name__)
 GAP = 0.25  # seconds of air between scenes
+HOOK_SECONDS = 3.0  # the on-screen hook line at the top of a vertical
 
 
 @dataclass
@@ -140,7 +141,7 @@ def captions_ass(clips: list[Clip], starts: list[float], size: tuple[int, int], 
     if hook_text:
         hook = _ass_escape(hook_text)
         hsize = _fit_size(hook, int(h * 0.085), (w - 2 * margin) * 2)       # the hook may wrap to 2 lines
-        events.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(3.0)},Hook,,0,0,0,,{{\\fs{hsize}}}{hook}")
+        events.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(HOOK_SECONDS)},Hook,,0,0,0,,{{\\fs{hsize}}}{hook}")
     yellow, white = "&H0016D1FC&", "&H00FFFFFF&"
     for clip, start in zip(clips, starts):
         groups = caption_chunks(clip.words)
@@ -214,7 +215,18 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
         names.append(name.name)
     (work / "shots.txt").write_text("".join(f"file '{n}'\n" for n in names), encoding="utf-8")
     ff(["-f", "concat", "-safe", "0", "-i", "shots.txt", "-c", "copy", "video.mp4"], cwd=work)
+    return finish(work / "video.mp4", clips, starts, total, kind, work, out, hook_text, sound_plan, scene_ids, shots)
 
+
+def finish(picture: Path, clips: list[Clip], starts: list[float], total: float, kind: str, work: Path, out: Path,
+           hook_text: str = "", sound_plan=None, scene_ids: list[int] | None = None,
+           shots: list | None = None) -> tuple[Path, list[float]]:
+    """Silent picture (in `work`) + narration.wav + music/effects + burned captions (verticals) -> final mp4.
+    `shots[i].card` (dict or None) times the infographic sound effects."""
+    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
+    size = (vcfg["width"], vcfg["height"])
+    wav = work / "narration.wav"
+    shots = shots or []
     srt(clips, starts, work / "captions.srt")
     audio_file = "narration.wav"
     if channel().get("sound", {}).get("enabled", True):
@@ -226,7 +238,7 @@ def render(shots: list[Shot], clips: list[Clip], kind: str, work: Path, out: Pat
                 audio_file = sound.mix(wav, total, segments, events, work).name
         except Exception:
             log.exception("music/sfx mix failed; narration only")
-    inputs = ["-i", "video.mp4", "-i", audio_file]
+    inputs = ["-i", picture.name, "-i", audio_file]
     audio = "[1:a]loudnorm=I=-14:TP=-1.5:LRA=11[a]"
 
     if kind == "vertical":

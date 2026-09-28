@@ -8,3 +8,4 @@ secrets/
 *.mp3
 *.wav
 .pytest_cache/
+node_modules/

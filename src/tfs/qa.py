@@ -26,7 +26,17 @@ from .media.tts import clean, duration
 from .models import AudioQA, ReviewReport, Script, ShotList, VisualQA
 
 log = logging.getLogger(__name__)
-CAST = sorted((ROOT / "assets" / "characters").glob("*.png"))
+CAST_AI = sorted((ROOT / "assets" / "characters").glob("*.png"))
+CAST_VECTOR = sorted((ROOT / "assets" / "characters_vector").glob("*.png"))
+
+
+def _vector() -> bool:
+    return channel()["video"].get("engine", "vector") == "vector"
+
+
+def _cast() -> list[Path]:
+    """Model sheets for the engine that drew the frames."""
+    return CAST_VECTOR if _vector() and CAST_VECTOR else CAST_AI
 
 
 def cfg() -> dict:
@@ -121,10 +131,11 @@ def _look(frames: list[tuple[str, Path, dict]], context: str) -> tuple[list, int
     for i in range(0, len(frames), per_call):
         batch = frames[i:i + per_call]
         brief = [{"frame": label, "file": path.name, **info} for label, path, info in batch]
-        user = (f"{context}\n\nCast model sheets: {', '.join(p.name for p in CAST)}.\n"
+        cast = _cast()
+        user = (f"{context}\n\nCast model sheets: {', '.join(p.name for p in cast)}.\n"
                 f"Frames to review (answer once per frame, echoing its `frame` label):\n"
                 + json.dumps(brief, ensure_ascii=False, indent=1))
-        qa = llm.structured_with_images("visual_qa", user, [*CAST, *[p for _, p, _ in batch]], VisualQA)
+        qa = llm.structured_with_images("visual_qa", user, [*cast, *[p for _, p, _ in batch]], VisualQA)
         verdicts += qa.frames
         appeals.append(qa.appeal_score)
         if any(label == "hook" for label, _, _ in batch):
@@ -177,15 +188,16 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
             warnings.append(f"{v.frame}: {p}")
         if not v.blocking:
             continue
-        if v.frame == "thumbnail" and v.fix_prompt:
-            redo_images["thumbnail"] = v.fix_prompt
+        if v.frame == "thumbnail" and (v.fix_prompt or (_vector() and v.problems)):
+            redo_images["thumbnail"] = v.fix_prompt or "; ".join(v.problems)
             continue
         m = re.search(r"\d+", v.frame)
         scene_id = int(m.group()) if m and v.frame.startswith("scene") else (script.scenes[0].id if v.frame == "hook"
                                                                              else None)
         shot = by_scene.get(scene_id) if scene_id is not None else None
-        if shot and shot.kind != "card" and v.fix_prompt:
-            redo_images[str(source.get(scene_id, scene_id))] = v.fix_prompt
+        note = v.fix_prompt or ("; ".join(v.problems) if _vector() else "")
+        if shot and (shot.kind != "card" or _vector()) and note:   # vector: cards are re-planned too
+            redo_images[str(source.get(scene_id, scene_id))] = note
         else:
             warnings.append(f"{v.frame}: blocking but not auto-fixable (card/caption) — {'; '.join(v.problems)}")
 

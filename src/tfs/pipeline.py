@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -17,9 +18,9 @@ from . import db, notify, qa, slots
 from .agents import editor, packaging, trend_scout, writers
 from .config import channel, data_dir, item_dir, media, now, schedule
 from .llm import UsageLimitError
-from .media import cards, compose, images, render, tts
-from .models import (Carousel, FactCheck, HookReview, ReviewReport, Scene, Script, SeoPack, ShotList,
-                     ThumbnailPlan, TitlePlan)
+from .media import cards, compose, images, render, tts, vector
+from .models import (Carousel, FactCheck, HookReview, MotionPlan, ReviewReport, Scene, Script, SeoPack, ShotList,
+                     ThumbnailPlan, TitlePlan, VisualCritique)
 
 log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
@@ -210,8 +211,97 @@ def _voiced_script(script: Script, d: Path) -> Script:
     return script.model_copy(update={"scenes": _voiced(script, d)})
 
 
+def _engine() -> str:
+    """"vector": our own free cartoon engine (SVG puppets + GSAP, rendered by HyperFrames). "images": the old
+    paid AI-illustration path, kept only for reference."""
+    return channel()["video"].get("engine", "vector")
+
+
+def _dossier(d: Path) -> str:
+    f = d / "dossier.md"
+    return f.read_text(encoding="utf-8") if f.exists() else ""
+
+
+def _motion(item: dict, d: Path, script: Script, size: tuple[int, int], clips: list, starts: list[float],
+            total: float) -> MotionPlan:
+    """Motion Designer plans every shot; the Visual Critic checks a still of each scene and the designer fixes what
+    it flags, all before the full render. Review-team notes on a finished render re-plan only those scenes."""
+    ids = [sc.id for sc in script.scenes]
+    dossier = _dossier(d)
+    plan_file = d / "motion.json"
+    if plan_file.exists():
+        plan = MotionPlan.model_validate_json(plan_file.read_text(encoding="utf-8"))
+    else:
+        draft = cached(d / "motion_draft.json", MotionPlan, lambda: packaging.motion_plan(item, script, dossier))
+        plan = vector.sanitize(draft, ids)
+        rounds = qa.cfg().get("critic_rounds", 2) if qa.enabled() else 0
+        for rnd in range(rounds):
+            spec = vector.spec_from_plan(plan, starts, total, clips, size)
+            stills = vector.snapshot(spec, d / "work", vector.still_times(spec), d / "critic" / f"r{rnd}")
+            try:
+                crit = cached(d / f"critic_r{rnd}.json", VisualCritique,
+                              lambda: packaging.visual_critique(item, script, plan, stills, dossier))
+                notes = {c.scene_id: c.problems for c in crit.scenes if not c.ok and c.problems}
+                log.info("visual critic r%d %s: %d of %d scenes flagged", rnd, item["id"], len(notes), len(ids))
+                if not notes:
+                    break
+                plan = vector.sanitize(packaging.motion_revise(item, script, plan, notes, dossier), ids)
+            except UsageLimitError:
+                raise
+            except Exception:
+                log.exception("visual critic round failed; rendering the plan as it is")
+                break
+        plan_file.write_text(plan.model_dump_json(indent=1), encoding="utf-8")
+
+    fixes = _fixes(d)
+    done = fixes.setdefault("replanned", {})
+    dropped = {k for k in fixes["drop"] if k.isdigit()}
+    pending = {int(k): [note] for k, note in fixes["images"].items()
+               if k.isdigit() and k not in dropped and fixes["attempts"].get(k, 0) > done.get(k, 0)}
+    if pending:                                       # the review team flagged scenes of a finished render
+        plan = vector.sanitize(packaging.motion_revise(item, script, plan, pending, dossier), ids)
+        done.update({str(k): fixes["attempts"][str(k)] for k in pending})
+        (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+    if dropped:                                       # still failing after a re-plan: the host explains instead
+        plan = plan.model_copy(update={"scenes": [vector.fallback_scene(s.scene_id, s.background)
+                                                  if str(s.scene_id) in dropped else s for s in plan.scenes]})
+    plan_file.write_text(plan.model_dump_json(indent=1), encoding="utf-8")
+    return plan
+
+
+def _vector_video(item: dict, d: Path, script: Script, hook: HookReview, size: tuple[int, int]) -> list[float]:
+    """Voice -> Motion Designer + Visual Critic -> HyperFrames picture -> music, effects and captions."""
+    kind = item["kind"]
+    clips = tts.synthesize(_voiced(script, d), d / "audio")
+    work = d / "work"
+    work.mkdir(parents=True, exist_ok=True)
+    wav, starts = render.narration(clips, work)
+    total = tts.duration(wav)
+    plan = _motion(item, d, script, size, clips, starts, total)
+    (d / "shots.json").write_text(vector.as_shots(plan).model_dump_json(indent=1), encoding="utf-8")
+    hook_until = render.HOOK_SECONDS if kind == "vertical" and hook.on_screen_hook_text else 0.0
+    spec = vector.spec_from_plan(plan, starts, total, clips, size, hook_until=hook_until)
+    picture = work / "picture.mp4"
+    vector.render(spec, work, picture)
+    cards_info = [render.Shot(Path(), sp.camera, {"card_type": sp.card_type, "title": sp.card_title,
+                                                  "lines": sp.card_lines} if sp.kind == "card" else None)
+                  for sp in plan.scenes]
+    render.finish(picture, clips, starts, total, kind, work, d / "video.mp4", hook.on_screen_hook_text,
+                  sound_plan=_sound_plan(item, d, script), scene_ids=[sc.id for sc in script.scenes],
+                  shots=cards_info)
+    return starts
+
+
+def _vector_stills(item: dict, briefs: list[str], purpose: str, size: tuple[int, int], work: Path) -> list[Path]:
+    """Single images (thumbnail, carousel art) drawn by the vector engine from short briefs."""
+    plan = vector.sanitize(packaging.motion_stills(item, briefs, purpose), list(range(len(briefs))))
+    return vector.stills(plan, size, work, work / "stills")
+
+
 def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
     """Images, voice, render and (long form) thumbnail; every step cached, so a fix only redoes what it touched."""
+    if _engine() == "vector":
+        return _build_vector(item, d, script, hook)
     kind = item["kind"]
     vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
     size, aspect = (vcfg["width"], vcfg["height"]), "16:9" if kind == "long_form" else "9:16"
@@ -237,7 +327,34 @@ def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple
     return video, starts, thumb_path, thumb_moment
 
 
-AUDIO_EXTRA_ROUNDS = 2   # extra re-voice rounds when only the narration still has a major problem
+def _build_vector(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
+    kind = item["kind"]
+    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
+    size = (vcfg["width"], vcfg["height"])
+    video, starts_file = d / "video.mp4", d / "starts.json"
+    if not video.exists():
+        starts_file.write_text(json.dumps(_vector_video(item, d, script, hook, size)))
+    starts = json.loads(starts_file.read_text())
+    thumb_path, thumb_moment = None, "(no custom thumbnail)"
+    if kind == "long_form":
+        plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
+        best = plan.concepts[0]
+        thumb_moment = best.moment
+        art = d / "thumb_art.png"
+        if not art.exists():
+            fix = _fixes(d)["images"].get("thumbnail")
+            brief = best.image_prompt + (f"\nReviewer's correction: {fix}" if fix else "")
+            [png] = _vector_stills(item, [brief], "YouTube thumbnail, one 16:9 still: big expressive faces, bold "
+                                   "and simple, nothing important in the bottom third (the headline goes there)",
+                                   (1920, 1080), d / "work_thumb")
+            shutil.copy(png, art)
+        thumb_path = d / "thumbnail.jpg"
+        if not thumb_path.exists():
+            compose.thumbnail(art, best.overlay_text, thumb_path)
+    return video, starts, thumb_path, thumb_moment
+
+
+AUDIO_EXTRA_ROUNDS = 2  # extra re-voice rounds when only the narration still has a major problem
 MAX_IMAGE_ATTEMPTS = 1   # regenerate a failing shot once; if it fails again it is replaced (never sinks the video)
 
 
@@ -407,14 +524,31 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
     slide_dir.mkdir(exist_ok=True)
     handle = channel()["channel"]["handle"].lower()
 
+    def vector_art() -> None:
+        """Slide art drawn by the vector engine, all missing slides in one go."""
+        fixed, drop = _fixes(d)["images"], _fixes(d)["drop"]
+        need = [i for i, s in enumerate(car.slides)
+                if s.image_prompt and str(i) not in drop and not (slide_dir / f"art{i:02d}.png").exists()]
+        if not need:
+            return
+        briefs = [car.slides[i].image_prompt + (f"\nReviewer's correction: {fixed[str(i)]}" if str(i) in fixed else "")
+                  for i in need]
+        pngs = _vector_stills(item, briefs, "Instagram carousel slide art, 4:5 stills. No speech bubbles: the slide "
+                              "adds its own text", (1080, 1350), d / "work_slides")
+        for i, png in zip(need, pngs):
+            shutil.copy(png, slide_dir / f"art{i:02d}.png")
+            (slide_dir / f"slide{i:02d}.jpg").unlink(missing_ok=True)
+
     def build() -> list[str]:
+        if _engine() == "vector":
+            vector_art()
         fixed = _fixes(d)["images"]
         paths = []
         for i, s in enumerate(car.slides):
             headline, _, body = edited.get(i, f"{s.headline}\n{s.body}").partition("\n")
             art_path, out = slide_dir / f"art{i:02d}.png", slide_dir / f"slide{i:02d}.jpg"
             art = None
-            if s.image_prompt and str(i) not in _fixes(d)["drop"]:
+            if s.image_prompt and str(i) not in _fixes(d)["drop"] and (_engine() != "vector" or art_path.exists()):
                 if not art_path.exists():
                     images.generate(fixed.get(str(i)) or s.image_prompt, art_path, "4:5", style=s.style)
                     out.unlink(missing_ok=True)

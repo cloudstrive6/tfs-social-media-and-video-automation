@@ -1,0 +1,12 @@
+{
+  "name": "tfs-engine",
+  "private": true,
+  "description": "The Filipino Standard vector cartoon engine: SVG puppets + Fluent Emoji props + GSAP, rendered with HyperFrames",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "hyperframes": "0.8.81"
+  }
+}

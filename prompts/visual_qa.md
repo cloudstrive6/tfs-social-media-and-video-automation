@@ -32,3 +32,12 @@ shot that failed review). Repetition is never a defect; judge only the frame its
 For a blocking AI illustration, write `fix_prompt`: a complete corrected image prompt (keep the subject and
 style, add what must change and what to avoid). Cards and captions are drawn by code: leave `fix_prompt` empty.
 Score `appeal_score` and `hook_frame_score` honestly; 7+ means genuinely scroll-stopping.
+
+## Frames from the vector engine
+When the model sheets are flat-vector puppets, every frame was drawn in code by our own cartoon engine (SVG
+characters, emoji props, speech bubbles, animated cards), not by an AI image model. Garbled AI lettering and
+melted anatomy can't happen there. Instead, look for staging faults: actors overlapping each other, a prop
+over a face, a bubble or card cut off by the frame or sitting under the captions, the wrong character for the
+line, and wrong facts on a card. For a blocking frame, write `fix_prompt` as a short note to the Motion
+Designer saying what to change in that scene ("move the money bag off Juan's face", "the card says ₱5.4M; the
+script says ₱5.4B"). Cards are re-planned too, so give them a `fix_prompt` as well.
