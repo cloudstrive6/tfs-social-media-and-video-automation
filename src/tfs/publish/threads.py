@@ -3,7 +3,7 @@
 Carousels only: each slide becomes an image item (hosted on Meta's CDN the same way Instagram carousels are),
 then one CAROUSEL container with the text is published.
 
-Access: THREADS_USER_ID and THREADS_ACCESS_TOKEN (a long-lived token, valid 60 days). The token is refreshed
+Access: THREADS_ACCESS_TOKEN (a long-lived token, valid 60 days; THREADS_USER_ID is optional, "me" works). The token is refreshed
 here about once a week and the fresh one is kept in the private state (data dir -> R2), so it never expires
 while the channel is running. The GitHub secret is only the starting token.
 """
@@ -74,7 +74,7 @@ def carousel(images: list[Path], text: str) -> str:
     """Publish the slides as one Threads carousel. Returns the Threads media id."""
     from .meta import _hosted_image_url
 
-    user = require_env("THREADS_USER_ID")
+    user = env("THREADS_USER_ID") or "me"
     items = []
     for path in images[:MAX_ITEMS]:
         item = _call("POST", f"{user}/threads", media_type="IMAGE", is_carousel_item="true",

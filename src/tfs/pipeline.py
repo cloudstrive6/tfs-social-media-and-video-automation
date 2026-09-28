@@ -630,7 +630,7 @@ def _schedule(item: dict, **artifacts) -> None:
 def _connected(platform: str) -> bool:
     """Platforms added before their account is connected are skipped instead of failing every day."""
     if platform == "threads_carousel":
-        return bool(env("THREADS_USER_ID") and (env("THREADS_ACCESS_TOKEN") or (data_dir() / "threads_token.json").exists()))
+        return bool(env("THREADS_ACCESS_TOKEN") or (data_dir() / "threads_token.json").exists())
     return True
 
 

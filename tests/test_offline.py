@@ -984,9 +984,8 @@ def test_carousels_go_to_tiktok_photos_and_threads(data_dir, monkeypatch):
     cfg = sent["platform_configurations"]["tiktok"]
     assert len(sent["media"]) == 3 and cfg["auto_add_music"] and "allow_duet" not in cfg
     assert pipeline._provider("tiktok_carousel") == "postforme" and pipeline._provider("threads_carousel") == "direct"
-    monkeypatch.delenv("THREADS_USER_ID", raising=False)
+    monkeypatch.delenv("THREADS_ACCESS_TOKEN", raising=False)
     assert not pipeline._connected("threads_carousel")               # not connected yet: skipped, not failed
-    monkeypatch.setenv("THREADS_USER_ID", "1")
     monkeypatch.setenv("THREADS_ACCESS_TOKEN", "t")
     assert pipeline._connected("threads_carousel")
 
@@ -999,7 +998,7 @@ def test_scheduling_uses_the_current_schedule(data_dir, monkeypatch):
                                   "facebook_post": "2026-09-29T10:00:00+08:00"}})
     monkeypatch.setattr(pipeline, "_notify_ready", lambda item: None)
     monkeypatch.setattr("tfs.archive.archive_item", lambda item: None)
-    monkeypatch.delenv("THREADS_USER_ID", raising=False)
+    monkeypatch.delenv("THREADS_ACCESS_TOKEN", raising=False)
     pipeline._schedule(db.get_item("2026-09-29-caro0"), slides=[])
     posts = {p["platform"]: p["slot_at"] for p in db.queued_posts()}
     assert posts == {"instagram_carousel": "2026-09-29T08:30:00+08:00", "facebook_post": "2026-09-29T08:30:00+08:00",

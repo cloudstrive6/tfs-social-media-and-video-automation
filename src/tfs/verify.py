@@ -107,7 +107,7 @@ CHECKS = [
     ("Facebook + Instagram", ("META_PAGE_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID"), _meta),
     ("ElevenLabs", ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"), _elevenlabs),
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY_TIKTOK",), _postforme),
-    ("Threads", ("THREADS_USER_ID", "THREADS_ACCESS_TOKEN"), _threads),
+    ("Threads", ("THREADS_ACCESS_TOKEN",), _threads),
     ("Cloudflare R2 state", ("S3_ENDPOINT_URL", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_BACKUP_BUCKET"), _r2),
     ("Backblaze B2 archive", ("B2_ENDPOINT", "B2_BUCKET", "B2_KEY_ID", "B2_APP_KEY"), _b2),
     ("Telegram", ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"), _telegram),
