@@ -11,5 +11,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg fonts-dejavu-core
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: engine/package-lock.json
+      - run: npm ci --prefix engine --no-audit --no-fund
+        env:
+          HYPERFRAMES_NO_TELEMETRY: "1"
       - run: pip install -e ".[dev]"
       - run: pytest -q
