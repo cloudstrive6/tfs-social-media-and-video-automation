@@ -864,7 +864,7 @@ def test_vector_sanitize_orders_clamps_and_fills_gaps():
     s0 = out.scenes[0]
     assert s0.actors[0].x == 0.9 and s0.actors[0].holds == ""
     assert [p.emoji for p in s0.props] == ["money_with_wings"] and s0.props[0].count == 16
-    assert [b.text for b in s0.bubbles] == ["Where did it go?"] and s0.bubbles[0].at == 0.6
+    assert [b.text for b in s0.bubbles] == ["Where did it go?"] and s0.bubbles[0].at == 0.35
 
 
 def test_vector_spec_and_project(tmp_path):
@@ -902,3 +902,16 @@ def test_paid_images_are_off():
     assert channel()["video"]["engine"] == "vector" and channel()["video"]["fps_vector"] == 60
     with pytest.raises(RuntimeError, match="vector engine"):
         images.generate("anything", __import__("pathlib").Path("never.png"))
+
+
+def test_vector_staging_keeps_adults_the_same_height_and_apart():
+    from tfs.media import vector
+    from tfs.models import Actor
+
+    def a(who, x, scale):
+        return Actor(who=who, label="", x=x, scale=scale, row="front", pose="stand", expression="neutral",
+                     speaking=False, facing="right", enter="none", holds="")
+
+    out = vector._stage([a("kuya_standard", 0.45, 0.55), a("juan", 0.6, 0.32), a("child", 0.8, 0.5)], True)
+    assert [x.scale for x in out[:2]] == [0.55, 0.55] and out[2].scale < 0.4
+    assert sorted(x.x for x in out) == [0.2, 0.5, 0.8]
