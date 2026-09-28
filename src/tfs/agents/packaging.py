@@ -147,7 +147,8 @@ def motion_stills(item: dict, briefs: list[str], purpose: str) -> "MotionPlan":
         "motion_designer",
         f"Format: {purpose}. Each scene is ONE still image, not a video: pick the single most telling moment, "
         "use `kind: scene` (no cards), `enter: none`, and a bubble only if the brief quotes one. Keep the "
-        f"subject large and clear.\n\n# Vocabulary\n{vector.vocabulary()}\n\n{_ctx(item)}\n\n"
+        "subject large and clear (scale 0.65–0.75 in wide frames). Vary the sets: never the same background on "
+        f"two stills in a row, and no set more than twice.\n\n# Vocabulary\n{vector.vocabulary()}\n\n{_ctx(item)}\n\n"
         f"# Stills to design\n{listing}",
         MotionPlan,
     )

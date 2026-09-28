@@ -52,6 +52,10 @@ use only those names.
 - `x`, `y` place the centre (0–1). Keep props off faces and actors. On verticals keep x in 0.1–0.85 and y in
   0.12–0.55, above the caption zone. `size` is 0.08–0.3 of the frame's short side. `at` (0–1) is when the prop appears in the scene.
 
+- Props are staged, not stickers: held (`holds`), resting on the ground or a desk (y near the floor line), or
+  moving with a reason (`rain`, `float` for something magical or ghostly). Never park a prop at head height
+  beside someone as decoration. One strong prop beats three weak ones.
+
 ## Speech bubbles
 At most one per scene, ≤10 English words, spoken by `actor` (an index into `actors`). On a vertical the hook line owns the top of the screen for the first 3 seconds, so a bubble in the opening scene appears after it. Use them for punchlines
 and for skit dialogue, never to repeat the narration word for word (captions already do that). `at` is

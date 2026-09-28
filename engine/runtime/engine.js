@@ -57,9 +57,14 @@
       box.appendChild(el("div", { class: "tag", style: `position:absolute;left:${-wPx * 0.1}px;width:${wPx * 1.2}px;top:${hPx * 0.44}px;` +
         `text-align:center;font:800 ${fs}px Montserrat, Arial, sans-serif;line-height:1.1;color:#FCD116;text-transform:uppercase` }, esc(a.label)));
     }
-    if (a.holds && S.emoji[a.holds]) {                      // prop in the viewer-right hand
-      const hold = el("div", { style: `position:absolute;width:${wPx * 0.55}px;left:${a.facing === "left" ? -wPx * 0.2 : wPx * 0.65}px;top:${hPx * 0.42}px` },
-        S.emoji[a.holds]);
+    if (a.holds && S.emoji[a.holds]) {                      // prop hangs from the right hand, the hand still visible
+      const p = POSES[a.pose] || POSES.stand, rad = Math.PI / 180;
+      const ex = 218 - 68 * Math.sin(p[2] * rad), ey = 232 + 68 * Math.cos(p[2] * rad);
+      let hx = ex - 80 * Math.sin((p[2] + p[3]) * rad), hy = ey + 80 * Math.cos((p[2] + p[3]) * rad);
+      if (a.facing === "left") hx = 300 - hx;
+      const size = wPx * 0.42;
+      const hold = el("div", { style: `position:absolute;width:${size}px;height:${size}px;left:${hx / 300 * wPx - size / 2}px;` +
+        `top:${(hy + 14) / 600 * hPx}px` }, S.emoji[a.holds]);
       box.appendChild(hold);
     }
     layer.appendChild(box);
