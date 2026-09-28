@@ -1,49 +1,33 @@
-# Posting slots in Asia/Manila time (PHT, UTC+8).
+# When things post. Every platform of a kind posts at the SAME moment (owner's choice, 28 Sep 2026).
 #
-# Philippine audiences peak at the morning commute (7–9), lunch (12–1) and the long evening
-# prime (7–11 PM). Long-form goes out 1–2 h BEFORE a peak so it has early velocity when the
-# crowd arrives. Verticals are staggered so the same clip never hits every platform at once.
-# The analyst agent rewrites these slots weekly from real analytics (see `tfs analyze`).
+# Times are Asia/Manila (PHT, UTC+8) and stay fixed to the Philippine audience all year. In New Zealand that
+# is +5 h while NZ is on daylight time (late Sep - early Apr) and +4 h the rest of the year:
+#
+#   kind       PHT      NZ (NZDT, +5h)   NZ (NZST, +4h)
+#   vertical   04:30    09:30            08:30
+#   carousel   08:30    13:30            12:30
+#   vertical   12:30    17:30            16:30
+#   carousel   19:00    00:00 (+1 day)   23:00
+#   vertical   20:30    01:30 (+1 day)   00:30 (+1 day)
+#   long_form  21:00    02:00 (+1 day)   01:00 (+1 day)
+#
+# Verticals run every 8 hours, 4 hours either side of the morning carousel.
+# The weekly analyst can move these times (per kind) from real analytics; see `tfs analyze`.
 
 production_lead_hours: 6      # everything is rendered at least this long before its slot
 
-youtube_long:                 # 1 / day to start (YouTube "inauthentic content" policy); add slots to scale
-  - "18:00"
+slots:
+  long_form: ["21:00"]
+  vertical: ["04:30", "12:30", "20:30"]
+  carousel: ["08:30", "19:00"]
 
-youtube_shorts:               # 3 / day
-  - "10:30"
-  - "15:30"
-  - "20:30"
+platforms:
+  long_form: [youtube]
+  vertical: [youtube_shorts, instagram_reel, facebook_reel, tiktok]
+  # tiktok_carousel = a TikTok photo post (via Post for Me); threads_carousel = Threads (direct API)
+  carousel: [instagram_carousel, facebook_post, tiktok_carousel, threads_carousel]
 
-instagram_reels:              # 3 / day (same vertical masters, own captions)
-  - "07:30"
-  - "12:30"
-  - "20:00"
-
-instagram_carousels:          # 2 / day
-  - "11:00"
-  - "19:00"
-
-tiktok:                       # 3 / day via Post for Me ("New Project" quickstart project, connected 2026-09-26)
-  enabled: true
-  slots:
-    - "12:00"
-    - "18:30"
-    - "21:30"
-
-facebook_reels:               # 3 / day
-  - "08:30"
-  - "13:30"
-  - "19:30"
-
-facebook_posts:               # 2 / day (carousel / multi-photo posts)
-  - "10:00"
-  - "20:30"
-
-# Daily production that feeds the slots above:
-#   1 long-form video   -> youtube_long
-#   3 vertical videos   -> youtube_shorts + instagram_reels + facebook_reels + tiktok
-#   2 carousels         -> instagram_carousels + facebook_posts
+# Pieces made per day (one per slot above).
 daily_production:
   long_form: 1
   vertical: 3

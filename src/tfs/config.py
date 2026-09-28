@@ -44,12 +44,9 @@ def schedule() -> dict:
     """config/schedule.yaml, with slot changes the analyst wrote to the data dir layered on top."""
     merged = dict(load_yaml("schedule"))
     override = data_dir() / "schedule_override.yaml"
-    if override.exists():
-        for key, slots in (yaml.safe_load(override.read_text()) or {}).items():
-            if isinstance(merged.get(key), dict):
-                merged[key] = {**merged[key], "slots": slots}
-            elif key in merged:
-                merged[key] = slots
+    if override.exists():                          # {"slots": {kind: [HH:MM, ...]}}; older per-platform keys are ignored
+        changed = (yaml.safe_load(override.read_text()) or {}).get("slots") or {}
+        merged["slots"] = {**merged["slots"], **{k: v for k, v in changed.items() if k in merged["slots"]}}
     return merged
 
 

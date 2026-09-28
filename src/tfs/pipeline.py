@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from . import db, notify, qa, slots
 from .agents import editor, packaging, trend_scout, writers
-from .config import channel, data_dir, item_dir, media, now, schedule
+from .config import channel, data_dir, env, item_dir, media, now, schedule
 from .llm import UsageLimitError
 from .media import cards, compose, images, render, tts, vector
 from .models import (Carousel, FactCheck, HookReview, MotionPlan, ReviewReport, Scene, Script, SeoPack, ShotList,
@@ -601,7 +601,7 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
                   "instagram_carousel": "IG Carousel", "facebook_reel": "FB Reel", "facebook_post": "FB Post",
-                  "tiktok": "TikTok"}
+                  "tiktok": "TikTok", "tiktok_carousel": "TikTok Photos", "threads_carousel": "Threads"}
 
 
 def _schedule(item: dict, **artifacts) -> None:
@@ -610,12 +610,28 @@ def _schedule(item: dict, **artifacts) -> None:
     if item["data"].get("sample"):                # `tfs sample`: finished, but never queued for posting
         db.set_status(item["id"], "sample", **artifacts)
         return
-    for platform, slot in item["data"]["platforms"].items():
-        db.queue_post(item["id"], platform, slot)
+    try:                                          # the schedule may have changed since this piece was planned
+        platforms = {p: db.iso(t) for p, t in slots.unit_by_id(item["id"]).platforms.items()}
+        item["data"]["platforms"] = platforms
+        artifacts["platforms"] = platforms
+    except (StopIteration, ValueError):
+        platforms = item["data"]["platforms"]
+    for platform, slot in platforms.items():
+        if _connected(platform):
+            db.queue_post(item["id"], platform, slot)
+        else:
+            log.info("%s: %s isn't connected yet; not queued", item["id"], platform)
     db.set_status(item["id"], "scheduled", **artifacts)
     log.info("scheduled %s", item["id"])
     _notify_ready(db.get_item(item["id"]))
     archive.archive_item(db.get_item(item["id"]))  # permanent copy in B2 (never blocks posting)
+
+
+def _connected(platform: str) -> bool:
+    """Platforms added before their account is connected are skipped instead of failing every day."""
+    if platform == "threads_carousel":
+        return bool(env("THREADS_USER_ID") and (env("THREADS_ACCESS_TOKEN") or (data_dir() / "threads_token.json").exists()))
+    return True
 
 
 def _notify_ready(item: dict) -> None:
@@ -646,6 +662,9 @@ def _post_link(platform: str, remote_id: str) -> str:
         return f"https://www.facebook.com/{remote_id}"
     if platform in ("instagram_reel", "instagram_carousel"):
         return "https://www.instagram.com/thefilipinostandard/"
+    if platform == "threads_carousel":
+        from .publish import threads
+        return threads.permalink(remote_id) or "https://www.threads.com/@thefilipinostandard"
     return ""
 
 
@@ -703,6 +722,7 @@ def _publish_one(post: dict) -> tuple[str, str]:
     """Returns (status, remote_id). `submitted` = accepted by Post for Me, confirmed later by reconcile()."""
     item = db.get_item(post["item_id"])
     d, data = item_dir(item["id"]), item["data"]
+    from .publish import limits
     from .publish.limits import enforce_seo
     seo = enforce_seo(SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8")))
     slot = datetime.fromisoformat(post["slot_at"])
@@ -712,12 +732,14 @@ def _publish_one(post: dict) -> tuple[str, str]:
     caption = {"youtube": seo.youtube_description, "youtube_shorts": seo.youtube_description,
                "instagram_reel": seo.instagram_caption, "instagram_carousel": seo.instagram_caption,
                "facebook_reel": seo.facebook_caption, "facebook_post": seo.facebook_caption,
-               "tiktok": seo.tiktok_caption}[platform]
-    title = data["title"] if platform == "youtube" else seo.shorts_title
+               "tiktok": seo.tiktok_caption, "tiktok_carousel": seo.tiktok_caption,
+               "threads_carousel": limits.threads_text(seo.instagram_caption)}[platform]
+    title = (data["title"] if platform == "youtube" else limits.tiktok_photo_title(data.get("title") or "")
+             if platform == "tiktok_carousel" else seo.shorts_title)
 
     if _provider(platform) == "postforme":
         from .publish import postforme
-        files = slides if platform in ("instagram_carousel", "facebook_post") else [video]
+        files = slides if platform in ("instagram_carousel", "facebook_post", "tiktok_carousel") else [video]
         thumb = media(data["thumbnail"]) if platform == "youtube" and data.get("thumbnail") else None
         pid = postforme.create_post(platform, caption, files, slot, title=title, description=caption,
                                     tags=seo.tags, thumbnail=thumb, external_id=f"{item['id']}:{platform}")
@@ -739,6 +761,9 @@ def _publish_one(post: dict) -> tuple[str, str]:
             return "published", meta.ig_carousel(slides, caption)
         case "facebook_post":
             return "published", meta.fb_photos(slides, caption)
+        case "threads_carousel":
+            from .publish import threads
+            return "published", threads.carousel(slides, caption)
     raise ValueError(f"unknown platform {platform}")
 
 

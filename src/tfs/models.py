@@ -158,8 +158,8 @@ class AgentNote(BaseModel):
 
 
 class SlotChange(BaseModel):
-    platform: str
-    slots: list[str]
+    kind: Literal["long_form", "vertical", "carousel"]   # all of a kind's platforms post at these times
+    slots: list[str]                                      # HH:MM PHT, one per daily piece
 
 
 class AnalystReport(BaseModel):

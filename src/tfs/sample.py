@@ -13,8 +13,8 @@ from pathlib import Path
 
 from . import db, notify, pipeline
 from .agents import editor, trend_scout
-from .config import data_dir, env, now
-from .slots import FEEDS, Unit
+from .config import data_dir, env, now, schedule
+from .slots import Unit
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def run(kind: str = "vertical") -> Path:
         except Exception:
             log.exception("trend scout failed; the editor falls back to an evergreen idea")
     unit = Unit(id=f"sample-{kind}-{now():%Y%m%d-%H%M}", kind=kind, index=0,
-                platforms={p: now() + timedelta(days=1) for p, _ in FEEDS[kind]})
+                platforms={p: now() + timedelta(days=1) for p in schedule()["platforms"][kind]})
     if not editor.plan([unit]):
         raise SystemExit("sample: the editor did not assign a topic")
     db.set_status(unit.id, "planned", sample=True)

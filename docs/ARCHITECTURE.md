@@ -17,7 +17,7 @@
 | 11 | **Title Writer** | `title_writer.md` | 10 options scored for curiosity / clarity / keyword / honesty; primary + 2 alternates for later swaps. | `titles.json` |
 | 12 | **SEO & Discovery Writer** | `seo_writer.md` | Description written for YouTube search *and* AI answer engines, chapters, sources, tags, and native captions for Shorts / IG / FB / TikTok. | `seo.json` |
 | 13 | **Carousel Designer** | `carousel_designer.md` | 6–10 slide scroll-stoppers (cover hook, one idea per slide, "so what", CTA), fact-checked; slide art drawn by the vector engine, rendered 1080×1350. | `slides/*.jpg` |
-| 14 | **Publisher** | (code: `publish/youtube.py`, `publish/postforme.py`) | YouTube + Shorts upload directly through the TFS Automation Google Cloud project with native `publishAt` scheduling, custom thumbnail and the synthetic-media flag. IG Reels & carousels and FB Reels & multi-photo posts go direct through the Meta app TFS Content Creator at the slot time. TikTok (public, AI-generated label) goes through Post for Me with `scheduled_at` = slot, and each result is confirmed afterwards. | `posts` table |
+| 14 | **Publisher** | (code: `publish/youtube.py`, `publish/postforme.py`) | YouTube + Shorts upload directly through the TFS Automation Google Cloud project with native `publishAt` scheduling, custom thumbnail and the synthetic-media flag. IG Reels & carousels and FB Reels & multi-photo posts go direct through the Meta app TFS Content Creator at the slot time. TikTok videos and photo posts (public, AI-generated label) go through Post for Me with `scheduled_at` = slot, and each result is confirmed afterwards. Threads carousels go direct through the Threads API at the slot time (the token refreshes itself weekly). | `posts` table |
 | 15 | **Growth Analyst** | `analyst.md` | Weekly: YouTube Analytics + IG insights → what worked, standing notes appended to every agent's prompt, schedule retune, title swaps on low-CTR videos. | `analyst_notes/` |
 | 16 | **Proofreader** | `audio_qa.md` | Whisper (faster-whisper, `small`) transcribes the finished video. Each scene is word-matched against the script, and a Claude judge decides which differences are real: skipped words, wrong numbers or names, garbled audio. Scenes that fail are re-voiced, with a respelled line if pronunciation was the problem. | `qa_r*.json` |
 | 17 | **Visual QA** | `visual_qa.md` | Looks at a frame from every shot (plus the hook frame, thumbnail or carousel slides) next to the vector cast model sheets (`assets/characters_vector/`). It checks for wrong characters, real-person likeness, staging faults (overlaps, props over faces), misspelled or cut-off text, wrong card facts, captions under the platform buttons, anachronisms and appeal. Blocking scenes go back to the Motion Designer with a note and are re-planned and re-rendered, up to 2 rounds; a scene that still fails becomes the host explaining, and a remaining safety problem skips the piece. | `qa_r*.json`, `qa_fixes.json` |
@@ -49,6 +49,7 @@ flowchart LR
     Q --> YT[YouTube / Shorts via Data API, publishAt = slot]
     Q --> META[Meta Graph API, at slot] --> IG[Instagram] & FB[Facebook]
     Q --> PFM[Post for Me, scheduled_at = slot] --> TT[TikTok]
+    Q --> TH[Threads API, at slot] --> THR[Threads]
   end
   YT & IG --> AN[Growth Analyst weekly] -.notes & schedule.-> E & W & H & P
 ```
@@ -57,9 +58,9 @@ flowchart LR
 
 | Produced | Published as |
 |---|---|
-| 1 long-form (8–15 min, 16:9) — scale later by adding slots | 1 × YouTube long-form (18:00 PHT) |
-| 3 verticals (35–58 s, 9:16) | 3 × Shorts, 3 × IG Reels, 3 × FB Reels, 3 × TikTok — same master, staggered times, platform-native captions |
-| 2 carousels (1080×1350) | 2 × IG carousel, 2 × FB multi-photo post |
+| 1 long-form (8–15 min, 16:9) — scale later by adding slots | 1 × YouTube long-form (21:00 PHT) |
+| 3 verticals (35–58 s, 9:16) | 3 × Shorts, 3 × IG Reels, 3 × FB Reels, 3 × TikTok — same master, all platforms at the same moment (04:30, 12:30, 20:30 PHT), platform-native captions |
+| 2 carousels (1080×1350) | 2 × IG carousel, 2 × FB multi-photo post, 2 × TikTok photo post, 2 × Threads carousel — all at the same moment (08:30, 19:00 PHT) |
 
 ## Reliability
 

@@ -75,6 +75,7 @@ publishing:
   provider: direct
   overrides:
     tiktok: postforme
+    tiktok_carousel: postforme
 
 tts:
   provider: elevenlabs        # elevenlabs | fishaudio

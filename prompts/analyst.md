@@ -10,7 +10,8 @@ Deliver:
 3. **Packaging** — title patterns and thumbnail concepts correlated with CTR. Recommend title swaps for any
    video under 3% CTR after 48 h (pick from its stored alternates).
 4. **Topics** — which pillars/angles grow subscribers vs. only views.
-5. **Schedule** — propose new posting slots per platform (HH:MM PHT) only if the data supports it
-   (≥2 weeks of data per slot).
+5. **Schedule** — propose new posting times per kind (`long_form`, `vertical`, `carousel`; HH:MM PHT, one per
+   daily piece) only if the data supports it (≥2 weeks of data per slot). Every platform of a kind posts at the
+   same moment, so judge a slot by its results across all platforms together.
 6. **Notes for each agent** — 1–3 concrete instructions each (these are appended to their prompts next week).
 Be honest about sample size. Don't over-fit to one viral video.

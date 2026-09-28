@@ -6,7 +6,8 @@ YouTube (developers.google.com/youtube/v3/docs/videos):
 - tags: the whole list max 500 characters; the commas between tags count, and a tag containing a space counts
   as if wrapped in quotes (+2). A list over the limit rejects the entire upload ("invalidTags").
 Instagram: caption max 2200 characters, max 30 hashtags (more fails the post), max 20 @mentions.
-TikTok: caption max 2200 characters.
+TikTok: caption max 2200 characters; a photo (carousel) post's title max 90 characters.
+Threads: text max 500 characters; only one topic tag per post (the first hashtag), so the rest are dropped.
 """
 from __future__ import annotations
 
@@ -14,7 +15,8 @@ import re
 
 YT_TITLE, YT_DESC_BYTES, YT_TAGS = 100, 5000, 500
 IG_CAPTION, IG_HASHTAGS, IG_MENTIONS = 2200, 30, 20
-TIKTOK_CAPTION = 2200
+TIKTOK_CAPTION, TIKTOK_PHOTO_TITLE = 2200, 90
+THREADS_TEXT = 500
 HASHTAG = re.compile(r"(?<!\w)#\w+")
 MENTION = re.compile(r"(?<!\w)@\w+")
 
@@ -85,6 +87,25 @@ def instagram_caption(text: str) -> str:
 
 def tiktok_caption(text: str) -> str:
     return _cut_chars(text or "", TIKTOK_CAPTION)[:TIKTOK_CAPTION]
+
+
+def tiktok_photo_title(text: str) -> str:
+    return _cut_chars(re.sub(r"\s+", " ", text or "").strip(), TIKTOK_PHOTO_TITLE)[:TIKTOK_PHOTO_TITLE]
+
+
+def threads_text(caption: str) -> str:
+    """A Threads post from the Instagram caption: one topic tag (its first hashtag), at most 500 characters,
+    cut at a paragraph or sentence rather than mid-word."""
+    tags = HASHTAG.findall(caption or "")
+    body = re.sub(r"[ \t]{2,}", " ", HASHTAG.sub("", caption or ""))
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(line.rstrip() for line in body.splitlines())).strip()
+    tag = f"\n\n{tags[0]}" if tags else ""
+    room = THREADS_TEXT - len(tag)
+    if len(body) > room:
+        cut = body[:room]
+        stop = max(cut.rfind("\n\n"), cut.rfind(". "), cut.rfind("? "), cut.rfind("! "))
+        body = cut[:stop + 1].rstrip() if stop > room * 0.5 else _cut_chars(body, room - 1)
+    return (body + tag)[:THREADS_TEXT]
 
 
 def enforce_seo(pack):

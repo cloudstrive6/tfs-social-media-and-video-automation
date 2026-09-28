@@ -78,8 +78,9 @@ def run() -> AnalystReport:
     if report.schedule_changes:
         override = data_dir() / "schedule_override.yaml"
         current = yaml.safe_load(override.read_text()) if override.exists() else {}
-        for change in report.schedule_changes:
-            current[change.platform] = change.slots
+        slots = current.setdefault("slots", {})
+        for change in report.schedule_changes:          # per kind: every platform of a kind posts together
+            slots[change.kind] = change.slots
         override.write_text(yaml.safe_dump(current))
     for swap in report.title_swaps:
         video_id, _, title = (s.strip() for s in swap.partition("|"))

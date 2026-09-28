@@ -20,14 +20,18 @@ def test_day_units_match_schedule():
     assert kinds.count("long_form") == 1 and kinds.count("vertical") == 3 and kinds.count("carousel") == 2
     vert0 = next(u for u in units if u.id.endswith("vert0"))
     assert set(vert0.platforms) == {"youtube_shorts", "instagram_reel", "facebook_reel", "tiktok"}
-    assert vert0.anchor.strftime("%H:%M") == "07:30"
+    assert vert0.anchor.strftime("%H:%M") == "04:30"
+    assert len(set(vert0.platforms.values())) == 1                  # every platform at the same moment
+    caro0 = next(u for u in units if u.id.endswith("caro0"))
+    assert set(caro0.platforms) == {"instagram_carousel", "facebook_post", "tiktok_carousel", "threads_carousel"}
+    assert caro0.anchor.strftime("%H:%M") == "08:30"
 
 
 def test_schedule_override(data_dir):
     from tfs import config, slots
 
-    (data_dir / "schedule_override.yaml").write_text("youtube_long: ['09:00', '14:00', '19:30']\n")
-    assert config.schedule()["youtube_long"][0] == "09:00"
+    (data_dir / "schedule_override.yaml").write_text("slots: {long_form: ['09:00']}\nyoutube_long: ['10:00']\n")
+    assert config.schedule()["slots"]["long_form"] == ["09:00"]      # an old per-platform key is ignored
     long0 = next(u for u in slots.day_units(date(2026, 9, 28)) if u.id.endswith("long0"))
     assert long0.anchor.strftime("%H:%M") == "09:00"
 
@@ -943,3 +947,60 @@ def test_carousel_slides_keep_text_off_the_art(tmp_path):
     assert img.getpixel((540, band_bottom - 20))[1] > 180
     assert all(img.getpixel((x, band_bottom + 200))[1] < 150 or img.getpixel((x, band_bottom + 200))[0] > 150
                for x in range(0, 1080, 60))
+
+
+def test_threads_text_fits_and_keeps_one_topic_tag():
+    from tfs.publish import limits
+
+    caption = "The Court killed PDAF in 2013. " * 30 + "\n\nSource: COA.\n\n#PorkBarrel #PDAF #Philippines"
+    text = limits.threads_text(caption)
+    assert len(text) <= 500 and text.endswith("#PorkBarrel") and "#PDAF" not in text
+    assert limits.threads_text("Short one. #A #B") == "Short one.\n\n#A"
+
+
+def test_carousels_go_to_tiktok_photos_and_threads(data_dir, monkeypatch):
+    from tfs import pipeline
+    from tfs.publish import postforme
+
+    sent = {}
+
+    def fake_call(method, path, platform=None, **kw):
+        if path == "/media/create-upload-url":
+            return {"upload_url": "https://u", "media_url": "https://m"}
+        sent.update(kw.get("json") or {})
+        return {"id": "pfm1"}
+
+    monkeypatch.setattr(postforme, "_call", fake_call)
+    monkeypatch.setattr(postforme, "account_id", lambda p: "acct")
+    monkeypatch.setattr(postforme.requests, "put", lambda *a, **k: type("R", (), {"raise_for_status": lambda s: None})())
+    slides = []
+    for i in range(3):
+        f = data_dir / f"slide{i}.jpg"
+        f.write_bytes(b"jpg")
+        slides.append(f)
+    from datetime import timedelta
+    from tfs.config import now
+    postforme.create_post("tiktok_carousel", "caption", slides, now() + timedelta(hours=2), title="A title")
+    cfg = sent["platform_configurations"]["tiktok"]
+    assert len(sent["media"]) == 3 and cfg["auto_add_music"] and "allow_duet" not in cfg
+    assert pipeline._provider("tiktok_carousel") == "postforme" and pipeline._provider("threads_carousel") == "direct"
+    monkeypatch.delenv("THREADS_USER_ID", raising=False)
+    assert not pipeline._connected("threads_carousel")               # not connected yet: skipped, not failed
+    monkeypatch.setenv("THREADS_USER_ID", "1")
+    monkeypatch.setenv("THREADS_ACCESS_TOKEN", "t")
+    assert pipeline._connected("threads_carousel")
+
+
+def test_scheduling_uses_the_current_schedule(data_dir, monkeypatch):
+    from tfs import db, pipeline
+
+    db.upsert_item("2026-09-29-caro0", "carousel", "2026-09-29T11:00:00+08:00", "producing",
+                   {"platforms": {"instagram_carousel": "2026-09-29T11:00:00+08:00",
+                                  "facebook_post": "2026-09-29T10:00:00+08:00"}})
+    monkeypatch.setattr(pipeline, "_notify_ready", lambda item: None)
+    monkeypatch.setattr("tfs.archive.archive_item", lambda item: None)
+    monkeypatch.delenv("THREADS_USER_ID", raising=False)
+    pipeline._schedule(db.get_item("2026-09-29-caro0"), slides=[])
+    posts = {p["platform"]: p["slot_at"] for p in db.queued_posts()}
+    assert posts == {"instagram_carousel": "2026-09-29T08:30:00+08:00", "facebook_post": "2026-09-29T08:30:00+08:00",
+                     "tiktok_carousel": "2026-09-29T08:30:00+08:00"}          # Threads waits until it's connected

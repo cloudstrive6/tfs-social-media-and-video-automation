@@ -1,4 +1,4 @@
-"""Post for Me (postforme.dev) — one API for YouTube, Instagram, Facebook and TikTok.
+"""Post for Me (postforme.dev) — one API for YouTube, Instagram, Facebook and TikTok (videos and photo posts).
 
 With a Quickstart project, posts go out through Post for Me's already-approved platform apps, so
 TikTok posts are public without our own TikTok audit, and YouTube uploads don't use our API quota.
@@ -26,6 +26,7 @@ PLATFORMS = {
     "facebook_reel": ("facebook", "reels"),
     "facebook_post": ("facebook", "timeline"),
     "tiktok": ("tiktok", None),
+    "tiktok_carousel": ("tiktok", None),          # photo post: the slides as a swipeable TikTok photo carousel
 }
 
 
@@ -90,7 +91,10 @@ def create_post(platform_key: str, caption: str, media: list[Path], slot: dateti
         config |= {"title": title[:100], "description": description[:5000], "tags": (tags or [])[:30],
                    "category_id": "27", "default_language": "fil", "localizations": {},
                    "privacy_status": "public", "made_for_kids": False, "contains_synthetic_media": True}
-    if platform == "tiktok":
+    if platform_key == "tiktok_carousel":
+        config |= {"title": title[:90], "privacy_status": "public", "is_ai_generated": True,
+                   "allow_comment": True, "auto_add_music": True}
+    elif platform == "tiktok":
         config |= {"title": title[:90], "privacy_status": "public", "is_ai_generated": True,
                    "allow_comment": True, "allow_duet": True, "allow_stitch": True}
 
