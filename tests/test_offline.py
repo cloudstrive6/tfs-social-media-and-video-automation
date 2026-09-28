@@ -1003,3 +1003,30 @@ def test_scheduling_uses_the_current_schedule(data_dir, monkeypatch):
     posts = {p["platform"]: p["slot_at"] for p in db.queued_posts()}
     assert posts == {"instagram_carousel": "2026-09-29T08:30:00+08:00", "facebook_post": "2026-09-29T08:30:00+08:00",
                      "tiktok_carousel": "2026-09-29T08:30:00+08:00"}          # Threads waits until it's connected
+
+
+def test_post_now_publishes_on_every_carousel_platform(data_dir, monkeypatch):
+    from tfs import db, pipeline, post_now, state
+    from tfs.agents import editor
+
+    monkeypatch.setattr(state, "enabled", lambda: True)
+    monkeypatch.setattr(state, "pull", lambda: None)
+    monkeypatch.setattr(state, "push", lambda: 0)
+
+    def plan(units):
+        u = units[0]
+        db.upsert_item(u.id, u.kind, db.iso(u.anchor), "planned",
+                       {"working_title": "Permits", "platforms": {p: db.iso(t) for p, t in u.platforms.items()}})
+        return [u.id]
+
+    monkeypatch.setattr(editor, "plan", plan)
+    monkeypatch.setattr(pipeline, "produce", lambda item_id: pipeline._schedule(db.get_item(item_id), slides=[]))
+    monkeypatch.setattr(pipeline, "_notify_ready", lambda item: None)
+    monkeypatch.setattr("tfs.archive.archive_item", lambda item: None)
+    monkeypatch.setenv("THREADS_ACCESS_TOKEN", "t")
+    published = []
+    monkeypatch.setattr(pipeline, "publish_due", lambda: published.extend(p["platform"] for p in db.queued_posts()))
+    out = post_now.run("carousel", "Starting a business in the Philippines", "look at Reddit")
+    assert sorted(published) == ["facebook_post", "instagram_carousel", "threads_carousel", "tiktok_carousel"]
+    item = db.items_with_status("scheduled")[0]
+    assert "now-carousel" in item["id"] and "Reddit" in item["data"]["owner_request"] and out.startswith(item["id"])

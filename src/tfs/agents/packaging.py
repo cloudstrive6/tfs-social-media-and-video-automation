@@ -23,8 +23,8 @@ def _vocabulary() -> str:
 
 def _ctx(item: dict, script: Script | None = None) -> str:
     d = item["data"]
-    out = json.dumps({k: d.get(k) for k in ("working_title", "pillar", "primary_keyword", "brief")},
-                     ensure_ascii=False)
+    out = json.dumps({k: d.get(k) for k in ("working_title", "pillar", "primary_keyword", "brief", "owner_request")
+                      if d.get(k)}, ensure_ascii=False)
     if script:
         out += "\n\n# Final script\n" + "\n".join(f"[{s.speaker}] {s.text}" for s in script.scenes)
     return out

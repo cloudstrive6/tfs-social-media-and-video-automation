@@ -22,6 +22,16 @@ on:
         required: false
         type: string
         default: ""
+      note:
+        description: optional guidance for `tfs post-now`
+        required: false
+        type: string
+        default: ""
+      kind:
+        description: piece kind for `tfs post-now`
+        required: false
+        type: string
+        default: ""
       encrypt_to:
         description: base64 PEM public key; if set, data/sample_out is attached ENCRYPTED to it (public repo)
         required: false
@@ -68,6 +78,8 @@ jobs:
       HYPERFRAMES_NO_TELEMETRY: "1"
       DO_NOT_TRACK: "1"
       TFS_SAMPLE_TOPIC: ${{ inputs.topic }}
+      TFS_NOTE: ${{ inputs.note }}
+      TFS_KIND: ${{ inputs.kind }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 
 from . import db, pipeline
@@ -24,6 +25,11 @@ def main() -> None:
     sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
     sub.add_parser("sample", help="produce one piece now for review; never scheduled or posted").add_argument(
         "--kind", choices=["vertical", "carousel"], default="vertical")
+    pn = sub.add_parser("post-now", help="make one piece on a topic and publish it right away on all its platforms")
+    # workflow inputs arrive as environment variables (never pasted into a shell command line)
+    pn.add_argument("--kind", choices=["vertical", "carousel"], default=os.environ.get("TFS_KIND") or "carousel")
+    pn.add_argument("--topic", default=os.environ.get("TFS_SAMPLE_TOPIC", ""))
+    pn.add_argument("--note", default=os.environ.get("TFS_NOTE", ""), help="extra guidance for the editor and researcher")
     sub.add_parser("hold", help="stop posts that haven't gone live yet (one item, or all); never deletes").add_argument(
         "item_id", nargs="?", default="")
     sub.add_parser("build-sound-library", help="one-time: generate music beds + sound effects with ElevenLabs into R2")
@@ -89,6 +95,9 @@ def main() -> None:
         case "sample":
             from .sample import run as make_sample
             print(make_sample(a.kind))
+        case "post-now":
+            from .post_now import run as post_now
+            print(post_now(a.kind, a.topic, a.note))
         case "hold":
             from .hold import run as hold
             print("\n".join(hold("held by request", a.item_id)) or "nothing to hold")

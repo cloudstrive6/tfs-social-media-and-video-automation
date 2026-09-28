@@ -1,0 +1,31 @@
+# Actions -> post-now -> Run workflow: make one carousel (or vertical) on a topic and publish it immediately on
+# every platform of its kind. Shares the tfs-state concurrency group with `run`, so the two never overlap.
+name: post-now
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        options: [carousel, vertical]
+        default: carousel
+      topic:
+        description: what the piece is about
+        required: true
+      note:
+        description: optional guidance for the editor and researcher (angles, sources to look at)
+        required: false
+        default: ""
+concurrency:
+  group: tfs-state
+  cancel-in-progress: false
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: post-now
+      needs_claude: true
+      needs_media: true
+      topic: ${{ inputs.topic }}
+      note: ${{ inputs.note }}
+      kind: ${{ inputs.kind }}
+    secrets: inherit

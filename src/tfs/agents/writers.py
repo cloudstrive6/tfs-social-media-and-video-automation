@@ -10,7 +10,8 @@ from ..models import FactCheck, HookReview, Script
 
 def _brief(item: dict) -> str:
     d = item["data"]
-    return json.dumps({k: d.get(k) for k in ("working_title", "pillar", "primary_keyword", "brief", "topic")},
+    return json.dumps({k: d.get(k) for k in ("working_title", "pillar", "primary_keyword", "brief", "topic",
+                                           "owner_request") if d.get(k)},
                       ensure_ascii=False, default=str)
 
 
