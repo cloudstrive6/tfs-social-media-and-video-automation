@@ -84,6 +84,20 @@ def _stage(actors: list[Actor], vertical: bool, bubble: bool = False) -> list[Ac
     return actors
 
 
+SKY = 0.25                                     # props above this are sky things (sun, plane, cloud) and stay up
+
+
+def _grounded(p, vertical: bool):
+    """A still prop between the sky and the floor would float beside the characters: stand it on the ground
+    (the engine's ground line is ~78% down a vertical frame, 80% down a wide one). Falling, floating and
+    held props are left alone."""
+    if p.motion in ("rain", "float") or p.y <= SKY:
+        return p
+    ground = 0.78 if vertical else 0.8
+    half = p.size * (0.5625 if vertical else 1.0) / 2        # the size is a share of the frame's short side
+    return p.model_copy(update={"y": round(ground - half, 3)})
+
+
 def sanitize(plan: MotionPlan, scene_ids: list[int], vertical: bool = True) -> MotionPlan:
     """One scene per script scene, in script order, with every number inside what the engine can draw."""
     by_id = {s.scene_id: s for s in plan.scenes}
@@ -100,9 +114,9 @@ def sanitize(plan: MotionPlan, scene_ids: list[int], vertical: bool = True) -> M
         actors = [a.model_copy(update={"x": _clamp(a.x, 0.1, 0.9), "scale": _clamp(a.scale, 0.2, 0.7),
                                        "holds": a.holds if a.holds and emoji_svg(a.holds) else ""})
                   for a in sp.actors[:3]]
-        props = [p.model_copy(update={"x": _clamp(p.x, 0.05, 0.95), "y": _clamp(p.y, 0.05, 0.9),
-                                      "size": _clamp(p.size, 0.05, 0.4), "count": int(_clamp(p.count, 1, 16)),
-                                      "at": _clamp(p.at, 0, 0.5)})
+        props = [_grounded(p.model_copy(update={"x": _clamp(p.x, 0.05, 0.95), "y": _clamp(p.y, 0.05, 0.9),
+                                                "size": _clamp(p.size, 0.05, 0.4), "count": int(_clamp(p.count, 1, 16)),
+                                                "at": _clamp(p.at, 0, 0.5)}), vertical)
                  for p in sp.props[:5] if emoji_svg(p.emoji)]
         bubbles = [b.model_copy(update={"at": _clamp(b.at, 0, 0.35)}) for b in sp.bubbles
                    if 0 <= b.actor < len(actors) and b.text.strip()][:1]

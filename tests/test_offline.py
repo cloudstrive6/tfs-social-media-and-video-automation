@@ -1101,3 +1101,14 @@ def test_post_now_requests_are_picked_up_by_the_run(monkeypatch):
     monkeypatch.setattr(post_now, "make", lambda kind, topic, note: made.append((kind, topic, note)) or "ok")
     assert pipeline._owner_requests() and made == [("carousel", "Permits", "Reddit")]
     assert not pipeline._owner_requests()                       # nothing left: the run carries on as usual
+
+
+def test_loose_props_stand_on_the_ground():
+    from tfs.media import vector
+    from tfs.models import Prop
+
+    def p(y, motion="none"):
+        return Prop(emoji="door", x=.5, y=y, size=.2, enter="none", motion=motion, count=1, at=0)
+    assert vector._grounded(p(0.4), False).y == 0.7                      # beside a head -> on the floor
+    assert vector._grounded(p(0.1), False).y == 0.1                      # sky stays sky
+    assert vector._grounded(p(0.4, "rain"), True).y == 0.4               # falling / floating on purpose
