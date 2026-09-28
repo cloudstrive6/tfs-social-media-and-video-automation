@@ -50,7 +50,7 @@ def run(kind: str = "vertical") -> Path:
         files = [Path(data["video"])] if data.get("video") else [Path(p) for p in data.get("slides", [])]
     for f in files:
         shutil.copy2(f, out / f.name)
-    for extra in ("seo.json", "titles.json", "factcheck.json", "qa_r0.json", "qa_r1.json", "qa_r2.json", "qa_r3.json", "qa_r4.json"):   # factcheck.json holds the final script
+    for extra in ("seo.json", "titles.json", "factcheck.json", "motion.json", "critic_r0.json", "critic_r1.json", "qa_r0.json", "qa_r1.json", "qa_r2.json", "qa_r3.json", "qa_r4.json"):   # factcheck.json holds the final script
         src = pipeline.item_dir(unit.id) / extra
         if src.exists():
             shutil.copy2(src, out / extra)
