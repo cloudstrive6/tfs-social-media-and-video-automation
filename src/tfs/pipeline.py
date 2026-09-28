@@ -517,7 +517,7 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
     as_script = Script(scenes=[Scene(id=i, chapter="slide", speaker="TEXT", text=f"{s.headline}\n{s.body}",
                                      visual=s.image_prompt) for i, s in enumerate(car.slides)],
                        sources=[s.source for s in car.slides if s.source])
-    fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(as_script, dossier))
+    fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(as_script, dossier, "carousel"))
     if not _gate(item, fc):
         return
     edited = {sc.id: sc.text for sc in fc.script.scenes}

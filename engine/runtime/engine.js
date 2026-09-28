@@ -50,7 +50,10 @@
     const flip = a.facing === "left" ? "scale(-1 1) translate(-300 0)" : "";
     const box = el("div", { class: "actor", style: `position:absolute;left:${x}px;top:${bottom - hPx}px;width:${wPx}px;height:${hPx}px;` +
       `z-index:${a.row === "back" ? 2 : 3}` });
-    box.innerHTML = `<svg viewBox="0 0 300 600" width="${wPx}" height="${hPx}" overflow="visible"><g transform="${flip}">` +
+    // a soft contact shadow under the feet: characters stand on the set instead of floating over it
+    box.appendChild(el("div", { style: `position:absolute;left:${wPx * 0.12}px;width:${wPx * 0.76}px;top:${hPx * 0.955}px;` +
+      `height:${hPx * 0.05}px;border-radius:50%;background:radial-gradient(closest-side, rgba(0,0,0,.34), rgba(0,0,0,0))` }));
+    box.innerHTML += `<svg viewBox="0 0 300 600" width="${wPx}" height="${hPx}" overflow="visible" style="position:relative"><g transform="${flip}">` +
       puppet({ who: a.who, expression: a.expression, seed: a.seed || (i + 1) * 7, label: "" }) + `</g></svg>`;
     if (a.label) {                                          // never mirrored with the figure, never off-frame
       const fs = Math.max(14, wPx * 0.085);
@@ -340,6 +343,9 @@
     const bgName = sc.background || "plain";
     const bg = background(bgName).replace(/id="sky"/g, `id="sky${i}"`).replace(/url\(#sky\)/g, `url(#sky${i})`);
     inner.innerHTML = `<svg viewBox="0 0 1000 1000" width="${1000 * SCALE}" height="${1000 * SCALE}" style="${BG_BOX}">${bg}</svg>`;
+    // cinematic finish: gentle vignette so the eye goes to the middle of the frame
+    if (sc.kind !== "card") scene.appendChild(el("div", { style: "position:absolute;inset:0;pointer-events:none;z-index:5;" +
+      "background:radial-gradient(ellipse 75% 70% at 50% 45%, rgba(0,0,0,0) 60%, rgba(8,10,20,.30) 100%)" }));
     stage.appendChild(scene);
     if (sc.kind === "card") {
       inner.querySelector("svg").style.filter = `blur(${Math.round(W * 0.012)}px)`;   // the set, softened, behind the card

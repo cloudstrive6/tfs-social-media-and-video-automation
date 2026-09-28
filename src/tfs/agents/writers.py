@@ -84,6 +84,11 @@ def hook_pass(item: dict, script: Script) -> HookReview:
 
 def fact_check(script: Script, dossier: str, kind: str = "", hook_text: str = "") -> FactCheck:
     fmt = f"# Format\n{_length(kind)}\n\n" if kind in ("long_form", "vertical") else ""
+    if kind == "carousel":
+        fmt = ("# Format\nInstagram/Facebook carousel: each scene is one slide's headline and body, written in "
+               "original English. Change wording only where a fact, a name or a legal rule requires it, and keep any "
+               "rewrite in natural, complete English sentences (never Taglish, never clipped fragments). Keep "
+               "*asterisk* highlights around the same phrase.\n\n")
     if hook_text:
         fmt += f"# On-screen hook text (check it too; return it corrected in on_screen_hook_text)\n{hook_text}\n\n"
     return llm.structured(

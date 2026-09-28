@@ -13,7 +13,7 @@ unfolds panel by panel.
   dry voice). `body` = what that character says in the speech bubble (≤10 words, English, or "" for none).
   Build to a punchline panel.
 - Second-to-last `layout: text`, `theme: paper`: "Resibo": 2–4 sourced facts, the source on the `source` line.
-- Last `layout: text`: the takeaway + CTA ("I-share sa GC ng pamilya mo.", "Full story sa YouTube").
+- Last `layout: text`: the takeaway + CTA ("Send this to the family group chat.", "The full story is on our YouTube.").
 
 ## `explainer` (cartoon explainer) — history, culture, myths
 6–10 slides, each with one cartoon image above its text. Slide 1 `cover`; middle slides `text` layout:
@@ -40,5 +40,12 @@ Exactly 1 slide, `layout: panel`, `style: satire`: one editorial cartoon that ma
   a labelled silhouette. Money is always pesos: `money_bag`, `money_with_wings` and `peso_banknote` show ₱.
 - `style` is ignored by the engine; set it to `story`.
 
-## Written language: English
+## Written language: original English
+Write every word in English from the start, as a sharp English-language columnist would. This is never a
+translation of Taglish. Each slide reads like one or two complete, natural sentences that flow into the next
+slide, with a clear subject and verb. No telegraphic fragments, no stacked three-word sentences, no slogans
+without meaning. Bad: "World Bank's own count, 2019. No sales yet. You have already paid. Gate by gate."
+Good: "That's the World Bank's own count, and you'll pay at every one of them before you sell a single thing."
+Wrap the ONE key phrase or number of a headline in *asterisks* (e.g. "It takes *13 steps* to open a shop");
+it is drawn on a highlighter. In a body, *asterisks* mark at most one phrase.
 Everything written (descriptions, captions, slide text, on-screen text, card text) is in clear, natural English. Keep Filipino proper nouns and well-known terms as they are (barangay, ayuda, Bayanihan, DPWH, ₱). The narration alone stays Taglish.

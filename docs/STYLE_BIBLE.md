@@ -84,9 +84,15 @@ Why the Philippines is the way it is: history → culture → the systems that c
 | **Myths & fact-checks** | 15% | "Marcos gold", "Philippines almost became a US state", viral fake history |
 
 ### 2.3 Voice
-- **Default language: Taglish** (conversational Manila Taglish, roughly the way Filipino tech/finance YouTubers
+- **Spoken narration: Taglish** (conversational Manila Taglish, roughly the way Filipino tech/finance YouTubers
   speak). English for technical terms, numbers and quotes; Tagalog for emotion, humor and punchlines.
   Configure in `config/channel.yaml` → `language`.
+- **Everything written is original English** (`text_language`): carousels, cards, on-screen text, thumbnails,
+  titles, descriptions and captions. Write it in English from the start, in the same witty Kuya Standard
+  voice, as a native English writer would. Never translate Taglish into English: translated copy comes out
+  stiff and clipped. Use complete, natural sentences that flow into each other, never telegraphic fragments
+  ("No sales yet. You have already paid. Gate by gate."). Filipino proper nouns and everyday terms stay as they
+  are (barangay, sari-sari store, ayuda, DTI, BIR, ₱).
 - Narrator persona: **"Kuya Standard"** — calm, witty, slightly exasperated older brother. Never shouts, never
   preachy. Sarcasm aimed at systems and the powerful, **never** at ordinary Filipinos, regions, ethnic groups,
   religions or the poor.

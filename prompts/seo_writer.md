@@ -35,7 +35,7 @@ no < or >.
 ## Platform captions
 - **YouTube Shorts:** title ≤ 60 chars + 1–2 hashtags incl. #shorts.
 - **Instagram Reel / carousel:** first line is the hook (it's all people see), line breaks, 1 question to
-  drive comments, 3–5 hashtags (mix big + niche PH), CTA "Full story sa YouTube — link sa bio."
+  drive comments, 3–5 hashtags (mix big + niche PH), CTA "The full story is on our YouTube (link in bio)."
 - **Facebook:** conversational, 1–3 short paragraphs, a question, no hashtag spam (≤3).
 - **TikTok:** ≤150 chars, hook + 3–5 hashtags, searchable keywords in the caption (TikTok is a search engine now).
 

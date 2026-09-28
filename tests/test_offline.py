@@ -938,15 +938,18 @@ def test_carousel_slides_keep_text_off_the_art(tmp_path):
 
     art = tmp_path / "art.png"
     Image.new("RGB", compose.band_size("text"), (0, 200, 0)).save(art)
-    out = compose.slide(2, 8, "A headline", "Some body text for the slide.", "Source", "dark", art,
-                        tmp_path / "s.jpg", "@h")
+    out = compose.slide(2, 8, "It takes *13 steps* to open a shop", "Some body text with ₱500 in it.", "Source",
+                        "dark", art, tmp_path / "s.jpg", "@h")
     img = Image.open(out).convert("RGB")
-    band_bottom = compose.TOP + compose.BAND["text"]
+    card_bottom = compose.CARD_Y + compose.ART["text"][1]
     assert img.size == (1080, 1350)
-    # the band is the art at full strength (no wash), and nothing below it is art-coloured
-    assert img.getpixel((540, band_bottom - 20))[1] > 180
-    assert all(img.getpixel((x, band_bottom + 200))[1] < 150 or img.getpixel((x, band_bottom + 200))[0] > 150
-               for x in range(0, 1080, 60))
+    # the card is the art at full strength (no wash), and nothing under it is art-coloured
+    assert img.getpixel((540, card_bottom - 30))[1] > 180
+    greenish = [x for x in range(0, 1080, 30) if img.getpixel((x, card_bottom + 220))[1] > 150
+                and img.getpixel((x, card_bottom + 220))[0] < 100]
+    assert not greenish
+    assert [w for w, e in compose._tokens("It takes *13 steps* to open") if e] == ["13", "steps"]
+    assert [w for w, e in compose._tokens("About ₱30,000 before day one") if e] == ["₱30,000"]
 
 
 def test_threads_text_fits_and_keeps_one_topic_tag():

@@ -33,7 +33,7 @@ catch it now. Return the corrected shot list: the same scene ids and one shot pe
 - `timeline`: ≤4 points of ≤8 words each. `document`: title + the key line first.
 - `map`: `card_lines` are atlas place names (province, city, region, sea, country).
 - No `[S#]` tags anywhere in card text.
-- Card text is in English (translate any Taglish; keep Filipino proper nouns, ₱ amounts and agency names).
+- Card text is natural English written from the facts, never a stiff word-for-word translation of Taglish; keep Filipino proper nouns, ₱ amounts and agency names.
 
 ## Rhythm (verticals)
 - The first shot is an illustration, and it is never a card.

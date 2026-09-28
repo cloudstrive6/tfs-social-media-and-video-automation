@@ -195,7 +195,8 @@ def preflight_carousel(item: dict, car: Carousel, dossier: str) -> Carousel:
 def carousel(item: dict, dossier: str) -> Carousel:
     return llm.structured(
         "carousel_designer",
-        f"Language: {channel()['channel']['language']}\n\n# What the cartoon engine can draw (slide art)\n"
+        "Language: original English (written natively, never translated from Taglish).\n\n"
+        "# What the cartoon engine can draw (slide art)\n"
         f"{_vocabulary()}\n\n{_ctx(item)}\n\n# Dossier\n{dossier}",
         Carousel,
     )
