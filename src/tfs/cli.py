@@ -42,7 +42,7 @@ def main() -> None:
     for name in ("produce", "approve", "reject", "requeue"):
         sp = sub.add_parser(name)
         sp.add_argument("item_id")
-    sub.add_parser("retry", help="re-queue a failed post (id), or 'failed' = every failed post whose slot is ahead"
+    sub.add_parser("retry", help="re-queue a post (id), an item's held/failed posts (item id), or 'failed' = every failed post ahead"
                    ).add_argument("post_id")
     sub.add_parser("auth").add_argument("service", choices=["youtube"])
     a = p.parse_args()
@@ -75,8 +75,12 @@ def main() -> None:
             from .config import now
             if state.enabled():
                 state.pull()
-            ids = ([p["id"] for p in db.posts_with_status("failed")
-                    if datetime.fromisoformat(p["slot_at"]) > now()] if a.post_id == "failed" else [int(a.post_id)])
+            if a.post_id == "failed":
+                ids = [p["id"] for p in db.posts_with_status("failed") if datetime.fromisoformat(p["slot_at"]) > now()]
+            elif a.post_id.isdigit():
+                ids = [int(a.post_id)]
+            else:                                    # an item id: its held (skipped) or failed posts go out again
+                ids = [p["id"] for p in db.posts_for_item(a.post_id) if p["status"] in ("skipped", "failed")]
             for pid in ids:
                 db.retry_post(pid)
             print(f"re-queued posts: {ids}")

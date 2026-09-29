@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       post:
-        description: post id, or "failed"
+        description: post id, an item id (its held/failed posts), or "failed"
         required: true
         default: failed
 concurrency:
