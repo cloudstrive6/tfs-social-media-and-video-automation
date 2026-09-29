@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime, time
 
-from .config import PHT, schedule
+from .config import PHT, paused_kinds, schedule
 
 PREFIX = {"long_form": "long", "vertical": "vert", "carousel": "caro"}
 
@@ -26,7 +26,10 @@ def day_units(d: date) -> list[Unit]:
     platforms at once."""
     sched = schedule()
     units = []
+    paused = paused_kinds()
     for kind, count in sched["daily_production"].items():
+        if kind in paused:
+            continue
         times = sched["slots"].get(kind, [])
         for i in range(min(count, len(times))):
             hh, mm = map(int, times[i].split(":"))

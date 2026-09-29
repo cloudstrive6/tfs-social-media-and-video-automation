@@ -50,6 +50,11 @@ def schedule() -> dict:
     return merged
 
 
+def paused_kinds() -> set[str]:
+    """Production kinds on pause (schedule.yaml `paused`): not planned, produced or posted."""
+    return set(schedule().get("paused") or [])
+
+
 def sources() -> dict:
     return load_yaml("sources")
 

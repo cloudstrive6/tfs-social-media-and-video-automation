@@ -16,6 +16,10 @@
 
 production_lead_hours: 6      # everything is rendered at least this long before its slot
 
+# Kinds on pause: not planned, produced or posted (owner's choice, 29 Sep 2026: videos paused, carousels go on).
+# Remove a kind from the list to resume it.
+paused: [long_form, vertical]
+
 slots:
   long_form: ["21:00"]
   vertical: ["04:30", "12:30", "20:30"]

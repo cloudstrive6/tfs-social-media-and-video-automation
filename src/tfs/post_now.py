@@ -10,7 +10,7 @@ import logging
 
 from . import db, notify, pipeline, state
 from .agents import editor
-from .config import now, schedule
+from .config import now, paused_kinds, schedule
 from .slots import Unit
 
 log = logging.getLogger(__name__)
@@ -32,6 +32,9 @@ def request(kind: str, topic: str, note: str = "") -> str:
 
 def make(kind: str, topic: str, note: str = "") -> str:
     """Inside a run (state already pulled): plan, produce and publish one requested piece."""
+    if kind in paused_kinds():
+        notify.send(f"⏸️ Post-now request not made: {kind} production is paused ({topic[:120]}).")
+        return f"{kind} production is paused"
     request = f"Owner request, published immediately. {note}".strip()
     db.add_topics([{"title": topic.strip(), "momentum_score": 100, "why_now": request}])
     at = now()

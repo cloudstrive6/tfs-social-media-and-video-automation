@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from . import db, notify, qa, slots
 from .agents import editor, packaging, trend_scout, writers
-from .config import channel, data_dir, env, item_dir, media, now, schedule
+from .config import channel, data_dir, env, item_dir, media, now, paused_kinds, schedule
 from .llm import UsageLimitError
 from .media import cards, compose, images, render, tts, vector
 from .models import (Carousel, FactCheck, HookReview, MotionPlan, ReviewReport, Scene, Script, SeoPack, ShotList,
@@ -741,6 +741,9 @@ def _alert_once(key: str, text: str, hours: int = 6) -> None:
 
 def produce(item_id: str) -> None:
     item = db.get_item(item_id)
+    if item["kind"] in paused_kinds():
+        log.info("%s: %s production is paused; left as it is", item_id, item["kind"])
+        return
     d = item_dir(item_id)
     try:
         dossier = cached_text(d / "dossier.md", lambda: writers.research(item))
@@ -924,7 +927,7 @@ def tick(max_produce: int = 1) -> None:
             notify.send(f"⚠️ Trend scout failed: {e}")
     plan_upcoming()
     expire_stale()
-    for item in db.items_with_status("planned", "approved")[:max_produce]:
+    for item in [i for i in db.items_with_status("planned", "approved") if i["kind"] not in paused_kinds()][:max_produce]:
         produce(item["id"])
 
 
@@ -1042,7 +1045,8 @@ def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
                 last_tick = now()
             if _owner_requests():                    # post-now requests jump the queue, between pieces
                 continue
-            todo = [i for i in db.items_with_status("planned", "approved") if i["id"] not in tried]
+            todo = [i for i in db.items_with_status("planned", "approved")
+                    if i["id"] not in tried and i["kind"] not in paused_kinds()]
             if todo and now() - started < budget:
                 tried.add(todo[0]["id"])
                 produce(todo[0]["id"])

@@ -12,8 +12,10 @@ def data_dir(tmp_path, monkeypatch):
     yield tmp_path
 
 
-def test_day_units_match_schedule():
+def test_day_units_match_schedule(monkeypatch):
     from tfs import slots
+
+    monkeypatch.setattr(slots, "paused_kinds", lambda: set())       # the full schedule, nothing on pause
 
     units = slots.day_units(date(2026, 9, 28))
     kinds = [u.kind for u in units]
@@ -27,8 +29,10 @@ def test_day_units_match_schedule():
     assert caro0.anchor.strftime("%H:%M") == "08:30"
 
 
-def test_schedule_override(data_dir):
+def test_schedule_override(data_dir, monkeypatch):
     from tfs import config, slots
+
+    monkeypatch.setattr(slots, "paused_kinds", lambda: set())
 
     (data_dir / "schedule_override.yaml").write_text("slots: {long_form: ['09:00']}\nyoutube_long: ['10:00']\n")
     assert config.schedule()["slots"]["long_form"] == ["09:00"]      # an old per-platform key is ignored
@@ -1158,3 +1162,15 @@ def test_youtube_upload_resumes_after_a_network_drop(monkeypatch, tmp_path):
     video = tmp_path / "v.mp4"
     video.write_bytes(b"x")
     assert youtube.upload(video, "t", "d", ["a"], now() + timedelta(hours=2)) == "vid1"
+
+
+def test_paused_kinds_are_not_planned_or_produced(data_dir, monkeypatch):
+    from tfs import db, pipeline, slots
+
+    monkeypatch.setattr(slots, "paused_kinds", lambda: {"long_form", "vertical"})
+    monkeypatch.setattr(pipeline, "paused_kinds", lambda: {"long_form", "vertical"})
+    assert {u.kind for u in slots.day_units(date(2026, 9, 30))} == {"carousel"}
+    db.upsert_item("2026-09-30-vert0", "vertical", "2026-09-30T04:30:00+08:00", "planned", {})
+    monkeypatch.setattr(pipeline.writers, "research", lambda item: (_ for _ in ()).throw(AssertionError("made")))
+    pipeline.produce("2026-09-30-vert0")                               # paused: left alone, not failed
+    assert db.get_item("2026-09-30-vert0")["status"] == "planned"
