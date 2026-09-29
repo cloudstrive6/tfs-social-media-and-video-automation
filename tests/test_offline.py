@@ -1112,3 +1112,49 @@ def test_loose_props_stand_on_the_ground():
     assert vector._grounded(p(0.4), False).y == 0.7                      # beside a head -> on the floor
     assert vector._grounded(p(0.1), False).y == 0.1                      # sky stays sky
     assert vector._grounded(p(0.4, "rain"), True).y == 0.4               # falling / floating on purpose
+
+
+def test_instagram_publish_waits_out_media_not_available(monkeypatch):
+    from tfs.publish import meta
+
+    calls = []
+
+    def fake(method, path, files=None, **params):
+        calls.append(path)
+        if len(calls) < 3:
+            raise RuntimeError("Graph API 1/media_publish: Media ID is not available")
+        return {"id": "m1"}
+
+    monkeypatch.setattr(meta, "_call", fake)
+    monkeypatch.setattr(meta.time, "sleep", lambda s: None)
+    assert meta._publish("1", "c1") == "m1" and len(calls) == 3
+
+
+def test_youtube_upload_resumes_after_a_network_drop(monkeypatch, tmp_path):
+    from tfs.publish import youtube
+
+    class Req:
+        n = 0
+
+        def next_chunk(self):
+            Req.n += 1
+            if Req.n == 1:
+                raise OSError("EOF occurred in violation of protocol")
+            return None, {"id": "vid1"}
+
+    class Videos:
+        def insert(self, **kw):
+            return Req()
+
+    class Api:
+        def videos(self):
+            return Videos()
+
+    monkeypatch.setattr(youtube, "api", lambda: Api())
+    monkeypatch.setattr(youtube, "MediaFileUpload", lambda *a, **k: None)
+    monkeypatch.setattr(youtube.time, "sleep", lambda s: None)
+    from datetime import timedelta
+    from tfs.config import now
+    video = tmp_path / "v.mp4"
+    video.write_bytes(b"x")
+    assert youtube.upload(video, "t", "d", ["a"], now() + timedelta(hours=2)) == "vid1"

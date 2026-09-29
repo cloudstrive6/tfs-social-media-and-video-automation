@@ -646,10 +646,12 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
     if not done:
         return
     paths, report = done
-    text = "\n".join(f"{i + 1}. {s.headline} — {s.body}" for i, s in enumerate(car.slides))
+    def plain(t: str) -> str:                     # *highlight* marks are for the slide design only
+        return t.replace("*", "")
+    text = "\n".join(f"{i + 1}. {plain(s.headline)} — {plain(s.body)}" for i, s in enumerate(car.slides))
     cached(d / "seo.json", SeoPack,
-           lambda: packaging.seo(item, None, car.slides[0].headline, [], f"\n\n# Slides\n{text}"))
-    _schedule(item, title=car.slides[0].headline, slides=paths, **_qa_note(report))
+           lambda: packaging.seo(item, None, plain(car.slides[0].headline), [], f"\n\n# Slides\n{text}"))
+    _schedule(item, title=plain(car.slides[0].headline), slides=paths, **_qa_note(report))
 
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",

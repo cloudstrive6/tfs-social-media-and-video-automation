@@ -5,15 +5,20 @@ thumbnails.set and videos.list use the regular 10,000 units/day. Our cadence (4 
 """
 from __future__ import annotations
 
+import logging
+import time
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
 from ..config import now, require_env
+
+log = logging.getLogger(__name__)
 
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
@@ -75,9 +80,17 @@ def upload(video: Path, title: str, description: str, tags: list[str], publish_a
     request = api().videos().insert(part="snippet,status", body=body, notifySubscribers=True,
                                     media_body=MediaFileUpload(str(video), mimetype="video/mp4",
                                                                chunksize=16 * 1024 * 1024, resumable=True))
-    response = None
+    response, failures = None, 0
     while response is None:
-        _, response = request.next_chunk()
+        try:
+            _, response = request.next_chunk()
+        except (OSError, ConnectionError, HttpError) as e:     # e.g. an SSL "EOF occurred in violation of protocol"
+            status = getattr(getattr(e, "resp", None), "status", 500)
+            failures += 1
+            if failures > 5 or (isinstance(e, HttpError) and int(status) < 500):
+                raise
+            log.warning("YouTube upload interrupted (%s); resuming in %ds", e, 10 * failures)
+            time.sleep(10 * failures)                          # the resumable upload continues where it stopped
     video_id = response["id"]
     if thumbnail:
         api().thumbnails().set(videoId=video_id, media_body=MediaFileUpload(str(thumbnail))).execute()

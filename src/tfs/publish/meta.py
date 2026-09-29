@@ -47,6 +47,19 @@ def _wait_ready(container_id: str, timeout_s: int = 900) -> None:
     raise TimeoutError(f"IG container {container_id} not ready after {timeout_s}s")
 
 
+def _publish(ig: str, container: str, attempts: int = 5) -> str:
+    """Publish a finished container. Instagram sometimes answers "Media ID is not available" for a few seconds
+    after the container reports FINISHED (seen on a carousel): wait and try again rather than fail the post."""
+    for attempt in range(attempts):
+        try:
+            return _call("POST", f"{ig}/media_publish", creation_id=container)["id"]
+        except RuntimeError as e:
+            if attempt == attempts - 1 or "not available" not in str(e).lower() and "not ready" not in str(e).lower():
+                raise
+            time.sleep(15 * (attempt + 1))
+    raise AssertionError("unreachable")
+
+
 def _page_photo(path: Path, published: bool = False) -> str:
     with path.open("rb") as f:
         return _call("POST", f"{require_env('META_PAGE_ID')}/photos", files={"source": f},
@@ -105,7 +118,7 @@ def ig_reel(video: Path, caption: str) -> str:
             container = _call("POST", f"{ig}/media", media_type="REELS", video_url=url, caption=caption,
                               share_to_feed="true")["id"]
             _wait_ready(container)
-            return _call("POST", f"{ig}/media_publish", creation_id=container)["id"]
+            return _publish(ig, container)
         finally:
             from .. import state
             try:
@@ -121,7 +134,7 @@ def ig_reel(video: Path, caption: str) -> str:
     if up.status_code >= 400:
         raise RuntimeError(f"IG resumable upload failed: {up.status_code} {up.text[:300]}")
     _wait_ready(container)
-    return _call("POST", f"{ig}/media_publish", creation_id=container)["id"]
+    return _publish(ig, container)
 
 
 def ig_carousel(images: list[Path], caption: str) -> str:
@@ -130,7 +143,7 @@ def ig_carousel(images: list[Path], caption: str) -> str:
                 for p in images[:10]]
     container = _call("POST", f"{ig}/media", media_type="CAROUSEL", children=",".join(children), caption=caption)["id"]
     _wait_ready(container)
-    return _call("POST", f"{ig}/media_publish", creation_id=container)["id"]
+    return _publish(ig, container)
 
 
 # ---------- Facebook Page ----------
