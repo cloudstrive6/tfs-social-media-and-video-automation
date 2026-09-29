@@ -1174,3 +1174,23 @@ def test_paused_kinds_are_not_planned_or_produced(data_dir, monkeypatch):
     monkeypatch.setattr(pipeline.writers, "research", lambda item: (_ for _ in ()).throw(AssertionError("made")))
     pipeline.produce("2026-09-30-vert0")                               # paused: left alone, not failed
     assert db.get_item("2026-09-30-vert0")["status"] == "planned"
+
+
+def test_facebook_reel_is_not_posted_twice(monkeypatch, tmp_path):
+    from datetime import datetime, timezone
+    from tfs.publish import meta
+
+    monkeypatch.setenv("META_PAGE_ID", "p1")
+    posted = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+0000")
+    calls = []
+
+    def fake(method, path, files=None, **params):
+        calls.append((method, params.get("upload_phase")))
+        if method == "GET":
+            return {"data": [{"id": "r9", "description": "Jeepney caption", "created_time": posted}]}
+        raise AssertionError("must not upload again")
+
+    monkeypatch.setattr(meta, "_call", fake)
+    video = tmp_path / "v.mp4"
+    video.write_bytes(b"x")
+    assert meta.fb_reel(video, "Jeepney caption") == "r9" and calls == [("GET", None)]

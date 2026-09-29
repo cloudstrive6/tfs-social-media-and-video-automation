@@ -147,16 +147,43 @@ def ig_carousel(images: list[Path], caption: str) -> str:
 
 
 # ---------- Facebook Page ----------
+def _existing_reel(page: str, description: str, hours: int = 12) -> str | None:
+    """A reel with this caption posted in the last few hours (a publish that errored but went through)."""
+    from datetime import datetime, timedelta, timezone
+    try:
+        reels = _call("GET", f"{page}/video_reels", fields="id,description,created_time", limit="15").get("data", [])
+    except RuntimeError:
+        return None
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    for r in reels:
+        created = datetime.strptime(r.get("created_time", "1970-01-01T00:00:00+0000"), "%Y-%m-%dT%H:%M:%S%z")
+        if created >= since and (r.get("description") or "").strip()[:150] == description.strip()[:150]:
+            return r["id"]
+    return None
+
+
 def fb_reel(video: Path, description: str) -> str:
     page = require_env("META_PAGE_ID")
+    existing = _existing_reel(page, description)
+    if existing:                                  # already up (an earlier attempt errored after publishing)
+        return existing
     start = _call("POST", f"{page}/video_reels", upload_phase="start")
     data = video.read_bytes()
     up = requests.post(start["upload_url"], data=data, timeout=1800, headers={
         "Authorization": f"OAuth {_token()}", "offset": "0", "file_size": str(len(data))})
     up.raise_for_status()
-    _call("POST", f"{page}/video_reels", upload_phase="finish", video_id=start["video_id"],
-          video_state="PUBLISHED", description=description)
-    return start["video_id"]
+    for attempt in range(3):          # Meta sometimes answers "An unknown error occurred" to the finish step
+        try:
+            _call("POST", f"{page}/video_reels", upload_phase="finish", video_id=start["video_id"],
+                  video_state="PUBLISHED", description=description)
+            return start["video_id"]
+        except RuntimeError as e:
+            if "unknown error" not in str(e).lower() or attempt == 2:
+                raise
+            time.sleep(30 * (attempt + 1))
+            if _existing_reel(page, description):   # it went through after all
+                return start["video_id"]
+    raise AssertionError("unreachable")
 
 
 def fb_photos(images: list[Path], message: str) -> str:
