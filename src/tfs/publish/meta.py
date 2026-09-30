@@ -35,6 +35,22 @@ def _call(method: str, path: str, files: dict | None = None, **params) -> dict:
     return data
 
 
+TRANSIENT = ("unknown error", "unexpected error", "retry your request", "temporarily unavailable", "please try again")
+
+
+def _create(path: str, attempts: int = 4, **params) -> dict:
+    """Create a media container, retrying Meta's temporary errors. Safe to repeat: an unused container is never
+    published and simply expires."""
+    for attempt in range(attempts):
+        try:
+            return _call("POST", path, **params)
+        except RuntimeError as e:
+            if attempt == attempts - 1 or not any(t in str(e).lower() for t in TRANSIENT):
+                raise
+            time.sleep(10 * (attempt + 1))
+    raise AssertionError("unreachable")
+
+
 def _wait_ready(container_id: str, timeout_s: int = 900) -> None:
     deadline = time.time() + timeout_s
     while time.time() < deadline:
@@ -139,9 +155,9 @@ def ig_reel(video: Path, caption: str) -> str:
 
 def ig_carousel(images: list[Path], caption: str) -> str:
     ig = require_env("META_IG_USER_ID")
-    children = [_call("POST", f"{ig}/media", image_url=_hosted_image_url(p), is_carousel_item="true")["id"]
+    children = [_create(f"{ig}/media", image_url=_hosted_image_url(p), is_carousel_item="true")["id"]
                 for p in images[:10]]
-    container = _call("POST", f"{ig}/media", media_type="CAROUSEL", children=",".join(children), caption=caption)["id"]
+    container = _create(f"{ig}/media", media_type="CAROUSEL", children=",".join(children), caption=caption)["id"]
     _wait_ready(container)
     return _publish(ig, container)
 

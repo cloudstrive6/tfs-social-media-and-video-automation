@@ -58,6 +58,22 @@ def _call(method: str, path: str, **params) -> dict:
     return data
 
 
+TRANSIENT = ("unknown error", "unexpected error", "retry your request", "temporarily unavailable", "please try again")
+
+
+def _create(path: str, attempts: int = 4, **params) -> dict:
+    """Create a media container, retrying Meta's temporary errors. Safe to repeat: an unused container is never
+    published and simply expires."""
+    for attempt in range(attempts):
+        try:
+            return _call("POST", path, **params)
+        except RuntimeError as e:
+            if attempt == attempts - 1 or not any(t in str(e).lower() for t in TRANSIENT):
+                raise
+            time.sleep(10 * (attempt + 1))
+    raise AssertionError("unreachable")
+
+
 def _wait_ready(container: str, timeout_s: int = 600) -> None:
     deadline = time.time() + timeout_s
     while time.time() < deadline:
@@ -77,16 +93,16 @@ def carousel(images: list[Path], text: str) -> str:
     user = env("THREADS_USER_ID") or "me"
     items = []
     for path in images[:MAX_ITEMS]:
-        item = _call("POST", f"{user}/threads", media_type="IMAGE", is_carousel_item="true",
+        item = _create(f"{user}/threads", media_type="IMAGE", is_carousel_item="true",
                      image_url=_hosted_image_url(path))["id"]
         items.append(item)
     for item in items:
         _wait_ready(item)
     if len(items) == 1:                                     # a single slide is a plain image post
-        container = _call("POST", f"{user}/threads", media_type="IMAGE", text=text,
+        container = _create(f"{user}/threads", media_type="IMAGE", text=text,
                           image_url=_hosted_image_url(images[0]))["id"]
     else:
-        container = _call("POST", f"{user}/threads", media_type="CAROUSEL", children=",".join(items),
+        container = _create(f"{user}/threads", media_type="CAROUSEL", children=",".join(items),
                           text=text)["id"]
     _wait_ready(container)
     return _call("POST", f"{user}/threads_publish", creation_id=container)["id"]

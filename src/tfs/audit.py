@@ -124,7 +124,7 @@ def audit(item_ids: list[str]) -> list[str]:
                 elif platform == "tiktok_carousel":
                     sent, feed = _postforme(f"{item_id}:{platform}")
                     got = {"sent to Post for Me": _match(local, sent)}
-                    if feed:
+                    if len(feed) > 1:                  # the feed often lists only the cover: no order to check
                         got["TikTok feed"] = _match(local, feed)
                 else:
                     continue

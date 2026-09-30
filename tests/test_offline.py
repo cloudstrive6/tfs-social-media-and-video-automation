@@ -1211,3 +1211,45 @@ def test_audit_matches_slides_by_image_not_by_file(tmp_path, monkeypatch):
     monkeypatch.setattr(audit, "_fetch", lambda url: served.get(url))
     assert audit._match(local, ["u0", "u1", "u2"]) == ["1", "2", "3"]
     assert audit._match(local, ["u2", "u0", "u1", "missing"]) == ["3", "1", "2", "x"]
+
+
+def test_postforme_puts_carousel_slides_back_in_order(monkeypatch):
+    from tfs.publish import postforme
+
+    stored = {"media": [{"url": u} for u in ("c", "a", "b")]}      # Post for Me's scrambled copy
+    calls = []
+
+    def fake(method, path, platform=None, **kw):
+        calls.append(method)
+        if method == "PUT":
+            stored["media"] = kw["json"]["media"]
+        return stored
+
+    monkeypatch.setattr(postforme, "_call", fake)
+    body = {"media": [{"url": u} for u in ("a", "b", "c")]}
+    postforme._ensure_order("p1", body, "tiktok")
+    assert [m["url"] for m in stored["media"]] == ["a", "b", "c"] and "PUT" in calls
+
+    stored["media"] = [{"url": u} for u in ("b", "a", "c")]
+    monkeypatch.setattr(postforme, "_call", lambda m, path, platform=None, **kw:
+                        calls.append(m) or {"media": [{"url": u} for u in ("b", "a", "c")]})
+    with pytest.raises(RuntimeError, match="cancelled"):              # won't stay fixed: cancel, don't post
+        postforme._ensure_order("p1", body, "tiktok")
+    assert calls[-1] == "DELETE"
+
+
+def test_meta_container_creation_retries_temporary_errors(monkeypatch):
+    from tfs.publish import meta, threads
+
+    for mod in (meta, threads):
+        tries = []
+
+        def fake(method, path, files=None, _t=tries, **params):
+            _t.append(1)
+            if len(_t) < 3:
+                raise RuntimeError("Graph API x/media: An unknown error has occurred.")
+            return {"id": "c1"}
+
+        monkeypatch.setattr(mod, "_call", fake)
+        monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+        assert mod._create("1/media", image_url="u")["id"] == "c1" and len(tries) == 3

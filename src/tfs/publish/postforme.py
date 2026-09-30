@@ -7,7 +7,7 @@ Post for Me also hosts the media and holds each post until `scheduled_at`.
 from __future__ import annotations
 
 import mimetypes
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
 
@@ -105,9 +105,33 @@ def create_post(platform_key: str, caption: str, media: list[Path], slot: dateti
         "platform_configurations": {platform: config},
         "external_id": external_id,
     }
+    if len(items) > 1:
+        for it in items:
+            it["skip_processing"] = True           # our slides already meet the specs; processing reordered them
+        if slot <= now():                          # a few minutes' grace to check the order before it goes out
+            slot = now() + timedelta(minutes=4)
     if slot > now():
         body["scheduled_at"] = slot.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return _call("POST", "/social-posts", platform, json=body)["id"]
+    post_id = _call("POST", "/social-posts", platform, json=body)["id"]
+    if len(items) > 1:
+        _ensure_order(post_id, body, platform)
+    return post_id
+
+
+def _ensure_order(post_id: str, body: dict, platform: str) -> None:
+    """Post for Me once held a TikTok carousel's slides as 9, 10, 1 ... 8. Read the post back; if the images are
+    ours but out of order, put them back in order (it hasn't gone out yet). If it can't be fixed, cancel it
+    rather than publish a scrambled carousel."""
+    want = [m["url"] for m in body["media"]]
+    for _ in range(2):
+        got = [m.get("url") for m in _call("GET", f"/social-posts/{post_id}", platform).get("media", [])]
+        if got == want or set(got) != set(want):   # right, or rewritten URLs we can't compare: leave it
+            return
+        _call("PUT", f"/social-posts/{post_id}", platform, json=body)
+    got = [m.get("url") for m in _call("GET", f"/social-posts/{post_id}", platform).get("media", [])]
+    if got != want:
+        _call("DELETE", f"/social-posts/{post_id}", platform)
+        raise RuntimeError("Post for Me kept the slides out of order; the post was cancelled, not published")
 
 
 def results(post_id: str, platform_key: str) -> list[dict]:
