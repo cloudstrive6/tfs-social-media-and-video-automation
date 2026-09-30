@@ -71,10 +71,15 @@ def _threads(media_id: str) -> list[str]:
             .get("data", [])]
 
 
-def _postforme(post_id: str) -> tuple[list[str], list[str]]:
-    """(what Post for Me was sent, what TikTok's feed reports) as image URLs."""
+def _postforme(external_id: str) -> tuple[list[str], list[str]]:
+    """(what Post for Me was sent, what TikTok's feed reports) as image URLs. Found by our external id, since
+    the stored remote id becomes TikTok's own once the post is confirmed."""
     from .publish import postforme
-    sent = [m.get("url", "") for m in postforme._call("GET", f"/social-posts/{post_id}", "tiktok").get("media", [])]
+    posts = postforme._call("GET", "/social-posts", "tiktok", params={"external_id": external_id}).get("data", [])
+    if not posts:
+        raise RuntimeError(f"no Post for Me post with external id {external_id}")
+    post_id = posts[0]["id"]
+    sent = [m.get("url", "") for m in posts[0].get("media", [])]
     feed = []
     try:
         account = postforme.account_id("tiktok")
@@ -106,7 +111,8 @@ def audit(item_ids: list[str]) -> list[str]:
         for post in db.posts_for_item(item_id):
             rid, platform = post.get("remote_id"), post["platform"]
             if not rid or post["status"] not in ("published", "submitted"):
-                lines.append(f"  {platform:<19} {post['status']}")
+                lines.append(f"  {platform:<19} {post['status']}"
+                             + (f": {post['error'][:160]}" if post.get("error") else ""))
                 continue
             try:
                 if platform == "instagram_carousel":
@@ -116,7 +122,7 @@ def audit(item_ids: list[str]) -> list[str]:
                 elif platform == "threads_carousel":
                     got = {"published": _match(local, _threads(rid))}
                 elif platform == "tiktok_carousel":
-                    sent, feed = _postforme(rid)
+                    sent, feed = _postforme(f"{item_id}:{platform}")
                     got = {"sent to Post for Me": _match(local, sent)}
                     if feed:
                         got["TikTok feed"] = _match(local, feed)
