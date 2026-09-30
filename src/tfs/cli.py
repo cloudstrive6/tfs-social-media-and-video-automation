@@ -22,6 +22,8 @@ def main() -> None:
     sub.add_parser("plan", help="plan upcoming slots now")
     sub.add_parser("analyze", help="weekly growth analysis + agent notes + schedule retune")
     sub.add_parser("status", help="show items and posts")
+    sub.add_parser("audit-carousels", help="check each platform shows the slides in the right order").add_argument(
+        "items", nargs="*", default=[])
     sub.add_parser("creative-review", help="Creative Director now: review notes -> standing notes for the designers")
     sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
     sub.add_parser("sample", help="produce one piece now for review; never scheduled or posted").add_argument(
@@ -86,6 +88,12 @@ def main() -> None:
             print(f"re-queued posts: {ids}")
             if state.enabled():
                 state.push()
+        case "audit-carousels":
+            from . import audit, state
+            if state.enabled():
+                state.pull()
+            ids = a.items or os.environ.get("TFS_SAMPLE_TOPIC", "").split() or audit.recent_carousels()
+            print("\n".join(audit.audit(ids)))
         case "creative-review":
             from . import state
             from .agents import creative

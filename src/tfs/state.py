@@ -81,6 +81,7 @@ def pull() -> None:
         _download(f"{PREFIX}{DB}")
     for key in keys:                                # notes, schedule override, tokens
         if ("/" not in key[len(PREFIX):] or key.startswith(f"{PREFIX}analyst_notes/")
+                or key.startswith(f"{PREFIX}creative_notes/")          # the Creative Director's standing notes
                 or key.startswith(f"{PREFIX}library/")):                 # music + sound effects library
             if key != f"{PREFIX}{DB}":
                 _download(key)
@@ -90,6 +91,14 @@ def pull() -> None:
         if parts[0] == "items" and len(parts) > 2 and parts[1] in active:
             _download(key)
     log.info("state: pulled %d files (%d active items)", len(_seen), len(active))
+
+
+def pull_item(item_id: str) -> int:
+    """Download one item's files (e.g. the slides of a published carousel, which pull() skips)."""
+    keys = _keys(f"{PREFIX}items/{item_id}/")
+    for key in keys:
+        _download(key)
+    return len(keys)
 
 
 def _snapshot() -> Path:

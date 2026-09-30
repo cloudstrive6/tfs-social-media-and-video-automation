@@ -1,0 +1,17 @@
+# Actions -> audit -> Run workflow: check that Instagram, Facebook, Threads and TikTok show each recent carousel's
+# slides in the right order. Read-only (restores the state, changes nothing), so it needs no state lock.
+name: audit
+on:
+  workflow_dispatch:
+    inputs:
+      items:
+        description: carousel item ids, space-separated (blank = the 6 most recent)
+        required: false
+        default: ""
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: audit-carousels
+      topic: ${{ inputs.items }}
+    secrets: inherit

@@ -1194,3 +1194,20 @@ def test_facebook_reel_is_not_posted_twice(monkeypatch, tmp_path):
     video = tmp_path / "v.mp4"
     video.write_bytes(b"x")
     assert meta.fb_reel(video, "Jeepney caption") == "r9" and calls == [("GET", None)]
+
+
+def test_audit_matches_slides_by_image_not_by_file(tmp_path, monkeypatch):
+    from PIL import Image, ImageDraw
+
+    from tfs import audit
+
+    imgs = []
+    for i in range(3):
+        im = Image.new("RGB", (400, 500), (240, 240, 240))
+        ImageDraw.Draw(im).rectangle([40 + i * 110, 60, 120 + i * 110, 440], fill=(20, 20, 20))
+        imgs.append(im)
+    local = [audit._hash(im) for im in imgs]
+    served = {f"u{i}": imgs[i].resize((200, 250)) for i in range(3)}       # re-encoded smaller, like a CDN
+    monkeypatch.setattr(audit, "_fetch", lambda url: served.get(url))
+    assert audit._match(local, ["u0", "u1", "u2"]) == ["1", "2", "3"]
+    assert audit._match(local, ["u2", "u0", "u1", "missing"]) == ["3", "1", "2", "x"]
