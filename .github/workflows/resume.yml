@@ -1,0 +1,32 @@
+# One-off: resumes production after the owner's pause (paused 1 Oct 2026 to save Claude Max usage).
+# Fires Mon 5 Oct 2026 08:00 NZDT = Sun 4 Oct 19:00 UTC (GitHub may start scheduled runs a few minutes late),
+# switches `run` and `post-now` back on, starts a run, tells Telegram, then switches itself off.
+# Run it by hand (Actions -> resume -> Run workflow) to resume early.
+name: resume
+on:
+  schedule:
+    - cron: "0 19 4 10 *"
+  workflow_dispatch:
+permissions:
+  actions: write
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Only in 2026 (a yearly cron must never resume a later pause)
+        if: github.event_name == 'schedule'
+        run: test "$(date -u +%Y)" = "2026"
+      - run: gh workflow enable run.yml && gh workflow enable post-now.yml
+      - run: gh workflow run run.yml
+      - name: Tell Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -o /dev/null "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=▶️ The Filipino Standard: production resumed (reels/Shorts and carousels; long-form stays paused)."
+      - run: gh workflow disable resume.yml
