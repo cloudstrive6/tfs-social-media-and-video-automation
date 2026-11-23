@@ -43,9 +43,9 @@ def is_ncr(p):
     return "metropolitan manila" in n or "national capital" in n
 ncr_xy = []
 for i, p in enumerate(provs):
-    rings = []
+    rings = []                                  # outer ring of each polygon only: inner rings are lakes and holes
     for r in p["polys"]:
-        rings += r if r and isinstance(r[0][0], list) else [r]
+        rings.append(r[0] if r and isinstance(r[0][0], list) else r)
     ncr = is_ncr(p)
     h = 0.32 if ncr else 0.06
     for ring in rings:
@@ -60,6 +60,7 @@ for i, p in enumerate(provs):
         ext = bmesh.ops.extrude_face_region(bm, geom=[f])
         top = [v for v in ext["geom"] if isinstance(v, bmesh.types.BMVert)]
         bmesh.ops.translate(bm, verts=top, vec=(0, 0, h))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])   # every face outward, so no black backfaces
         bm.to_mesh(me); bm.free()
         ob = bpy.data.objects.new(f"p{i}", me); sc.collection.objects.link(ob)
         ob.data.materials.append(brick if ncr else land)
