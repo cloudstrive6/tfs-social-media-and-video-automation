@@ -47,7 +47,7 @@ for i, p in enumerate(provs):
     for r in p["polys"]:
         rings.append(r[0] if r and isinstance(r[0][0], list) else r)
     ncr = is_ncr(p)
-    h = 0.32 if ncr else 0.06
+    h = 0.32 if ncr else 0.06 + (i % 5) * 0.0008   # tiny per-province step: enclave cities (Baguio, Angeles, Naga) no longer z-fight
     for ring in rings:
         if len(ring) < 4: continue
         me = bpy.data.meshes.new(f"p{i}"); bm = bmesh.new()
@@ -60,6 +60,7 @@ for i, p in enumerate(provs):
         ext = bmesh.ops.extrude_face_region(bm, geom=[f])
         top = [v for v in ext["geom"] if isinstance(v, bmesh.types.BMVert)]
         bmesh.ops.translate(bm, verts=top, vec=(0, 0, h))
+        bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method="BEAUTY", ngon_method="EAR_CLIP")  # clean concave caps
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])   # every face outward, so no black backfaces
         bm.to_mesh(me); bm.free()
         ob = bpy.data.objects.new(f"p{i}", me); sc.collection.objects.link(ob)
