@@ -1,0 +1,44 @@
+name: Blender hero shot (Modal GPU)
+# Manual only. Renders a Blender scene script on a Modal L4 GPU (Bryce approved Modal on 2026-11-24)
+# and attaches the encoded MP4 plus the cost line as an artifact. Nothing is published.
+on:
+  workflow_dispatch:
+    inputs:
+      script: { description: "Scene script", default: "blender/hero_ph_push.py" }
+      geo: { description: "Geo JSON", default: "assets/geo/ph_provinces.json" }
+      frames: { description: "Frames", default: "96" }
+      chunks: { description: "Parallel containers", default: "3" }
+      samples: { description: "Cycles samples", default: "24" }
+      fps: { description: "Frames per second", default: "24" }
+      secs: { description: "Seconds", default: "4" }
+concurrency: { group: blender-hero, cancel-in-progress: false }
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -q modal==1.6.4 && sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg
+      - name: Render on Modal
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: |
+          modal run modal_apps/tfs_blender.py --script "${{ inputs.script }}" --geo "${{ inputs.geo }}" \
+            --frames ${{ inputs.frames }} --chunks ${{ inputs.chunks }} --samples ${{ inputs.samples }} \
+            --fps ${{ inputs.fps }} --secs ${{ inputs.secs }} --out out/frames | tee out-log.txt
+      - name: Encode
+        run: |
+          mkdir -p out
+          ffmpeg -y -loglevel error -framerate ${{ inputs.fps }} -i out/frames/f%04d.png -c:v libx264 -crf 12 -pix_fmt yuv420p out/hero.mp4
+          cp out-log.txt out/
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blender-hero
+          path: |
+            out/hero.mp4
+            out/out-log.txt
+          retention-days: 14
