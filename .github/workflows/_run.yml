@@ -72,7 +72,7 @@ jobs:
       B2_BUCKET: ${{ secrets.B2_BUCKET }}
       B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
       B2_APP_KEY: ${{ secrets.B2_APP_KEY }}
-      B2_ARCHIVE_KEY_ID: ${{ secrets.B2_ARCHIVE_KEY_ID }}       # shared studio-render-archive bucket (final renders)
+      B2_ARCHIVE_KEY_ID: ${{ secrets.B2_ARCHIVE_KEY_ID }}       # final-render archive bucket (render_archive.py)
       B2_ARCHIVE_APP_KEY: ${{ secrets.B2_ARCHIVE_APP_KEY }}
       B2_ARCHIVE_BUCKET: ${{ secrets.B2_ARCHIVE_BUCKET }}
       B2_ARCHIVE_ENDPOINT: ${{ secrets.B2_ARCHIVE_ENDPOINT }}

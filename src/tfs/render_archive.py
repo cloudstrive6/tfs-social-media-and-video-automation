@@ -1,8 +1,9 @@
 """Permanent copy of every final TFS render in the shared studio render archive on Backblaze B2.
 
 Bryce, 2026-11-24: "for all the final/approved renders/versions of the video, be sure to save a copy in B2 Backblaze as
-we might be able to use them in the future". One private bucket for every channel (studio-render-archive) with the same
-layout as the PC helper D:/AI-Video/archive/b2_archive.py:
+we might be able to use them in the future". The bucket is whatever B2_ARCHIVE_BUCKET names (on 2026-11-24 Bryce was
+still choosing one shared studio bucket or one bucket per channel), with the same layout as the PC helper
+D:/AI-Video/archive/b2_archive.py:
     tfs/<longform|shorts>/<YYYY-MM>/<item>.mp4               the final video
     tfs/<longform|shorts>/<YYYY-MM>/<item>__thumbnail.jpg    extras (long-form thumbnail)
     tfs/<longform|shorts>/<YYYY-MM>/<item>.mp4.json          sidecar: title, ids, platforms, size, SHA-1, date
