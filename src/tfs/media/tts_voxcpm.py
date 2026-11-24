@@ -218,8 +218,8 @@ def map_words(script_text: str, heard: list[tuple[str, float, float]], dur: floa
 
 # ---------------------------------------------------------------- outside calls (mocked in tests)
 def _transcribe(path: Path) -> tuple[str, list[tuple[str, float, float]]]:
-    from ..qa import _whisper, cfg                         # same faster-whisper model and language as the proofreader
-    segments, _ = _whisper().transcribe(str(path), language=cfg().get("whisper_language") or None,
+    from ..qa import _whisper, audio16k, cfg               # same faster-whisper model and language as the proofreader
+    segments, _ = _whisper().transcribe(audio16k(path), language=cfg().get("whisper_language") or None,
                                         word_timestamps=True, beam_size=5)
     words = [(w.word.strip(), w.start, w.end) for seg in segments for w in (seg.words or [])]
     return " ".join(w for w, _, _ in words), words

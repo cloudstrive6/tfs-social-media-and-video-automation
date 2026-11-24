@@ -79,8 +79,20 @@ def proper_nouns(script: Script) -> str:
     return ", ".join(sorted(names))[:600]
 
 
+def audio16k(media: Path):
+    """16 kHz mono float32 via ffmpeg. faster-whisper's own decoder goes through PyAV, whose newer releases dropped
+    an argument it passes (`metadata_errors`) and broke the cloud dry run on 2026-11-24; an array avoids PyAV."""
+    import subprocess
+
+    import numpy as np
+
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(media), "-ac", "1", "-ar", "16000", "-f", "f32le", "-"],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, dtype=np.float32).copy()
+
+
 def transcribe(media: Path, hints: str = "") -> list[tuple[str, float, float]]:
-    segments, _ = _whisper().transcribe(str(media), language=cfg().get("whisper_language") or None,
+    segments, _ = _whisper().transcribe(audio16k(media), language=cfg().get("whisper_language") or None,
                                         word_timestamps=True, beam_size=5, hotwords=hints or None)
     return [(w.word.strip(), w.start, w.end) for seg in segments for w in (seg.words or [])]
 
