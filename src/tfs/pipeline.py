@@ -18,6 +18,7 @@ from . import db, notify, qa, slots
 from .agents import editor, packaging, trend_scout, writers
 from .config import channel, data_dir, env, item_dir, media, now, paused_kinds, schedule
 from .llm import UsageLimitError
+from .media.tts_voxcpm import VoiceDeferred
 from .media import cards, compose, images, render, tts, vector
 from .models import (Carousel, FactCheck, HookReview, MotionPlan, ReviewReport, Scene, Script, SeoPack, ShotList,
                      ThumbnailPlan, TitlePlan, VisualCritique)
@@ -410,7 +411,11 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
     vertical = size[1] > size[0]
     work = d / "work"
     work.mkdir(parents=True, exist_ok=True)
-    clips = tts.synthesize(_voiced(script, d), d / "audio")
+    vcfg = channel()["tts"].get("voxcpm", {})              # local GPU first, Modal after this deadline
+    deadline = datetime.fromisoformat(item["anchor_at"]) - timedelta(hours=float(vcfg.get("local_until_hours_before_slot", 5)))
+    if item["id"].startswith("sample-"):                     # dry runs never wait for the local GPU
+        deadline = now()
+    clips = tts.synthesize(_voiced(script, d), d / "audio", item=item["id"], deadline=deadline)
     voice, starts, total, chapter_cards = atlas_plan.assemble(clips, script.scenes, kind)
     fixes = _fixes(d)                                 # review-team notes on a finished render re-plan the whole video
     done = fixes.setdefault("replanned", {})
@@ -868,11 +873,12 @@ def _alert_once(key: str, text: str, hours: int = 6) -> None:
     marker.write_text(now().isoformat(timespec="seconds"))
 
 
-def produce(item_id: str) -> None:
+def produce(item_id: str) -> bool:
+    """Returns False when the item is waiting (local narration, paused kind), so the run moves on to the next one."""
     item = db.get_item(item_id)
     if item["kind"] in paused_kinds():
         log.info("%s: %s production is paused; left as it is", item_id, item["kind"])
-        return
+        return False
     d = item_dir(item_id)
     try:
         dossier = cached_text(d / "dossier.md", lambda: writers.research(item))
@@ -880,6 +886,9 @@ def produce(item_id: str) -> None:
             _produce_carousel(item, d, dossier)
         else:
             _produce_video(item, d, dossier)
+    except VoiceDeferred as e:                       # the local GPU worker has the narration; try again next run
+        log.info("waiting for local narration: %s", e)
+        return False
     except UsageLimitError as e:
         log.warning("usage limit reached; %s will retry on the next run (%s)", item_id, e)
         _alert_once("limit", f"⏸️ Production paused: {str(e)[:300]}\n"
@@ -889,6 +898,7 @@ def produce(item_id: str) -> None:
         log.exception("production failed for %s", item_id)
         db.set_status(item_id, "failed", str(e)[:2000])
         notify.send(f"❌ Production failed: {item_id}: {e}")
+    return True
 
 
 # ---------------------------------------------------------------- publishing
@@ -1061,8 +1071,11 @@ def tick(max_produce: int = 1) -> None:
             notify.send(f"⚠️ Trend scout failed: {e}")
     plan_upcoming()
     expire_stale()
-    for item in [i for i in db.items_with_status("planned", "approved") if i["kind"] not in paused_kinds()][:max_produce]:
-        produce(item["id"])
+    done = 0
+    for item in [i for i in db.items_with_status("planned", "approved") if i["kind"] not in paused_kinds()]:
+        if done >= max_produce:
+            break
+        done += 1 if produce(item["id"]) else 0       # an item waiting for local narration does not block the queue
 
 
 # ---------------------------------------------------------------- one GitHub Actions run

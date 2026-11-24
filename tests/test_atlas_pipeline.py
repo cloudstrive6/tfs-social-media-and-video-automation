@@ -24,7 +24,7 @@ def test_atlas_long_form_end_to_end(tmp_path, monkeypatch):
                                   text="Wala pang presidente na natanggal: zero.", visual="")],
                     sources=[])
 
-    def fake_tts(scenes, out_dir):
+    def fake_tts(scenes, out_dir, item=None, deadline=None):
         out_dir.mkdir(parents=True, exist_ok=True)
         clips = []
         for sc in scenes:
@@ -54,7 +54,8 @@ def test_atlas_long_form_end_to_end(tmp_path, monkeypatch):
     monkeypatch.setattr(broll, "search", lambda q, limit=20: [])           # nothing licensed: type card fallback
     monkeypatch.setattr(atlas, "render", fake_render)
     monkeypatch.setattr(pipeline, "_dossier", lambda d: "")
-    starts, shots = pipeline._atlas_video({"id": "2026-12-01-long0", "kind": "long_form"}, d, script, (1920, 1080))
+    starts, shots = pipeline._atlas_video({"id": "2026-12-01-long0", "kind": "long_form", "anchor_at": "2026-12-01T19:15:00+08:00"},
+                                         d, script, (1920, 1080))
 
     kinds = [s["k"] for s in shots]
     assert kinds[:3] == ["map", "map", "bigtext"]                          # traced map, the scene map, then type                                  # no licensed photo -> type, never unlicensed

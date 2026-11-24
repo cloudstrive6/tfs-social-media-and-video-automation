@@ -22,7 +22,8 @@
 # Bryce flips it to true when he says go.
 live: false
 
-production_lead_hours: 6      # everything is rendered at least this long before its first platform slot
+production_lead_hours: 10     # production starts this long before the first slot, so the local GPU worker gets about
+                              # 5 h to narrate before Modal takes over (tts.voxcpm.local_until_hours_before_slot: 5)
 
 # Kinds on pause: not planned, produced or posted. Long-form unpaused for the revamp (2026-11-24); `live`
 # above still holds everything until Bryce says go.

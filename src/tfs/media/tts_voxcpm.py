@@ -346,7 +346,61 @@ def synthesize_scenes(texts: list[str], out_dir: Path, ids: list[int] | None = N
     return clips
 
 
-def synthesize(scenes: list, out_dir: Path) -> list[Clip]:
-    """Drop-in for tts.synthesize: same scene objects (id, text), same cache files."""
-    takes = int(channel().get("tts", {}).get("voxcpm", {}).get("takes", 1))
-    return synthesize_scenes([clean(s.text, False) for s in scenes], out_dir, ids=[s.id for s in scenes], takes=takes)
+class VoiceDeferred(RuntimeError):
+    """The local GPU worker has the job; the item waits (status unchanged) and is retried on the next run."""
+
+
+def _from_local(texts: list[str], ids: list[int], out_dir: Path, item: str, deadline, threshold: float) -> bool:
+    """Local GPU first (Bryce, 2026-11-24). Scores the worker's WAVs like Modal takes and caches the good ones.
+    Returns True when the item may go on (all lines cached, or the deadline passed so Modal takes the rest);
+    raises VoiceDeferred while the worker still has time."""
+    from datetime import datetime, timezone
+
+    from . import voice_queue
+
+    meta = {i: out_dir / f"{sid:03d}.json" for i, sid in enumerate(ids)}
+    todo = [i for i in range(len(texts)) if not meta[i].exists() and norm(texts[i])]
+    if not todo:
+        return True
+    got = voice_queue.fetch_done(item, [ids[i] for i in todo], out_dir / "local")
+    with tempfile.TemporaryDirectory() as td:
+        for i in todo:
+            wav = got.get(ids[i])
+            if not wav:
+                continue
+            pick = score_take(texts[i], wav.read_bytes(), Path(td), f"{ids[i]:03d}_local")
+            log.info("scene %s: local GPU take letter match %.3f", ids[i], pick["match"])
+            if pick["match"] < threshold:
+                continue                                     # Modal retries this line
+            mp3 = out_dir / f"{ids[i]:03d}.mp3"
+            d = _encode(pick["path"], mp3)
+            meta[i].write_text(json.dumps({
+                "words": map_words(texts[i], pick["words"], pick["dur"]), "duration": d, "provider": "voxcpm-local",
+                "letter_match": round(pick["match"], 3), "heard": pick["heard"]}, ensure_ascii=False), encoding="utf-8")
+    missing = [i for i in todo if not meta[i].exists()]
+    waiting = [i for i in missing if ids[i] not in got]
+    now = datetime.now(timezone.utc)
+    if waiting and now < deadline:
+        if voice_queue.get_job(item) is None:
+            voice_queue.post(item, [(ids[i], spoken(texts[i])) for i in waiting], SEED, deadline, now)
+            log.info("%s: %d lines queued for the local GPU (deadline %s)", item, len(waiting), deadline.isoformat())
+        raise VoiceDeferred(f"{item}: {len(waiting)} lines with the local GPU until {deadline.isoformat()}")
+    if not missing:
+        voice_queue.cleanup(item)
+    elif waiting:
+        log.warning("%s: local GPU missed the deadline for %d lines; Modal narrates them", item, len(waiting))
+    return True
+
+
+def synthesize(scenes: list, out_dir: Path, item: str | None = None, deadline=None) -> list[Clip]:
+    """Drop-in for tts.synthesize: same scene objects (id, text), same cache files. With `tts.voxcpm.mode: hybrid`,
+    an item and a deadline, the local GPU worker gets the lines first and Modal only narrates what it could not."""
+    cfg = channel().get("tts", {}).get("voxcpm", {})
+    takes = int(cfg.get("takes", 1))
+    texts, ids = [clean(s.text, False) for s in scenes], [s.id for s in scenes]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    if cfg.get("mode") == "hybrid" and item and deadline is not None:
+        from . import voice_queue
+        if voice_queue.enabled():
+            _from_local(texts, ids, out_dir, item, deadline, float(cfg.get("threshold", THRESHOLD)))
+    return synthesize_scenes(texts, out_dir, ids=ids, takes=takes)

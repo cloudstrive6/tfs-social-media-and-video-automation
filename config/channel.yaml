@@ -83,7 +83,9 @@ publishing:
 
 tts:
   provider: voxcpm            # voxcpm (style v2 narrator on Modal, 2026-11-24) | elevenlabs (fallback) | fishaudio
-  voxcpm: {takes: 1, seed: 19, threshold: 0.85}   # a 2nd take only when a line fails the Whisper check
+  # hybrid (Bryce, 2026-11-24): the local RTX 3080 worker (tools/voice_worker.py) narrates first; Modal only after the
+  # deadline (slot minus local_until_hours_before_slot) or for lines the worker did not get right. Samples skip the wait.
+  voxcpm: {mode: hybrid, takes: 1, seed: 19, threshold: 0.85, local_until_hours_before_slot: 5}
   elevenlabs:
     model_id: eleven_multilingual_v2      # steady long reads + scene-to-scene continuity; eleven_v3 dropped first words and broke down on long-form (27 Sep)
     voice_id: ""                          # ELEVENLABS_VOICE_ID = oqlKKpA3VREaqVHQKHNn ("Josh - Natural Narrator", Filipino)
