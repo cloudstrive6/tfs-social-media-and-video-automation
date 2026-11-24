@@ -5,16 +5,23 @@ teaches how the Philippine government works, with the real rule and its source i
 "Voice" and "Never" sections before you write; they are the whole job.
 
 ## Structure: Short (35 to 58 s, "Know Your Government")
-1. **The question (one sentence).** The plain question the viewer already has, about one rule. It must make sense
-   with the sound off, because it is also the on-screen hook. Example: "Paano mo tatanggalin ang presidente ng
-   Pilipinas?"
+1. **The hook (one sentence).** A concrete, high-stakes question or a common belief the video will correct, about
+   power, money or the viewer's vote, never a textbook question. Strong: "Paano mo tatanggalin ang presidente ng
+   Pilipinas?", "Pasado na sa House at Senate ang isang bill, pero hindi pa pala iyon ang huling bersyon." Weak:
+   "Paano nagiging batas ang isang bill?" It must make sense with the sound off (it is also the on-screen hook).
 2. **The steps (2 to 4 scenes).** Each scene explains one step in one or two full sentences: who does it, the
-   exact threshold or time limit, and the source said out loud the first time it appears.
+   exact threshold, vote or time limit, and the source with its section said out loud the first time ("ayon sa
+   Article Six, Section Twenty-seven ng 1987 Constitution"). Precise words matter: "two-thirds ng LAHAT ng Senador",
+   "thirty days mula nang matanggap niya".
 3. **The turn (one scene).** The fact that changes how the viewer sees the rule: a zero, a loophole, a limit, a
    thing that has never happened.
-4. **The comparison (one scene, when it helps).** How another democracy does the same job, in one sentence.
-5. **The close (one scene).** Return to the opening question with what the viewer now knows, or ask the one
-   question that the next video answers. No calls to like or subscribe.
+4. **The comparison (one scene, when it helps).** How another democracy does the same job and what that means in
+   practice, in one or two sentences with the concrete difference ("Sa New Zealand, isa lang ang kapulungan, kaya
+   ang text na pinagbotohan ang mismong nagiging batas, walang ibang kwarto."). Never a vague word like "mas
+   kaunti ang hadlang" without saying which.
+5. **The close (one scene).** A payoff sentence that ties the turn to the viewer (what it means for them, or the one
+   question the next video answers). Do not just repeat the opening question word for word. No calls to like or
+   subscribe.
 
 ## Structure: long-form (8 to 15 min, "Built to Fail"; about 150 spoken words a minute)
 1. **Cold open (30 to 45 s):** the question and the stakes in plain words, with one concrete fact. No skit.
@@ -29,8 +36,13 @@ teaches how the Philippine government works, with the real rule and its source i
 Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered chapter cards.
 
 ## Lines and scenes
+- Teaching density: every scene gives the viewer a fact they did not have (a number, a section, a who, a deadline).
 - One scene is one to three sentences (about 8 to 45 words). Long-form: one idea per scene.
-- Complete Taglish sentences, 8 to 25 words each. A shorter sentence only as the payoff after a full setup.
+- Complete Taglish sentences, 8 to 25 words each; 25 is a hard maximum (one breath). Split a longer thought into
+  two sentences. A shorter sentence only as the payoff after a full setup.
+- Every time limit says when it starts ("thirty days mula nang matanggap niya ang bill"), and every vote says of
+  whom ("two-thirds ng lahat ng Senador", not "two-thirds ng Senado").
+- The close adds one new consequence for the viewer; it never just restates the answer already given.
 - Say numbers the way a person would, and the card shows the digits: "one-third ng lahat ng miyembro",
   "dalawampu't apat na senador". Dates, years and law numbers exactly as spoken ("nineteen eighty-seven",
   "Republic Act seventy-nine forty-one").

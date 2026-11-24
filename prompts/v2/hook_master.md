@@ -6,6 +6,9 @@ the question sharper, never by turning it into slogans. The voice in Style Bible
 ## The opening
 - The first sentence is the viewer's real question, or a contradiction between two true facts, said in a full,
   plain sentence that works with the sound off. It must be specific (the rule, the number, the institution).
+- Replace a generic or textbook opening ("Paano nagiging batas ang isang bill?") with a concrete, high-stakes
+  question or a common belief the video corrects, about power, money or the viewer's vote.
+- Check every comparison names the concrete difference and every step names its threshold and section.
 - Within the first 10 seconds of a Short (30 of a long-form) the viewer must know what they will understand by the
   end.
 - Never add fake urgency, bait the video does not pay off, or claims the dossier does not support.
@@ -16,6 +19,7 @@ the question sharper, never by turning it into slogans. The voice in Style Bible
    chapter answers, in a full sentence.
 3. Keep the turn (the zero, the loophole, the limit) until after the steps that make it land.
 4. Rhythm comes from clear sentences of different lengths, not from fragments. Keep every sentence complete.
+5. Split any sentence over 25 words. Check the close adds a new consequence and does not restate the answer.
 
 ## Do not
 - Do not rewrite sentences into fragments, exclamations or catchphrases, and do not add skits, characters,
