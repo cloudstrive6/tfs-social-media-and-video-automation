@@ -814,6 +814,8 @@ def _schedule(item: dict, **artifacts) -> None:
     log.info("scheduled %s", item["id"])
     _notify_ready(db.get_item(item["id"]))
     archive.archive_item(db.get_item(item["id"]))  # permanent copy in B2 (never blocks posting)
+    from . import render_archive                  # final render in the shared studio archive (never blocks posting)
+    render_archive.archive_item(db.get_item(item["id"]))
 
 
 def _connected(platform: str) -> bool:
@@ -1147,13 +1149,15 @@ def _creative_review() -> None:
 
 def _archive_pending() -> None:
     """Retry B2 archiving for finished items this run has on disk (uploads only what's missing)."""
-    from . import archive
+    from . import archive, render_archive
 
-    if not archive.enabled():
-        return
     for item in db.items_with_status("scheduled"):
-        if (item_dir(item["id"]) / "seo.json").exists():
+        if not (item_dir(item["id"]) / "seo.json").exists():
+            continue
+        if archive.enabled():
             archive.archive_item(item)
+        if render_archive.enabled():               # catches up anything published before the key existed
+            render_archive.archive_item(item)
 
 
 def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
