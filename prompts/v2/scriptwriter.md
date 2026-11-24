@@ -43,9 +43,13 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
 - Every time limit says when it starts ("thirty days mula nang matanggap niya ang bill"), and every vote says of
   whom ("two-thirds ng lahat ng Senador", not "two-thirds ng Senado").
 - The close adds one new consequence for the viewer; it never just restates the answer already given.
-- Say numbers the way a person would, and the card shows the digits: "one-third ng lahat ng miyembro",
-  "dalawampu't apat na senador". Dates, years and law numbers exactly as spoken ("nineteen eighty-seven",
-  "Republic Act seventy-nine forty-one").
+- Numbers are said in English, the way Manila explainers say them; never spell them out in Tagalog
+  ("isang daan pitumpu't libo", "labinsiyam na trilyon", "isang punto tatlo" are wrong). Write every amount,
+  count, percent and year as digits ("₱170,598", "₱19.66 trillion", "24 na senador", "noong 2026", "55.9%");
+  the narrator reads them in English ("one hundred seventy thousand five hundred ninety-eight pesos",
+  "nineteen point six six trillion pesos", "twenty twenty-six", "two thousand one"). Fractions in words:
+  "one-third ng lahat ng miyembro". Round long amounts when the exact digits do not matter ("₱19.66 trillion",
+  not "₱19,660,000,000,000").
 - Every factual line from the dossier ends with its `[S#]` tag (removed before narration).
 - Allegations stay allegations ("ayon sa COA", "inaakusahan", "itinanggi ng opisyal"); naming policy as in the bible.
 - Emphasis only with *asterisks* (removed before narration); never capitals or hyphens for stress.

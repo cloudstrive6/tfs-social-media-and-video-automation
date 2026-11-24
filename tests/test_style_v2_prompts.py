@@ -23,3 +23,19 @@ def test_vector_engine_keeps_the_old_set(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "data_dir", lambda: tmp_path)
     assert "Style Bible v2" not in config.style_bible().splitlines()[0]
     assert config.load_prompt("scriptwriter").startswith("# Role: Head Writer\n")
+
+
+def test_v2_numbers_stay_digits_and_are_read_in_english(monkeypatch, tmp_path):
+    """Bryce, 2026-11-25: numbers need not be Tagalog; the narrator says "one point three trillion pesos",
+    "one hundred seventy thousand five hundred ninety eight", "twenty twenty six", "two thousand one"."""
+    from tfs.media.tts_voxcpm import spoken
+    monkeypatch.setattr(config, "channel", lambda: {"video": {"engine": "atlas"}})
+    monkeypatch.setattr(config, "data_dir", lambda: tmp_path)
+    ed = config.load_prompt("narration_editor")
+    assert "(style v2" in ed.splitlines()[0] and "limang punto apat" not in ed
+    assert "Never write a number in Tagalog words" in ed
+    assert "never spell them out in Tagalog" in config.load_prompt("scriptwriter")
+    assert spoken("₱1.3 trillion") == "one point three trillion pesos"
+    assert spoken("₱170,598") == "one hundred seventy thousand five hundred ninety-eight pesos"
+    assert spoken("noong 2026") == "noong twenty twenty-six"
+    assert spoken("noong 2001") == "noong two thousand one"
