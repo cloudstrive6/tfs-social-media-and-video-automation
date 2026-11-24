@@ -1,0 +1,12 @@
+{
+ "purpose": "Bryce, 2026-11-24: clone the TFS narrator exactly (production continuation mode from our own master clip), then design the storyteller in post (tempo, pitch, warmth, pauses). Empty style = exact clone.",
+ "sentences": [
+  {"text": "Marso, labinlimang daan at dalawampu't isa.", "pause_after": 1.0},
+  {"text": "Tatlong barko ang dumaong sa isla ng Homonhon.", "pause_after": 1.2},
+  {"text": "Hindi alam ng mga tao roon... na magbabago ang buong kapuluan, magpakailanman.", "pause_after": 1.4},
+  {"text": "Pitong libong isla. Mahigit isandaang wika. At tatlong siglong pamamahala ng iisang korona.", "pause_after": 2.0},
+  {"text": "Pero... may mga taong ayaw sumuko.", "pause_after": 0.6}
+ ],
+ "styles": {"K": ""},
+ "seeds": [11, 23, 37]
+}

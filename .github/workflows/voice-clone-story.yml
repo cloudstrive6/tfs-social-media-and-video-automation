@@ -1,0 +1,33 @@
+# Exact clone of the TFS narrator on Modal, then the storyteller designed in post (Rubber Band tempo and pitch,
+# warm EQ, pauses), scored on the runner. Private artifact with small MP3s for in-chat review.
+name: voice-clone-story
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/voice-design]
+    paths: [modal_apps/voice_clone_story_brief.json, tools/story_post.py, .github/workflows/voice-clone-story.yml]
+jobs:
+  clone-story:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg rubberband-cli
+      - run: pip install -q modal==1.6.4
+      - run: modal run modal_apps/tfs_voice_styled.py --out out/clone --brief-file modal_apps/voice_clone_story_brief.json
+      - run: pip install -q --index-url https://download.pytorch.org/whl/cpu torch && pip install -q openai-whisper librosa soundfile numpy
+      - run: python tools/story_post.py out/clone assets/voice/tfs_narrator_master.wav out/review
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-clone-story
+          path: |
+            out/clone/manifest.json
+            out/review/*.mp3
+            out/review/check.json
+          retention-days: 7

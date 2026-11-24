@@ -83,8 +83,8 @@ def styled(sentences: list[dict], styles: dict, seeds: list[int]) -> list[dict]:
 
 
 @app.local_entrypoint()
-def main(out: str = "out/styled"):
-    brief = json.loads(BRIEF.read_text(encoding="utf-8"))
+def main(out: str = "out/styled", brief_file: str = ""):
+    brief = json.loads((pathlib.Path(brief_file) if brief_file else BRIEF).read_text(encoding="utf-8"))
     o = pathlib.Path(out)
     o.mkdir(parents=True, exist_ok=True)
     t = time.time()
