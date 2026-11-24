@@ -21,7 +21,7 @@ class FakeS3:
 
 
 def _env(monkeypatch, on=True):
-    vals = {"B2_ARCHIVE_KEY_ID": "k", "B2_ARCHIVE_APP_KEY": "s", "B2_ARCHIVE_BUCKET": "studio-render-archive",
+    vals = {"B2_KEY_ID": "k", "B2_APP_KEY": "s", "B2_BUCKET": "tfs-content-archive",       # the existing secrets
             "B2_ENDPOINT": "https://s3.example"} if on else {}
     monkeypatch.setattr(ra, "env", lambda k, d="": vals.get(k, d))
 
@@ -36,13 +36,13 @@ def test_layout_sidecar_and_repeat(tmp_path, monkeypatch):
     item = {"id": "2026-12-01-long0", "kind": "long_form", "anchor_at": "2026-12-01T19:15:00+08:00",
             "data": {"title": "Built to Fail", "platforms": {"youtube": "2026-12-01T19:15:00+08:00"}}}
     rec = ra.archive_render(item, video, thumb)
-    assert rec["key"] == "tfs/longform/2026-12/2026-12-01-long0.mp4"
-    assert set(s3.objects) == {rec["key"], rec["key"] + ".json", "tfs/longform/2026-12/2026-12-01-long0__thumbnail.jpg"}
+    assert rec["key"] == "finals/longform/2026-12/2026-12-01-long0.mp4"
+    assert set(s3.objects) == {rec["key"], rec["key"] + ".json", "finals/longform/2026-12/2026-12-01-long0__thumbnail.jpg"}
     side = json.loads(s3.objects[rec["key"] + ".json"])
     assert side["bytes"] == 100 and len(side["sha1"]) == 40 and side["title"] == "Built to Fail" and side["channel"] == "tfs"
     assert ra.archive_render(item, video, thumb)["skipped"] == "already archived"
     short = dict(item, id="2026-12-01-vert0", kind="vertical")
-    assert ra.archive_render(short, video)["key"] == "tfs/shorts/2026-12/2026-12-01-vert0.mp4"
+    assert ra.archive_render(short, video)["key"] == "finals/shorts/2026-12/2026-12-01-vert0.mp4"
 
 
 def test_off_without_the_key_and_never_raises(tmp_path, monkeypatch):
@@ -53,3 +53,10 @@ def test_off_without_the_key_and_never_raises(tmp_path, monkeypatch):
     v = tmp_path / "v.mp4"
     v.write_bytes(b"x")
     assert ra.archive_item({"id": "a", "kind": "vertical", "data": {"video": str(v)}}) is None
+
+
+def test_archive_overrides_win(monkeypatch):
+    vals = {"B2_KEY_ID": "k", "B2_APP_KEY": "s", "B2_BUCKET": "tfs-content-archive", "B2_ENDPOINT": "https://a",
+            "B2_ARCHIVE_BUCKET": "other"}
+    monkeypatch.setattr(ra, "env", lambda k, d="": vals.get(k, d))
+    assert ra.enabled() and ra._cfg("BUCKET") == "other" and ra._cfg("KEY_ID") == "k"

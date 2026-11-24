@@ -1,17 +1,15 @@
-"""Permanent copy of every final TFS render in the shared studio render archive on Backblaze B2.
+"""Permanent copy of every final TFS render on Backblaze B2.
 
 Bryce, 2026-11-24: "for all the final/approved renders/versions of the video, be sure to save a copy in B2 Backblaze as
-we might be able to use them in the future". The bucket is whatever B2_ARCHIVE_BUCKET names (on 2026-11-24 Bryce was
-still choosing one shared studio bucket or one bucket per channel), with the same layout as the PC helper
-D:/AI-Video/archive/b2_archive.py:
-    tfs/<longform|shorts>/<YYYY-MM>/<item>.mp4               the final video
-    tfs/<longform|shorts>/<YYYY-MM>/<item>__thumbnail.jpg    extras (long-form thumbnail)
-    tfs/<longform|shorts>/<YYYY-MM>/<item>.mp4.json          sidecar: title, ids, platforms, size, SHA-1, date
-The cloud never rewrites the bucket's manifest.jsonl (the PC helper owns it; two writers would drop lines); the
-sidecars describe every file. TFS's own working-files bucket (archive.py, tfs-content-archive) is separate.
+we might be able to use them in the future", and the same day: one bucket per channel, TFS finals in the existing
+tfs-content-archive bucket under finals/, with no new Actions key. Layout (as D:/AI-Video/archive/b2_archive.py):
+    finals/<longform|shorts>/<YYYY-MM>/<item>.mp4               the final video
+    finals/<longform|shorts>/<YYYY-MM>/<item>__thumbnail.jpg    extras (long-form thumbnail)
+    finals/<longform|shorts>/<YYYY-MM>/<item>.mp4.json          sidecar: title, ids, platforms, size, SHA-1, date
+The working files (archive.py) live in the same bucket under <YYYY>/<MM>/<item>/; nothing there deletes finals/.
 
-Needs a key scoped to that bucket only, as repo secrets: B2_ARCHIVE_KEY_ID, B2_ARCHIVE_APP_KEY, B2_ARCHIVE_BUCKET
-(and B2_ARCHIVE_ENDPOINT, default B2_ENDPOINT). Without them it does nothing. Never blocks publishing.
+Uses the existing B2 secrets (B2_ENDPOINT, B2_BUCKET, B2_KEY_ID, B2_APP_KEY); B2_ARCHIVE_* of the same names override
+them if ever set. Never blocks publishing.
 """
 from __future__ import annotations
 
@@ -27,20 +25,24 @@ from .config import env
 
 log = logging.getLogger(__name__)
 CHANNEL = "tfs"
+ROOT = "finals"
 KIND = {"long_form": "longform", "vertical": "shorts"}
 
 
+def _cfg(name: str) -> str:
+    return env(f"B2_ARCHIVE_{name}") or env(f"B2_{name}")
+
+
 def enabled() -> bool:
-    return all(env(k) for k in ("B2_ARCHIVE_KEY_ID", "B2_ARCHIVE_APP_KEY", "B2_ARCHIVE_BUCKET")) and bool(
-        env("B2_ARCHIVE_ENDPOINT") or env("B2_ENDPOINT"))
+    return all(_cfg(k) for k in ("KEY_ID", "APP_KEY", "BUCKET", "ENDPOINT"))
 
 
 @lru_cache
 def _client():
     import boto3
     from botocore.config import Config
-    return boto3.client("s3", endpoint_url=env("B2_ARCHIVE_ENDPOINT") or env("B2_ENDPOINT"),
-                        aws_access_key_id=env("B2_ARCHIVE_KEY_ID"), aws_secret_access_key=env("B2_ARCHIVE_APP_KEY"),
+    return boto3.client("s3", endpoint_url=_cfg("ENDPOINT"),
+                        aws_access_key_id=_cfg("KEY_ID"), aws_secret_access_key=_cfg("APP_KEY"),
                         config=Config(request_checksum_calculation="when_required",
                                       response_checksum_validation="when_required"))
 
@@ -70,9 +72,9 @@ def archive_render(item: dict, video: Path, thumbnail: Path | None = None) -> di
     kind = KIND.get(item["kind"])
     if not kind or not enabled() or not video.is_file():
         return None
-    s3, bucket = _client(), env("B2_ARCHIVE_BUCKET")
+    s3, bucket = _client(), _cfg("BUCKET")
     month = (item.get("anchor_at") or datetime.now(timezone.utc).isoformat())[:7]
-    folder = f"{CHANNEL}/{kind}/{month}"
+    folder = f"{ROOT}/{kind}/{month}"
     key = f"{folder}/{_slug(item['id'])}{video.suffix}"
     if _exists(s3, bucket, f"{key}.json"):
         return {"key": key, "skipped": "already archived"}
