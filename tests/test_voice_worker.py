@@ -66,8 +66,8 @@ def test_narrate_batches_jobs_and_uploads(tmp_path, monkeypatch):
         returncode, stdout, stderr = 0, '{"done": 3}', ""
 
     def run(cmd, **k):
-        job = json.loads(Path(cmd[3]).read_text(encoding="utf-8"))
-        out = Path(cmd[4])
+        job = json.loads(Path(cmd[-2]).read_text(encoding="utf-8"))
+        out = Path(cmd[-1])
         out.mkdir()
         for line in job["lines"]:
             (out / line["file"]).write_bytes(b"RIFF")

@@ -30,12 +30,44 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def venv_base(venv: Path) -> tuple[Path, Path]:
+    """(base interpreter, site-packages) of a venv, read from its pyvenv.cfg."""
+    cfg = {k.strip(): v.strip() for k, v in (l.split("=", 1) for l in
+           (venv / "pyvenv.cfg").read_text(encoding="utf-8").splitlines() if "=" in l)}
+    return Path(cfg["home"]) / "python.exe", venv / "Lib" / "site-packages"
+
+
+def use_site(sp: Path) -> None:
+    """Put a venv's site-packages (and its .pth entries) at the front of sys.path."""
+    import site
+    before = list(sys.path)
+    site.addsitedir(str(sp))
+    sys.path[:] = [p for p in sys.path if p not in before] + before
+
+
+# Avast sandboxes the small venv launcher exes (.venv\Scripts\python(w).exe) when Task Scheduler starts them: every
+# file they write lands in C:\avast! sandbox instead of the real disk (found 2026-11-24; exceptions on those paths do
+# not help). The base interpreters are not sandboxed, so the task runs C:\Python313\pythonw.exe -I and the worker loads
+# its venv's packages here; VoxCPM is started the same way (see VOX_CMD).
+if sys.prefix == sys.base_prefix and (ROOT / ".venv" / "pyvenv.cfg").exists():
+    use_site(venv_base(ROOT / ".venv")[1])
 sys.path.insert(0, str(ROOT / "src"))
 from tfs.media import voice_queue as vq  # noqa: E402
 
 GPU = Path(os.environ.get("TFS_GPU_DIR", "D:/AI-Video/gpu"))
 REQUEST, GRANTED = GPU / "requests" / "tfs-voice.json", GPU / "granted" / "tfs-voice"
-VOX_PY = Path(os.environ.get("TFS_VOXCPM_PYTHON", "D:/AI-Video/VoxCPM/.venv/Scripts/python.exe"))
+VOX_VENV = Path(os.environ.get("TFS_VOXCPM_VENV", "D:/AI-Video/VoxCPM/.venv"))
+_BOOT = ("import runpy,site,sys; b=list(sys.path); site.addsitedir(sys.argv[1]); "
+         "sys.path[:]=[p for p in sys.path if p not in b]+b; sys.argv=sys.argv[2:]; "
+         "runpy.run_path(sys.argv[0], run_name='__main__')")
+
+
+def vox_cmd(script: Path, *args: str) -> list[str]:
+    """Run a script in the VoxCPM venv through its base interpreter (no venv launcher, see the Avast note above)."""
+    base, sp = venv_base(VOX_VENV)
+    return [str(base), "-I", "-c", _BOOT, str(sp), str(script), *args]
 POLL_S = 120
 NEED_COMMIT_GB = 25.0
 MARGIN = timedelta(minutes=20)          # leave a job to Modal when less than this remains before its deadline
@@ -112,8 +144,8 @@ def narrate(jobs: list[dict]) -> None:
                  for n, j in enumerate(jobs) for l in j["lines"]]
         (tmp / "job.json").write_text(json.dumps({"seed": jobs[0].get("seed", 19), "lines": lines},
                                                  ensure_ascii=False), encoding="utf-8")
-        res = subprocess.run([str(VOX_PY), "-I", str(ROOT / "tools" / "voice_local_gen.py"), str(tmp / "job.json"),
-                              str(tmp / "out")], capture_output=True, text=True, encoding="utf-8", errors="replace")
+        res = subprocess.run(vox_cmd(ROOT / "tools" / "voice_local_gen.py", str(tmp / "job.json"), str(tmp / "out")),
+                             capture_output=True, text=True, encoding="utf-8", errors="replace")
         log.info("generator: %s", (res.stdout.strip().splitlines() or ["(no output)"])[-1])
         if res.returncode:
             raise RuntimeError(res.stderr[-1500:])
