@@ -47,10 +47,11 @@ def use_site(sp: Path) -> None:
     sys.path[:] = [p for p in sys.path if p not in before] + before
 
 
-# Avast sandboxes the small venv launcher exes (.venv\Scripts\python(w).exe) when Task Scheduler starts them: every
-# file they write lands in C:\avast! sandbox instead of the real disk (found 2026-11-24; exceptions on those paths do
-# not help). The base interpreters are not sandboxed, so the task runs C:\Python313\pythonw.exe -I and the worker loads
-# its venv's packages here; VoxCPM is started the same way (see VOX_CMD).
+# The scheduled task runs the base interpreter (C:\Python313\pythonw.exe -I) and the worker loads its venv's packages
+# here; VoxCPM is started the same way (see vox_cmd). This keeps the venv launcher exes out of the picture with Avast.
+# Note (2026-11-24): the venv launcher worked too (the real log shows both starts); the "sandboxed" reading came from
+# checking %LOCALAPPDATA% from an agent shell, which itself sees Avast's sandbox copy of C: files. Check C: files a
+# scheduled job writes from a Terminal tab (Bryce's own PowerShell), never from an agent's Bash/PowerShell tool.
 if sys.prefix == sys.base_prefix and (ROOT / ".venv" / "pyvenv.cfg").exists():
     use_site(venv_base(ROOT / ".venv")[1])
 sys.path.insert(0, str(ROOT / "src"))
@@ -65,7 +66,7 @@ _BOOT = ("import runpy,site,sys; b=list(sys.path); site.addsitedir(sys.argv[1]);
 
 
 def vox_cmd(script: Path, *args: str) -> list[str]:
-    """Run a script in the VoxCPM venv through its base interpreter (no venv launcher, see the Avast note above)."""
+    """Run a script in the VoxCPM venv through its base interpreter (no venv launcher, see the note above)."""
     base, sp = venv_base(VOX_VENV)
     return [str(base), "-I", "-c", _BOOT, str(sp), str(script), *args]
 POLL_S = 120

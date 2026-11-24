@@ -2,10 +2,10 @@
 # failure). Bryce chose this on 2026-11-24 ("I'll add an Avast exception").
 #
 # Before running:
-#   1. Avast sandboxes the venv launcher exes (.venv\Scripts\python(w).exe) when Task Scheduler starts them, even with
-#      an exception on that path (found 2026-11-24: the log landed in C:\avast! sandbox\...\TFS\). So the task runs the
-#      venv's BASE interpreter (pythonw.exe in the pyvenv.cfg home, C:\Python313) with -I, and voice_worker.py loads
-#      the venv's packages itself. Tested 2026-11-24: a scheduled C:\Python313\pythonw.exe writes to the real disk.
+#   1. The task runs the venv's BASE interpreter (pythonw.exe in the pyvenv.cfg home, C:\Python313) with -I, and
+#      voice_worker.py loads the venv's packages itself. Avast exceptions exist for both pythonw.exe paths (2026-11-24).
+#      Verified 2026-11-24 from a Terminal tab: the real log shows "voice worker started". Agent shells see Avast's
+#      sandbox copy of C: files, so check the log from a Terminal tab, not from an agent's Bash/PowerShell tool.
 #   2. Put the R2 values in this repo's .env (git-ignored): S3_ENDPOINT_URL, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY,
 #      S3_BACKUP_BUCKET (the same values as the GitHub secrets). Never commit them.
 #   3. Test once:  .venv\Scripts\python.exe tools\voice_worker.py --once   (log: %LOCALAPPDATA%\TFS\voice_worker.log)
