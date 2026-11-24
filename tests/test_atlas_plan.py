@@ -66,9 +66,9 @@ def test_to_shots_anchors_fallbacks_and_hero():
     shots = ap.to_shots(plan, scenes, clips, starts, total, "long_form", resolve,
                         hero={"k": "broll", "kind": "video", "src": "assets/hero.mp4", "credit": ""})
     opener = shots.pop(0)                                    # the map is always traced under the first shot
-    assert opener["k"] == "map" and opener["draw"] and opener["t0"] == opener["t1"] == 0.4
+    assert opener["k"] == "map" and opener["draw"] and opener["instant"] and opener["t0"] == opener["t1"] == 0.0
     ks = [(s["k"], s["t0"], s["t1"]) for s in shots]
-    assert ks[0] == ("doc", 0.4, 3.4) and shots[0]["hl"] == ["one-third"]
+    assert ks[0] == ("doc", 0.0, 3.4) and shots[0]["instant"] and shots[0]["hl"] == ["one-third"]   # on screen at 0.0 s
     assert ks[1] == ("broll", 3.4, 5.4)
     assert shots[1]["src"] == "assets/b1.jpg" and shots[1]["word"] == "ONE-THIRD OF THE HOUSE"
     assert shots[2]["k"] == "bigtext" and shots[2]["text"] == "TWO-THIRDS OF THE SENATE"     # unlicensed: type instead
@@ -109,4 +109,4 @@ def test_title_cards_become_paper_cards_over_the_map():
     plan = AtlasPlan(scenes=[AtlasScene(scene_id=1, shots=[AtlasShot(k="title", text="THREE STEPS?", kicker="HOW A BILL")])])
     shots = ap.to_shots(plan, scenes, clips[:1], [0.4], 8.0, "vertical", lambda *a: None)
     assert shots[0]["k"] == "map" and shots[1] == {"k": "bigtext", "text": "THREE STEPS?", "sub": "HOW A BILL",
-                                                    "t0": 0.4, "t1": shots[1]["t1"]}
+                                                    "t0": 0.0, "t1": shots[1]["t1"], "instant": True}

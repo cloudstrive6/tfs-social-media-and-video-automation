@@ -46,6 +46,10 @@ Return one `AtlasScene` per script scene, same `scene_id`s, in order. Each scene
   adds numbered chapter cards for long-forms itself, so do not plan those.
 
 ## Rules
+- Every number the narrator says is on screen while it is said: a `cards`, `bars` or `seats` shot anchored on
+  that number's word. Peso amounts use the ₱ sign.
+- Photos match the present-day Philippines unless the line is about history: no old or foreign banknotes,
+  flags or seals standing in for today's money or institutions.
 - On-screen text is English, CAPS for big words, no em-dashes or en-dashes. Narration stays as written.
 - Every number, date and quote on screen must match the script and the dossier exactly. Cards and docs
   carry `src` with the real source.

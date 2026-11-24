@@ -154,8 +154,8 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
     the rendered 3D shot (long-form) or None."""
     by_id = {s.scene_id: s for s in plan.scenes}
     out: list[dict] = []
-    if starts:                                           # the paper map is traced under the opening shot, always
-        out.append({"k": "map", "view": "ph", "fill": "ph", "draw": 1.6, "t0": round(starts[0], 3), "t1": round(starts[0], 3)})
+    if starts:                                           # the paper map is traced under the opening shot, always, and is
+        out.append({"k": "map", "view": "ph", "fill": "ph", "draw": 0.001, "instant": True, "t0": 0.0, "t1": 0.0})  # there at 0.0 s
     hero_used = False
     for i, (sc, clip, st) in enumerate(zip(scenes, clips, starts)):
         nxt = starts[i + 1] if i + 1 < len(starts) else total - LEAD + GAP
@@ -193,6 +193,8 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
             else:
                 d = _runtime(s)
             d.update(t0=round(t0, 3), t1=round(t1, 3))
+            if i == 0 and j == 0:                        # the first frame is the thumbnail in the feed: the opening
+                d.update(t0=0.0, instant=True)           # shot is fully on screen from 0.0 s, no fade
             if out and out[-1]["t1"] > d["t0"]:
                 out[-1]["t1"] = d["t0"]
             out.append(d)

@@ -46,14 +46,24 @@
   const phLine = mapWrap.querySelector("#phLine");
   const L = phLine.getTotalLength();
   phLine.setAttribute("stroke-dasharray", `${L} ${L}`);
-  phLine.setAttribute("stroke-dashoffset", `${L}`);
-  tl.set(mapWrap, { opacity: 0 }, 0);
+  // an instant opener (the Short's first frame is its feed thumbnail) starts with the map already traced and filled
+  const OPEN = (S.shots || []).find((s) => s.k === "map" && s.instant && s.t0 <= 0.001);
+  phLine.setAttribute("stroke-dashoffset", OPEN ? "0" : `${L}`);
+  if (OPEN && OPEN.fill === "ph") {
+    const pv = mapWrap.querySelector("#phProv");
+    pv.setAttribute("fill-opacity", "0.85");
+    pv.setAttribute("stroke-opacity", "1");
+  }
+  mapWrap.style.opacity = OPEN ? "1" : "0";
+  tl.set(mapWrap, { opacity: OPEN ? 1 : 0 }, 0);
 
   const layer = (backdrop) => { const n = el("div", "position:absolute;inset:0;opacity:0");
     if (backdrop) n.dataset.bd = "1";              // the paper backdrop is added after the shot's HTML is set
     return n; };
   function inOut(node, s, from) {
-    tl.fromTo(node, Object.assign({ opacity: 0 }, from || { y: 30 * U }), { opacity: 1, y: 0, x: 0, scale: 1, duration: 0.35, ease: "power2.out" }, s.t0);
+    // the opening shot is fully on screen at 0.0 s: the first frame is the Short's thumbnail in the feed
+    if (s.instant) tl.set(node, { opacity: 1, y: 0, x: 0, scale: 1 }, s.t0);
+    else tl.fromTo(node, Object.assign({ opacity: 0 }, from || { y: 30 * U }), { opacity: 1, y: 0, x: 0, scale: 1, duration: 0.35, ease: "power2.out" }, s.t0);
     tl.to(node, { opacity: 0, duration: 0.25, ease: "power1.in" }, Math.max(s.t0 + 0.4, s.t1 - 0.25));
   }
   const badge = (txt) => txt ? `<div style="display:inline-block;margin-top:${px(18)};font:700 ${px(V ? 24 : 27)} 'Segoe UI',sans-serif;letter-spacing:.5px;color:${C.muted};max-width:${Math.round(W * (V ? 0.84 : 0.62))}px;white-space:normal;line-height:1.3;` +
@@ -63,10 +73,12 @@
   // ------------------------------------------------------------------ shot builders
   const build = {
     map(s) {
-      tl.to(mapWrap, { opacity: 1, duration: 0.4 }, s.t0);
+      if (s.instant) tl.set(mapWrap, { opacity: 1 }, s.t0); else tl.to(mapWrap, { opacity: 1, duration: 0.4 }, s.t0);
       if (s.view) tl.to("#atlas", { attr: { viewBox: G.views[s.view].join(" ") }, duration: s.move || 1.6, ease: "power2.inOut" }, s.t0);
-      if (s.draw) tl.to(phLine, { attr: { "stroke-dashoffset": 0 }, duration: s.draw, ease: "power1.inOut" }, s.t0);
-      if (s.fill === "ph") tl.to("#phProv", { attr: { "fill-opacity": 0.85, "stroke-opacity": 1 }, duration: 0.6 }, s.t0 + 0.3);
+      if (s.draw && s.instant) tl.set(phLine, { attr: { "stroke-dashoffset": 0 } }, s.t0);
+      else if (s.draw) tl.to(phLine, { attr: { "stroke-dashoffset": 0 }, duration: s.draw, ease: "power1.inOut" }, s.t0);
+      if (s.fill === "ph" && s.instant) tl.set("#phProv", { attr: { "fill-opacity": 0.85, "stroke-opacity": 1 } }, s.t0);
+      else if (s.fill === "ph") tl.to("#phProv", { attr: { "fill-opacity": 0.85, "stroke-opacity": 1 }, duration: 0.6 }, s.t0 + 0.3);
       if (s.fill === "nz") tl.to("#nzFill", { attr: { "fill-opacity": 0.85, "stroke-opacity": 1 }, duration: 0.6 }, s.t0 + 0.6);
       if (s.label) {
         const n = layer();
@@ -118,7 +130,7 @@
         const v = document.getElementById(s.vid);
         if (v) n.querySelector(".vslot").replaceWith(v);
       }
-      tl.fromTo(n, { opacity: 0 }, { opacity: 1, duration: 0.25 }, s.t0);
+      if (s.instant) tl.set(n, { opacity: 1 }, s.t0); else tl.fromTo(n, { opacity: 0 }, { opacity: 1, duration: 0.25 }, s.t0);
       tl.to(n, { opacity: 0, duration: 0.2 }, Math.max(s.t0 + 0.3, s.t1 - 0.2));
       const img = n.querySelector(".bi");
       if (img) tl.fromTo(img, { scale: 1.0, xPercent: 0 }, { scale: 1.12, xPercent: s.pan || -2, duration: s.t1 - s.t0, ease: "none" }, s.t0);
@@ -206,7 +218,7 @@
         `<div style="position:absolute;left:4%;top:${V ? 21 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.left)}</div>` +
         `<div style="position:absolute;left:54%;top:${V ? 21 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.right)}</div>` +
         (s.text ? `<div style="position:absolute;left:50%;top:${V ? 46 : 64}%;transform:translateX(-50%);background:${C.paper};padding:${px(16)} ${px(30)};border-radius:${px(12)};` +
-          `font:400 ${px(V ? 70 : 72)} Anton;color:${C.ink};white-space:nowrap">${esc(s.text)}</div>` : "") +
+          `font:400 ${px(V ? 70 : 72)}/1.05 Anton;color:${C.ink};${V ? "width:80%;white-space:normal;text-align:center" : "white-space:nowrap"}">${esc(s.text)}</div>` : "") +
         (s.src ? `<div style="position:absolute;left:4%;top:${V ? 58 : 72}%">${badge(s.src)}</div>` : "");
       inOut(n, s, { scale: 1.04 });
     },

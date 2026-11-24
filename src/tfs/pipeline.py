@@ -387,7 +387,7 @@ def _atlas_shotlist(script: Script, starts: list[float], total: float, shots: li
     bounds = list(starts) + [total]
     out = []
     for i, sc in enumerate(script.scenes):
-        mine = [s for s in shots if bounds[i] - 0.01 <= s["t0"] < bounds[i + 1]]
+        mine = [s for s in shots if (0.0 if i == 0 else bounds[i]) - 0.01 <= s["t0"] < bounds[i + 1]]   # the opener starts at 0.0 s
         first = mine[0]["k"] if mine else "map"
         out.append(Shot(scene_id=sc.id, kind="card", style="story", image_prompt="",
                         card_type=ATLAS_CARD.get(first, "none"),
