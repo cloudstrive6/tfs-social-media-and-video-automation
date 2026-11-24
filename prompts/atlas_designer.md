@@ -46,6 +46,9 @@ Return one `AtlasScene` per script scene, same `scene_id`s, in order. Each scene
   adds numbered chapter cards for long-forms itself, so do not plan those.
 
 ## Rules
+- Card and bar text states facts, never labels for your own reasoning: `big` is a number, a date, a threshold or
+  the rule's name ("2/3 OF THE SENATE", "6 YEARS", "ART. VII SEC. 4"), and `small` says what it means. Never
+  words like PARAPHRASE, STEELMAN, VALID CONCERN, ONE WORD, FABRICATED. Bar `value` text is at most 4 words.
 - Every number the narrator says is on screen while it is said: a `cards`, `bars` or `seats` shot anchored on
   that number's word. Peso amounts use the ₱ sign.
 - Photos match the present-day Philippines unless the line is about history: no old or foreign banknotes,

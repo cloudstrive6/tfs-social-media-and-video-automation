@@ -442,6 +442,15 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
     sp = atlas.spec(item["id"].replace(".", "-"), size, shots, atlas_plan.caption_words(clips, starts), total)
     picture = work / "picture.mp4"
     atlas.render(sp, work, picture, assets)
+    if kind == "long_form":                          # thumbnail art: the hero push (else the first photo) without captions
+        pick = next((x for x in shots if x.get("src") == "assets/hero.mp4"), None) or             next((x for x in shots if x.get("k") == "broll"), None)
+        if pick:
+            try:
+                t = round(pick["t0"] + 0.8 * (pick["t1"] - pick["t0"]), 2)
+                [png] = atlas.snapshot(dict(sp, words=[]), work, [t], work / "thumb_snap", assets)
+                shutil.copy(png, d / "thumb_art.png")
+            except Exception:
+                log.exception("thumbnail snapshot failed; using a frame of the video")
     mixed, report = sfx_v2.mix(voice.astype(np.float32), shots, total)
     raw, mastered = work / "mix_raw.wav", work / "mix.wav"
     sfx_v2.write_wav(raw, mixed)

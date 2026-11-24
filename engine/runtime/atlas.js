@@ -169,10 +169,12 @@
     },
     bars(s) {
       const n = layer(true);
-      const rows = s.items.map((it, i) => `<div style="margin-bottom:${px(34)}"><div style="font:800 ${px(30)} Montserrat;color:${C.ink};margin-bottom:${px(10)}">${esc(it.label)}</div>` +
-        `<div style="position:relative;height:${px(54)};background:#fff;border:${px(3)} solid ${C.ink};border-radius:${px(10)};overflow:hidden">` +
-        `<div class="bf bf${i}" style="position:absolute;left:0;top:0;bottom:0;width:0;background:${it.color === "teal" ? C.teal : C.red}"></div>` +
-        `<div style="position:absolute;right:${px(14)};top:0;bottom:0;display:flex;align-items:center;font:400 ${px(36)} Anton;color:${C.ink}">${esc(it.value)}</div></div></div>`).join("");
+      // the value sits on the label line, never inside the bar (dry run: long values overflowed the fill)
+      const rows = s.items.map((it, i) => `<div style="margin-bottom:${px(34)}"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:${px(20)};margin-bottom:${px(10)}">` +
+        `<div style="font:800 ${px(30)} Montserrat;color:${C.ink}">${esc(it.label)}</div>` +
+        `<div style="font:400 ${px(V ? 44 : 40)} Anton;color:${it.color === "teal" ? C.teal : C.red};white-space:nowrap">${esc(it.value)}</div></div>` +
+        `<div style="position:relative;height:${px(46)};background:#fff;border:${px(3)} solid ${C.ink};border-radius:${px(10)};overflow:hidden">` +
+        `<div class="bf bf${i}" style="position:absolute;left:0;top:0;bottom:0;width:0;background:${it.color === "teal" ? C.teal : C.red}"></div></div></div>`).join("");
       n.innerHTML = `<div style="position:absolute;left:8%;right:8%;top:${V ? 24 : 26}%">${rows}${badge(s.src)}</div>`;
       inOut(n, s);
       s.items.forEach((it, i) => tl.to(n.querySelectorAll(".bf")[i], { width: `${it.frac * 100}%`, duration: 0.9, ease: "power2.out" },
