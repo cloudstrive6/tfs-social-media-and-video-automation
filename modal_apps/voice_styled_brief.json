@@ -1,0 +1,18 @@
+{
+ "purpose": "Approved TFS narrator re-styled as a history storyteller (Bryce, 2026-11-24: use our current TFS voice and design it into a storyteller). Only voice source: our own synthetic master clip.",
+ "sentences": [
+  {"text": "Marso, labinlimang daan at dalawampu't isa.", "pause_after": 1.0},
+  {"text": "Tatlong barko ang dumaong sa isla ng Homonhon.", "pause_after": 1.2},
+  {"text": "Hindi alam ng mga tao roon na magbabago ang buong kapuluan, magpakailanman.", "pause_after": 1.4},
+  {"text": "Pitong libong isla, mahigit isandaang wika, at tatlong siglong pamamahala ng iisang korona.", "pause_after": 2.0},
+  {"text": "Pero may mga taong ayaw sumuko.", "pause_after": 0.6}
+ ],
+ "styles": {
+  "C0": "",
+  "R1": "calm documentary storyteller, slow and measured, warm, falling intonation at the end of each sentence",
+  "R2": "cinematic history narrator, grave and dramatic, slow, with weight on key words",
+  "R3": "intimate storyteller telling a legend, soft and patient, slow, quiet intensity",
+  "R4": "epic documentary narration, rich and resonant, deliberate pace, rising tension then release"
+ },
+ "seeds": [11, 23]
+}

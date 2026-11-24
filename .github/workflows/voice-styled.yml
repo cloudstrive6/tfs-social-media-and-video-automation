@@ -1,0 +1,32 @@
+# The approved TFS narrator re-styled as a history storyteller on Modal, then scored on the runner (same voice,
+# clarity, pace, pauses) and returned as a private artifact with small MP3s for in-chat review.
+name: voice-styled
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/voice-design]
+    paths: [modal_apps/tfs_voice_styled.py, modal_apps/voice_styled_brief.json, tools/check_styled.py, .github/workflows/voice-styled.yml]
+jobs:
+  styled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+      - run: pip install -q modal==1.6.4
+      - run: modal run modal_apps/tfs_voice_styled.py --out out/styled
+      - run: pip install -q --index-url https://download.pytorch.org/whl/cpu torch && pip install -q openai-whisper librosa soundfile numpy
+      - run: python tools/check_styled.py out/styled assets/voice/tfs_narrator_master.wav out/review
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-styled
+          path: |
+            out/styled/manifest.json
+            out/review
+          retention-days: 7
