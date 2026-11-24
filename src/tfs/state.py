@@ -80,8 +80,8 @@ def pull() -> None:
     if f"{PREFIX}{DB}" in keys:
         _download(f"{PREFIX}{DB}")
     for key in keys:                                # notes, schedule override, tokens
-        if ("/" not in key[len(PREFIX):] or key.startswith(f"{PREFIX}analyst_notes/")
-                or key.startswith(f"{PREFIX}creative_notes/")          # the Creative Director's standing notes
+        if ("/" not in key[len(PREFIX):] or key.startswith((f"{PREFIX}analyst_notes/", f"{PREFIX}analyst_notes_v2/"))
+                or key.startswith((f"{PREFIX}creative_notes/", f"{PREFIX}creative_notes_v2/"))          # the Creative Director's standing notes
                 or key.startswith(f"{PREFIX}library/")):                 # music + sound effects library
             if key != f"{PREFIX}{DB}":
                 _download(key)

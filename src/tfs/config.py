@@ -79,18 +79,32 @@ def item_dir(item_id: str) -> Path:
     return path
 
 
-@lru_cache
+def _v2() -> bool:
+    """Style v2 (atlas engine, approved 2026-11-24): the cartoon-era bible and briefs are not used (Bryce: "don't use
+    that old one")."""
+    return channel().get("video", {}).get("engine") == "atlas"
+
+
+def notes_dir(kind: str) -> Path:
+    """Standing notes folder ("analyst_notes" or "creative_notes"). Style v2 keeps its own, so notes written while
+    reviewing cartoon-era videos never steer atlas videos."""
+    return data_dir() / (f"{kind}_v2" if _v2() else kind)
+
+
 def style_bible() -> str:
-    return (ROOT / "docs" / "STYLE_BIBLE.md").read_text(encoding="utf-8")
+    name = "STYLE_BIBLE_V2.md" if _v2() else "STYLE_BIBLE.md"
+    return (ROOT / "docs" / name).read_text(encoding="utf-8")
 
 
 def load_prompt(agent: str) -> str:
-    """Agent prompt plus any standing notes the analyst has written for it."""
-    prompt = (ROOT / "prompts" / f"{agent}.md").read_text(encoding="utf-8")
-    notes = data_dir() / "analyst_notes" / f"{agent}.md"
+    """Agent prompt (the style v2 brief in prompts/v2/ when the atlas engine is on and one exists) plus any standing
+    notes the analyst has written for it."""
+    v2 = ROOT / "prompts" / "v2" / f"{agent}.md"
+    prompt = (v2 if _v2() and v2.exists() else ROOT / "prompts" / f"{agent}.md").read_text(encoding="utf-8")
+    notes = notes_dir("analyst_notes") / f"{agent}.md"
     if notes.exists():
         prompt += "\n\n## Standing notes from the Growth Analyst\n" + notes.read_text(encoding="utf-8")
-    creative = data_dir() / "creative_notes" / f"{agent}.md"
+    creative = notes_dir("creative_notes") / f"{agent}.md"
     if creative.exists() and creative.read_text(encoding="utf-8").strip():
         prompt += ("\n\n## Standing notes from the Creative Director (from recent reviews; follow them)\n"
                    + creative.read_text(encoding="utf-8"))

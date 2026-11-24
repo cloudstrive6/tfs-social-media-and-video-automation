@@ -1,6 +1,8 @@
 """Editor-in-Chief: assigns fresh topics to upcoming production units."""
 from __future__ import annotations
 
+from ..config import notes_dir as config_notes_dir
+
 import json
 
 from .. import db, llm
@@ -11,7 +13,7 @@ from ..slots import Unit
 
 def plan(units: list[Unit]) -> list[str]:
     topics = db.fresh_topics(hours=12)
-    summary = data_dir() / "analyst_notes" / "_summary.md"
+    summary = config_notes_dir("analyst_notes") / "_summary.md"
     request = {
         "now": now().strftime("%A %d %B %Y %H:%M PHT"),
         "slots_to_fill": [{"slot_id": u.id, "format": u.kind,

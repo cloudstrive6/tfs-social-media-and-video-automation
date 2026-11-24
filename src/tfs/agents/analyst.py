@@ -1,6 +1,8 @@
 """Growth Analyst: pulls performance data, writes standing notes for every agent, retunes the schedule."""
 from __future__ import annotations
 
+from ..config import notes_dir as config_notes_dir
+
 import json
 import logging
 from datetime import timedelta
@@ -70,7 +72,7 @@ def run() -> AnalystReport:
         AnalystReport,
     )
 
-    notes_dir = data_dir() / "analyst_notes"
+    notes_dir = config_notes_dir("analyst_notes")
     notes_dir.mkdir(exist_ok=True)
     (notes_dir / "_summary.md").write_text(report.summary_markdown, encoding="utf-8")
     for note in report.agent_notes:

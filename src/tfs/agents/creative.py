@@ -5,6 +5,8 @@ last pass and rewrites data/creative_notes/<agent>.md, which load_prompt() appen
 """
 from __future__ import annotations
 
+from ..config import notes_dir as config_notes_dir
+
 import json
 import logging
 from datetime import datetime, timedelta
@@ -20,7 +22,7 @@ MIN_PIECES = 2
 
 
 def notes_dir():
-    d = data_dir() / "creative_notes"
+    d = config_notes_dir("creative_notes")
     d.mkdir(parents=True, exist_ok=True)
     return d
 
