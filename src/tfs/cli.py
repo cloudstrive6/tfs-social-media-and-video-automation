@@ -27,7 +27,7 @@ def main() -> None:
     sub.add_parser("creative-review", help="Creative Director now: review notes -> standing notes for the designers")
     sub.add_parser("backup", help="dated copy of the SQLite state in the private R2 bucket")
     sub.add_parser("sample", help="produce one piece now for review; never scheduled or posted").add_argument(
-        "--kind", choices=["vertical", "carousel"], default="vertical")
+        "--kind", choices=["vertical", "carousel", "long_form"], default="vertical")
     pn = sub.add_parser("post-now", help="make one piece on a topic and publish it right away on all its platforms")
     # workflow inputs arrive as environment variables (never pasted into a shell command line)
     pn.add_argument("--kind", choices=["vertical", "carousel"], default=os.environ.get("TFS_KIND") or "carousel")
