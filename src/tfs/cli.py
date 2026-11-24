@@ -34,6 +34,8 @@ def main() -> None:
     pn.add_argument("--topic", default=os.environ.get("TFS_SAMPLE_TOPIC", ""))
     pn.add_argument("--note", default=os.environ.get("TFS_NOTE", ""), help="extra guidance for the editor and researcher")
     pn.add_argument("--here", action="store_true", help="make it in this process instead of queueing it for a run")
+    sub.add_parser("publish-file", help="publish one approved, already-made video now (publish/<id> in R2)").add_argument(
+        "--key", required=True)
     sub.add_parser("hold", help="stop posts that haven't gone live yet (one item, or all); never deletes").add_argument(
         "item_id", nargs="?", default="")
     sub.add_parser("build-sound-library", help="one-time: generate music beds + sound effects with ElevenLabs into R2")
@@ -121,6 +123,9 @@ def main() -> None:
         case "post-now":
             from . import post_now
             print(post_now.run(a.kind, a.topic, a.note) if a.here else post_now.request(a.kind, a.topic, a.note))
+        case "publish-file":
+            from .publish_file import run as publish_file
+            publish_file(a.key)
         case "hold":
             from .hold import run as hold
             print("\n".join(hold("held by request", a.item_id)) or "nothing to hold")

@@ -1,0 +1,29 @@
+# Publish one owner-approved, already-made video now (timely pieces), without switching on the posting schedule.
+# Trigger: commit publish-requests/<id>.json ({"key": "publish/<id>", "approved_by": ..., "approved_at": ...}) to this
+# branch; the video and captions are already in the private R2 bucket under that key. See src/tfs/publish_file.py.
+name: publish-file
+on:
+  push:
+    paths: [publish-requests/*.json]
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    outputs:
+      key: ${{ steps.k.outputs.key }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: k
+        run: |
+          f=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'publish-requests/*.json' | head -1)
+          [ -n "$f" ] || { echo "no new request"; exit 0; }
+          echo "key=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['key'])" "$f")" >> "$GITHUB_OUTPUT"
+  publish:
+    needs: find
+    if: needs.find.outputs.key != ''
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: publish-file --key ${{ needs.find.outputs.key }}
+      needs_media: true
+    secrets: inherit
