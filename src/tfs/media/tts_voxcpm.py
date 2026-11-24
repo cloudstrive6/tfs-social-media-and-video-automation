@@ -52,6 +52,7 @@ log = logging.getLogger(__name__)
 
 APP, FUNCTION = "tfs-voice", "narrate"
 THRESHOLD = 0.85            # pilot pass mark for Whisper letter match
+FLOOR = 0.70                # after the retry, a take at or above this is kept and flagged; below it the episode stops
 SEED, TAKES = 19, 2         # seed 19 is the approved voice's design seed; 2 takes per line as in the pilot
 RETRY_SEED_STEP = 1000      # a retry round uses seed + 1000
 CHUNK = 16                  # lines per Modal call
@@ -140,6 +141,8 @@ def spoken(text: str) -> str:
 
 def norm(text: str) -> list[str]:
     """Lower-case letter tokens with accents and punctuation dropped, numbers spoken (pilot norm + numbers)."""
+    text = re.sub(r"(\d)\s+([.,]\d)", r"\1\2", text)      # Whisper splits numbers: "82 .98 %" is "82.98%"
+    text = re.sub(r"(\d)\s+%", r"\1%", text)
     s = unicodedata.normalize("NFKD", spoken(text).lower())
     s = "".join(c for c in s if not unicodedata.combining(c))
     return re.findall(r"[a-z0-9]+", s.replace("-", " "))
@@ -321,6 +324,17 @@ def synthesize_scenes(texts: list[str], out_dir: Path, ids: list[int] | None = N
                         "letter_match": round(pick["match"], 3), "heard": pick["heard"]}, ensure_ascii=False),
                         encoding="utf-8")
             todo = failed
+        keep = [i for i in todo if best[i]["match"] >= FLOOR]   # borderline after the retry: keep the best take and
+        for i in keep:                                          # flag it for the audio review (it re-voices real problems)
+            pick = best[i]
+            log.warning("scene %s: best take %.3f is under %.2f; kept for the audio review", ids[i], pick["match"],
+                        threshold)
+            d = _encode(pick["path"], mp3[i])
+            meta[i].write_text(json.dumps({
+                "words": map_words(texts[i], pick["words"], pick["dur"]), "duration": d, "provider": "voxcpm",
+                "take": pick["take"], "letter_match": round(pick["match"], 3), "below_threshold": True,
+                "heard": pick["heard"]}, ensure_ascii=False), encoding="utf-8")
+        todo = [i for i in todo if i not in keep]
     if todo:
         detail = ", ".join(f"scene {ids[i]} best {best[i]['match']:.3f} heard {best[i]['heard'][:80]!r}" for i in todo)
         raise NarrationQualityError(f"narration below {threshold} letter match after {retry_rounds + 1} rounds: {detail}")

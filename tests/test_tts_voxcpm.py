@@ -148,6 +148,20 @@ def test_retry_then_fail_below_threshold(tmp_path, monkeypatch):
     assert not (tmp_path / "audio" / "007.json").exists()
 
 
+def test_borderline_line_is_kept_and_flagged(tmp_path, monkeypatch):
+    # long-form dry run 2026-11-24: one borderline line stopped a 73-scene episode; now kept and flagged
+    line = "Isang impeachment lang kada taon laban sa iisang opisyal."
+    install(monkeypatch, plan=lambda l, seed, k: 0.5, heard_for=lambda m, l: "Isang impeachment lang kada taon laban sa")
+    clips = vx.synthesize_scenes([line], tmp_path / "audio", ids=[7])
+    meta = json.loads((tmp_path / "audio" / "007.json").read_text(encoding="utf-8"))
+    assert vx.FLOOR <= meta["letter_match"] < vx.THRESHOLD and meta["below_threshold"] is True and len(clips) == 1
+
+
+def test_split_numbers_from_whisper_match():
+    s = "Hindi tamad ang Pilipino. 2022, 82.98% ang turnout, 56 na milyong botante."
+    assert vx.letter_match(s, "Hindi tamad ang Pilipino. 2022, 82 .98 % ang turnout, 56 na milyong botante.") == 1.0
+
+
 def test_retry_round_rescues_a_line(tmp_path, monkeypatch):
     fn = install(monkeypatch, plan=lambda line, seed, k: 0.5 if seed == 19 else 0.7,
                  heard_for=lambda m, line: line if m == 0.7 else "mali")
