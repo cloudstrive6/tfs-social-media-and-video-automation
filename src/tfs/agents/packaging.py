@@ -120,6 +120,22 @@ def motion_plan(item: dict, script: Script, dossier: str) -> "MotionPlan":
     )
 
 
+def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool) -> "AtlasPlan":
+    """Atlas Designer (style v2): maps, real photos, documents, cards and charts for every scene, each cutaway
+    anchored on the word it shows."""
+    from ..models import AtlasPlan
+
+    fmt = ("Format: 9:16 Short (35 to 58 s). Keep text short; at least one real photo every 12 s."
+           if vertical else "Format: 16:9 long-form. At least one real photo every 20 s; one hero shot at most.")
+    return llm.structured(
+        "atlas_designer",
+        f"{fmt}\n\n{_ctx(item)}\n\n"
+        f"# Script (final, fact-checked; one AtlasScene per scene id, at_word copied from that scene's text)\n"
+        f"{script.model_dump_json()}\n\n# Dossier (exact law text for doc shots, facts for cards)\n{dossier[:30000]}",
+        AtlasPlan,
+    )
+
+
 def motion_revise(item: dict, script: Script, plan: "MotionPlan", notes: dict[int, list[str]],
                   dossier: str) -> "MotionPlan":
     """Motion Designer, second pass: fix the scenes the Visual Critic (or the review team) flagged."""

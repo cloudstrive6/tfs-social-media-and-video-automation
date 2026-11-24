@@ -1,38 +1,92 @@
-# When things post. Every platform of a kind posts at the SAME moment (owner's choice, 28 Sep 2026).
+# When things post. Revamp cadence (Bryce, 2026-11-24); the full table and the reasons are in the vault page
+# wiki/answers/tfs-weekly-posting-schedule-2026-11.md.
 #
 # Times are Asia/Manila (PHT, UTC+8) and stay fixed to the Philippine audience all year. In New Zealand that
 # is +5 h while NZ is on daylight time (late Sep - early Apr) and +4 h the rest of the year:
 #
-#   kind       PHT      NZ (NZDT, +5h)   NZ (NZST, +4h)
-#   vertical   04:30    09:30            08:30
-#   carousel   08:30    13:30            12:30
-#   vertical   12:30    17:30            16:30
-#   carousel   19:00    00:00 (+1 day)   23:00
-#   vertical   20:30    01:30 (+1 day)   00:30 (+1 day)
-#   long_form  21:00    02:00 (+1 day)   01:00 (+1 day)
+#   use                         PHT      NZ (NZDT, +5h)   NZ (NZST, +4h)
+#   Short / Reel A              07:30    12:30            11:30
+#   Short / Reel B              12:30    17:30            16:30
+#   long-form (YT + FB)         19:15    00:15 (+1 day)   23:15
+#   carousel (IG, FB, TikTok)   19:30    00:30 (+1 day)   23:30
+#   Threads image of carousel   20:00    01:00 (+1 day)   00:00 (+1 day)
+#   Short / Reel C (plain, C)   20:30    01:30 (+1 day)   00:30 (+1 day)
+#   Reel C after a long-form    21:00    02:00 (+1 day)   01:00 (+1 day)
 #
-# Verticals run every 8 hours, 4 hours either side of the morning carousel.
-# The weekly analyst can move these times (per kind) from real analytics; see `tfs analyze`.
+# Day types: C = carousel day (Mon, Wed, Fri), L = long-form day (Tue, Thu, Sat), P = plain day (Sun).
+# The weekly analyst can move times per kind (data/schedule_override.yaml, `slots: {kind: [HH:MM, ...]}`).
+# An override moves the i-th unit of that kind on every day by (override[i] - slots[kind][i]) below, so the
+# day-to-day differences (20:30 vs 21:00) and per-platform offsets (Threads +30 min) are kept.
 
-production_lead_hours: 6      # everything is rendered at least this long before its slot
+# Master switch. false = the run loop plans nothing new under this schedule (nothing new is made or posted).
+# Bryce flips it to true when he says go.
+live: false
 
-# Kinds on pause: not planned, produced or posted (owner's choice, 29 Sep 2026: long-form YouTube paused;
-# reels/Shorts and carousels run). Remove a kind from the list to resume it.
-paused: [long_form]
+production_lead_hours: 6      # everything is rendered at least this long before its first platform slot
 
+# Kinds on pause: not planned, produced or posted. Long-form unpaused for the revamp (2026-11-24); `live`
+# above still holds everything until Bryce says go.
+paused: []
+
+# Default time of the i-th unit of each kind (the analyst override replaces these lists; old readers use them).
 slots:
-  long_form: ["21:00"]
-  vertical: ["04:30", "12:30", "20:30"]
-  carousel: ["08:30", "19:00"]
+  long_form: ["19:15"]
+  vertical: ["07:30", "12:30", "20:30"]
+  carousel: ["19:30"]
 
+# Every platform a kind can go to (post-now and samples use the full list).
 platforms:
-  long_form: [youtube]
+  long_form: [youtube, facebook_video]
   vertical: [youtube_shorts, instagram_reel, facebook_reel, tiktok]
-  # tiktok_carousel = a TikTok photo post (via Post for Me); threads_carousel = Threads (direct API)
+  # tiktok_carousel = a TikTok photo post (via Post for Me); threads_carousel = the 1080x1080 Threads image post
   carousel: [instagram_carousel, facebook_post, tiktok_carousel, threads_carousel]
 
-# Pieces made per day (one per slot above).
+# Old-format piece counts (only used when `week` is missing).
 daily_production:
   long_form: 1
   vertical: 3
-  carousel: 2
+  carousel: 1
+
+# PHT weekday -> day type.
+week:
+  mon: carousel
+  tue: long_form
+  wed: carousel_single
+  thu: long_form
+  fri: carousel
+  sat: long_form
+  sun: plain
+
+# Each day type lists its units per kind, in order (unit i of a kind is shifted by the analyst's slot i).
+# A unit is one piece produced once and cross-posted:
+#   at:     its time (HH:MM PHT) on every platform of the kind
+#   only:   post only to these platforms        skip: post to every platform except these
+#   times:  per-platform times that differ from `at`
+#   format: a hint for the editor (carousel: multi = 7 to 9 slides, single = one infographic)
+day_types:
+  carousel:            # Mon, Fri: YT Shorts 3, IG and TikTok 2 Reels + photo post, FB 2 short-form + carousel
+    vertical:
+      - {at: "07:30"}
+      - {at: "12:30"}
+      - {at: "20:30", only: [youtube_shorts]}
+    carousel:
+      - {at: "19:30", format: multi, times: {threads_carousel: "20:00"}}
+  carousel_single:     # Wed: as Mon, with a single infographic
+    vertical:
+      - {at: "07:30"}
+      - {at: "12:30"}
+      - {at: "20:30", only: [youtube_shorts]}
+    carousel:
+      - {at: "19:30", format: single, times: {threads_carousel: "20:00"}}
+  long_form:           # Tue, Thu, Sat: long-form on YT and FB, YT Shorts 2, IG and TikTok 3, FB short-form 2
+    long_form:
+      - {at: "19:15"}
+    vertical:
+      - {at: "07:30"}
+      - {at: "12:30"}
+      - {at: "21:00", only: [instagram_reel, tiktok]}
+  plain:               # Sun: the full 3, 3, 3, 3 short-form day
+    vertical:
+      - {at: "07:30"}
+      - {at: "12:30"}
+      - {at: "20:30"}

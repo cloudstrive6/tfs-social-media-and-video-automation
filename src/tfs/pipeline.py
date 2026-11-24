@@ -903,6 +903,8 @@ def _publish_due() -> int:
 
 # ---------------------------------------------------------------- scheduler tick
 def plan_upcoming() -> list[str]:
+    if not slots.is_live():                          # schedule master switch (config/schedule.yaml `live`)
+        return []
     horizon = now() + timedelta(hours=schedule()["production_lead_hours"] + 2)
     today = now().date()
     units = [u for day in (today, today + timedelta(days=1)) for u in slots.day_units(day)

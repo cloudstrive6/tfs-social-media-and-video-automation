@@ -302,3 +302,59 @@ class SceneCritique(BaseModel):
 class VisualCritique(BaseModel):
     scenes: list[SceneCritique]
     notes: list[str]
+
+
+# ---------------------------------------------------------------- atlas engine (style v2, 2026-11-24)
+class AtlasItem(BaseModel):
+    """One entry of a cards, bars, timeline or seats shot (fill only the fields that kind uses)."""
+    big: str = ""                 # cards: the number or short phrase ("6 YEARS", "0")
+    small: str = ""               # cards: one plain line under it
+    color: Literal["red", "ink", "teal", ""] = ""
+    label: str = ""               # bars / seats: what the row is
+    value: str = ""               # bars: the value text ("1/3 OF ALL MEMBERS")
+    frac: float = 0.0             # bars: 0..1 fill
+    count: int = 0                # seats: filled dots
+    of: int = 0                   # seats: total dots
+    date: str = ""                # timeline: "7 DEC 2000"
+    text: str = ""                # timeline: what happened
+
+
+class AtlasSide(BaseModel):
+    name: str = ""
+    big: str = ""
+    small: str = ""
+
+
+class AtlasShot(BaseModel):
+    k: Literal["map", "bigtext", "title", "doc", "cards", "bars", "timeline", "compare", "seats", "split", "broll"]
+    at_word: str = ""             # starts when this word of the scene is spoken; "" = scene start
+    text: str = ""                # bigtext / title / split middle
+    sub: str = ""
+    kicker: str = ""
+    items: list[AtlasItem] = []
+    head: str = ""                # doc: the document's name ("THE 1987 CONSTITUTION")
+    sec: str = ""                 # doc: the section ("ARTICLE XI, SECTION 3")
+    body: str = ""                # doc: EXACT quoted text from the dossier, never paraphrased
+    hl: list[str] = []            # doc: exact substrings of body to highlight
+    src: str = ""                 # source badge ("1987 Constitution, Art. VII, Sec. 4")
+    view: Literal["", "ph", "nz", "both", "luzon", "visayas", "mindanao", "ncr"] = ""
+    fill: Literal["", "ph", "nz"] = ""
+    draw: bool = False
+    label: str = ""               # map: yellow label
+    left: str = ""                # split: left (red, Philippines) heading
+    right: str = ""               # split: right (teal, comparison) heading
+    ph: AtlasSide = AtlasSide()   # compare
+    nz: AtlasSide = AtlasSide()   # compare
+    foot: str = ""                # timeline footer
+    broll_query: str = ""         # broll: Wikimedia Commons search (place or object, never a living person)
+    word: str = ""                # broll: brick-red word pill
+    hero: bool = False            # broll: the 3D Metro Manila push (long-form, at most one)
+
+
+class AtlasScene(BaseModel):
+    scene_id: int
+    shots: list[AtlasShot]
+
+
+class AtlasPlan(BaseModel):
+    scenes: list[AtlasScene]

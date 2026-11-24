@@ -45,6 +45,7 @@ llm:
     sound_designer:   {model: claude-opus-5, effort: medium}
     visual_qa:        {model: claude-opus-5, effort: high}
     motion_designer:  {model: claude-opus-5, effort: high}
+    atlas_designer:   {model: claude-opus-5, effort: high}
     visual_critic:    {model: claude-opus-5, effort: high}
     creative_director: {model: claude-opus-5, effort: high}
 
@@ -144,6 +145,8 @@ video:
   # "vector" (28 Sep 2026): our own free cartoon engine. The Motion Designer plans every shot for SVG puppets,
   # illustrated sets, Fluent Emoji props (MIT), speech bubbles and animated cards; the Visual Critic checks a
   # still of each scene; GSAP animates it and HyperFrames (headless Chrome) renders it. No paid images.
+  # "atlas" (style v2, approved 2026-11-24): paper map, real b-roll, documents, cards, Blender hero, synthesized SFX.
+  # Stays "vector" until the atlas dry run is approved.
   engine: vector
   fps_vector: 60              # every format renders at 60 fps
   render_workers: 4           # parallel Chrome capture workers (GitHub runners have 4 vCPUs)

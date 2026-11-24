@@ -1,0 +1,419 @@
+"""TFS sound design v2 (map-explainer style, approved by Bryce on 2026-11-24 with the v2.2 pilot).
+
+A synthesized "paper desk" SFX palette (owned outright, so no Content ID risk), a cue engine that places each
+sound on the visual beat the atlas runtime (engine atlas.js) animates, a synthesized 4-chord documentary pad,
+and the pilot's mix chain:
+
+- speech gate from the narration (0.3 s moving averages);
+- pad about 15 dB quieter under speech, swelling about 10 dB over the 1.5 s before each reveal, silent from
+  reveal - 0.8 s to reveal + 1.6 s, then back over 0.8 s ("silence is a sound");
+- SFX bus gain 1.78 * (1 - 0.75 * gate): about +5 dB in gaps, about 7 dB under speech;
+- QC: voice-over-SFX margin in 50 ms windows where the voice is above -40 dBFS.
+
+`master` then compresses and limits the raw mix with ffmpeg, looping the make-up gain until integrated loudness
+is within 0.3 LU of the target (-14 LUFS), 48 kHz out.
+
+Ported from revamp-2026-11/pilot/engine/sfx_tfs.py and remix.py (2026-11-24). Same sounds, same levels, same
+cue rules; the RNG is reseeded on every `build_cues` call so output is deterministic per call.
+
+Typical use:
+    voice = load_audio(work / "narration.wav")             # 48 kHz mono float32
+    mixed, report = mix(voice, shots, total)
+    write_wav(work / "mix_raw.wav", mixed)
+    lufs, peak = master(work / "mix_raw.wav", work / "mix.wav")
+"""
+from __future__ import annotations
+
+import re
+import subprocess
+from pathlib import Path
+
+import numpy as np
+from scipy.signal import butter, sosfilt
+
+SR = 48000
+SEED = 7
+MIN_GAP = 1.2            # seconds between ordinary cues (hits, pens and ticks are exempt)
+
+PAD_LEVEL = 0.035        # pad bed gain in gaps
+PAD_DUCK = 0.82          # 1 - 0.82 is about -15 dB under speech
+SFX_BUS = 1.78           # about +5 dB in gaps
+SFX_DUCK = 0.75          # 1.78 * 0.25 is about -7 dB under speech
+CHORDS = [[220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [130.81, 196.0, 261.63], [196.0, 246.94, 293.66]]
+CHORD_SECONDS = 6.0
+
+_rng = np.random.default_rng(SEED)
+
+
+# ---- helpers (identical maths to the pilot) --------------------------------------------------------------------
+def db(x): return 10 ** (x / 20)
+def n(sec): return int(sec * SR)
+def noise(sec): return _rng.standard_normal(n(sec)).astype(np.float32)
+def band(x, lo, hi, order=2): return sosfilt(butter(order, [lo, hi], btype="band", fs=SR, output="sos"), x).astype(np.float32)
+def low(x, hi, order=2): return sosfilt(butter(order, hi, btype="low", fs=SR, output="sos"), x).astype(np.float32)
+def high(x, lo, order=2): return sosfilt(butter(order, lo, btype="high", fs=SR, output="sos"), x).astype(np.float32)
+
+
+def norm(x, peak_db):
+    m = np.abs(x).max() + 1e-9
+    return (x / m * db(peak_db)).astype(np.float32)
+
+
+def ad(length, a, d_shape=4.0):
+    k = max(1, int(a * length))
+    e = np.ones(length)
+    e[:k] = np.linspace(0, 1, k) ** 1.5
+    e[k:] = (1 - np.linspace(0, 1, length - k)) ** d_shape
+    return e.astype(np.float32)
+
+
+# ---- palette -------------------------------------------------------------------------------------------------
+def paper_swish(dur=0.34):
+    """Sheet of paper slid across the desk: a band of noise whose centre sweeps up then settles."""
+    x = noise(dur); L = len(x); out = np.zeros(L, np.float32)
+    for i, (lo, hi) in enumerate([(900, 2600), (1600, 4800), (2600, 7500)]):
+        out += band(x, lo, hi) * np.sin(np.linspace(0, np.pi, L)) ** (1.5 + i)
+    return norm(out * ad(L, 0.35, 2.2), -27)
+
+
+def card_slap(heavy=False):
+    """A stiff card landing on paper: soft transient, paper flutter, small low thump."""
+    L = n(0.32); t = np.arange(L) / SR
+    crack = low(noise(0.32), 4200) * np.exp(-t / 0.018)
+    flutter = band(noise(0.32), 1200, 5000) * np.exp(-t / 0.06) * 0.35
+    thump = np.sin(2 * np.pi * (95 if heavy else 120) * t) * np.exp(-t / (0.11 if heavy else 0.07)) * (1.2 if heavy else 0.7)
+    return norm(crack + flutter + thump, -26 if heavy else -24)
+
+
+def pen_circle(dur=0.6):
+    """Felt pen drawing a quick loop: scratchy band noise in short strokes."""
+    L = n(dur); t = np.arange(L) / SR
+    strokes = 0.55 + 0.45 * np.abs(np.sin(2 * np.pi * 4.2 * t + _rng.uniform(0, 1)))
+    grain = band(noise(dur), 2200, 6500) * strokes + band(noise(dur), 700, 1600) * 0.25
+    return norm(grain * ad(L, 0.08, 1.2), -29)
+
+
+def marker_swipe(dur=0.65):
+    """Highlighter dragged across a line: one smooth, slightly squeaky stroke."""
+    L = n(dur); t = np.arange(L) / SR
+    body = band(noise(dur), 900, 3200)
+    squeak = np.sin(2 * np.pi * (1850 + 120 * np.sin(2 * np.pi * 3 * t)) * t) * 0.05
+    return norm((body + squeak) * ad(L, 0.15, 1.0), -31)
+
+
+def tick(f=2100):
+    L = n(0.05); t = np.arange(L) / SR
+    return norm(np.sin(2 * np.pi * f * t) * np.exp(-t / 0.008) + high(noise(0.05), 3000) * np.exp(-t / 0.004) * 0.4, -30)
+
+
+def bar_fill(dur=0.9, count=9):
+    """Ticks that slow down with the bar's power2.out ease."""
+    out = np.zeros(n(dur + 0.06), np.float32)
+    for i in range(count):
+        u = i / (count - 1)
+        at = dur * (1 - (1 - u) ** 0.5)                       # dense first, then slower, like power2.out
+        tk = tick(1800 + 500 * u) * (0.75 + 0.25 * u)
+        s = n(at); out[s:s + len(tk)] += tk[: len(out) - s]
+    return out
+
+
+def pop():
+    """Paper tab tap for list items."""
+    L = n(0.12); t = np.arange(L) / SR
+    return norm(band(noise(0.12), 600, 3800) * np.exp(-t / 0.02) + np.sin(2 * np.pi * 300 * t) * np.exp(-t / 0.03) * 0.5, -20)
+
+
+def riser(dur=1.0):
+    """Air and a low tone climbing into a chapter card; peaks right at the landing."""
+    L = n(dur); t = np.arange(L) / SR; u = t / dur
+    air = np.zeros(L, np.float32)
+    for k, (lo, hi) in enumerate([(300, 900), (700, 2000), (1500, 4500), (3000, 9000)]):
+        air += band(noise(dur), lo, hi) * np.clip((u - k * 0.18) / 0.4, 0, 1)
+    tone = np.sin(2 * np.pi * (110 * t + 70 * t * u)) * 0.6
+    return norm((air * 0.6 + tone) * (u ** 2.2), -25)
+
+
+def low_hit():
+    """Deep, short documentary hit for the reveal."""
+    L = n(1.4); t = np.arange(L) / SR
+    f = 62 - 18 * (1 - np.exp(-t / 0.25))
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.3)
+    knock = low(noise(1.4), 300) * np.exp(-t / 0.03) * 0.15        # soft attack: the hit often lands on a word
+    tail = band(noise(1.4), 150, 600) * np.exp(-t / 0.5) * 0.12
+    return norm(body + knock + tail, -23)
+
+
+def soft_air(dur=0.9):
+    """Gentle air move for photo cutaways and map moves."""
+    L = n(dur); x = noise(dur)
+    centre = np.sin(np.linspace(0, np.pi, L))
+    out = band(x, 400, 1400) * centre ** 2 + band(x, 1400, 4200) * centre ** 4 * 0.6
+    return norm(out, -26)
+
+
+def camera_push(dur=3.6):
+    """Long airy push with a low rumble for the 3D hero shot."""
+    L = n(dur); t = np.arange(L) / SR; u = t / dur
+    air = band(noise(dur), 500, 3500) * (np.sin(np.pi * u) ** 1.5)
+    rumble = low(noise(dur), 120) * 3 * np.sin(np.pi * np.clip(u * 1.2, 0, 1))
+    return norm(air + rumble, -24)
+
+
+def projector(dur):
+    """Film projector under archive footage: 24 fps gate clatter plus motor hum."""
+    L = n(dur); t = np.arange(L) / SR
+    clicks = np.zeros(L, np.float32)
+    for k in range(int(dur * 24)):
+        s = max(0, n(k / 24 + _rng.uniform(-0.002, 0.002)))   # clamp: the first click could jitter below 0 s
+        c = band(noise(0.02), 1200, 5000) * np.exp(-np.arange(n(0.02)) / SR / 0.004)
+        clicks[s:s + len(c)] += c[: L - s] * (0.8 + 0.4 * _rng.random())
+    hum = (np.sin(2 * np.pi * 60 * t) * 0.3 + np.sin(2 * np.pi * 120 * t) * 0.15) * 0.4
+    env = np.minimum(1, t / 0.3) * np.minimum(1, (dur - t) / 0.3)
+    return norm((clicks + hum) * env, -19)
+
+
+def room_tone(dur):
+    """Very quiet hall air. Kept in the palette, but the approved v2.2 mix does NOT use it (no room tone)."""
+    L = n(dur); t = np.arange(L) / SR
+    x = low(noise(dur), 700) + band(noise(dur), 2000, 5000) * 0.08
+    env = np.minimum(1, t / 0.4) * np.minimum(1, (dur - t) / 0.4)
+    return norm(x * env, -40)
+
+
+# ---- cue engine ----------------------------------------------------------------------------------------------
+def is_reveal(s: dict) -> bool:
+    """The big turn of a video: a card or bigtext whose answer is zero."""
+    texts = [it.get("big", "") for it in s.get("items", [])] + [s.get("text", ""), s.get("foot", "")]
+    return any(str(x).strip().endswith(": 0") or str(x).strip() == "0" or "\n0" in str(x) or ": 0\n" in str(x)
+               for x in texts)
+
+
+def build_cues(shots: list[dict], total: float, seed: int = SEED):
+    """Return (cues, track, reveals): cues as (time, name, job), a mono float32 48 kHz track of
+    int((total + 0.5) * 48000) samples, and the reveal shot start times.
+
+    `shots` are the atlas.js shot dicts (k, t0, t1, plus src, gate, mat, items, hl, foot, text, view...)."""
+    global _rng
+    _rng = np.random.default_rng(seed)
+    track = np.zeros(n(total + 1.5), np.float32)
+    cues, reveals = [], []
+    last_ordinary = -9.0
+
+    def put(at, sound, name, job, ordinary=True):
+        nonlocal last_ordinary
+        if at < 0:
+            return
+        if ordinary and at - last_ordinary < MIN_GAP:
+            return
+        s = n(at); track[s:s + len(sound)] += sound[: max(0, len(track) - s)]
+        cues.append((round(at, 2), name, job))
+        if ordinary:
+            last_ordinary = at
+
+    prev_kind = None
+    for s in sorted(shots, key=lambda x: x["t0"]):
+        k, t0, t1 = s.get("k"), s["t0"], s["t1"]
+        dur = t1 - t0
+        if k == "title" and s.get("mat"):
+            put(t0 - 0.95, riser(1.0), "riser", "lift into the chapter card", ordinary=False)
+            put(t0 + 0.08, card_slap(heavy=True), "card slap (heavy)", "chapter card lands", ordinary=False)
+            last_ordinary = t0
+        elif k == "title":
+            put(t0 + 0.05, card_slap(), "card slap", "title card lands")
+        elif k == "broll":
+            if s.get("gate"):
+                put(t0, projector(dur), "projector", "archive footage feels like film", ordinary=False)
+            elif s.get("src", "").endswith("hero.mp4"):
+                put(t0, camera_push(dur), "camera push", "3D push to Metro Manila", ordinary=False)
+            else:
+                put(t0 - 0.1, soft_air(0.9), "soft air", "cut to a real place")
+        elif k == "doc":
+            put(t0, paper_swish(), "paper swish", "document slides in")
+            put(t0 + 0.35, pen_circle(0.6), "pen circle", "red ring around the section", ordinary=False)
+            hl = s.get("hl") or []
+            for i in range(len(hl)):
+                at = t0 + 0.5 + i * max(0.8, (dur - 1.2) / max(1, len(hl)))
+                if at < t0 + 0.35 + 0.6:
+                    continue                                       # the pen circle already covers this moment
+                put(at, marker_swipe(0.7), "marker swipe", "highlight the quoted words", ordinary=False)
+        elif k in ("cards", "seats", "timeline"):
+            items = s.get("items", [])
+            last_item = -9.0
+            for i in range(len(items)):
+                if k == "cards":
+                    at = t0 + i * max(0.5, (dur - 1) / len(items))
+                elif k == "seats":
+                    at = t0 + i * max(0.8, (dur - 1) / len(items))
+                else:
+                    at = t0 + i * max(0.6, (dur - 1.5) / (len(items) + (1 if s.get("foot") else 0)))
+                snd = card_slap() if k == "cards" else pop()
+                if at - last_item < MIN_GAP:                       # item cues 1.2 s apart: nudge up to 0.15 s, else skip
+                    if last_item + MIN_GAP - at > 0.15:
+                        continue
+                    at = last_item + MIN_GAP
+                last_item = at
+                put(at + 0.05, snd, "card slap" if k == "cards" else "tab pop", "each point lands",
+                    ordinary=(i == 0 and prev_kind != k))
+        elif k == "bars":
+            put(t0, paper_swish(), "paper swish", "chart slides in")
+            items = s.get("items", [])
+            for i in range(len(items)):
+                put(t0 + 0.4 + i * max(0.6, (dur - 1.2) / len(items)), bar_fill(), "bar ticks",
+                    "bar fills to its threshold", ordinary=False)
+        elif k in ("bigtext", "compare", "split"):
+            put(t0, card_slap() if k != "split" else paper_swish(), "card slap" if k != "split" else "paper swish",
+                "new idea on screen")
+        elif k == "map" and s.get("view") and prev_kind == "map":
+            put(t0, soft_air(1.2), "soft air", "map move")
+        if is_reveal(s):
+            reveals.append(t0)
+            put(t0 + 0.05, low_hit(), "low hit", "the reveal: zero", ordinary=False)
+        prev_kind = k
+    return cues, track[: n(total + 0.5)], reveals
+
+
+# ---- music pad and mix -----------------------------------------------------------------------------------------
+def music_pad(total: float, length: int | None = None, sr: int = SR) -> np.ndarray:
+    """The pilot's documentary pad: 4 chords of 6 s (Am, F, C(add G), G), each with a 1.8 s fade in and a 1.5 s
+    overlap fade out, sine plus a soft octave. Unity scale; `mix` applies the bed gain."""
+    L = length if length is not None else int((total + 0.5) * sr)
+    t = np.arange(L) / sr
+    pad = np.zeros(L, np.float32)
+    seg = CHORD_SECONDS
+    for i in range(int(L / sr / seg) + 1):
+        a0, a1 = int(i * seg * sr), min(L, int((i + 1) * seg * sr + 1.5 * sr))
+        tt = t[a0:a1] - i * seg
+        env = np.minimum(1, tt / 1.8) * np.minimum(1, np.maximum(0, (seg + 1.5 - tt) / 1.5))
+        for f in CHORDS[i % 4]:
+            pad[a0:a1] += env * (np.sin(2 * np.pi * f * tt) + 0.3 * np.sin(2 * np.pi * 2 * f * tt + 0.7)) / 3
+    return pad
+
+
+def _smooth(x: np.ndarray, win: int) -> np.ndarray:
+    """Centred moving average via a running sum (float64)."""
+    c = np.cumsum(np.concatenate([np.zeros(win), x, np.zeros(win)]))
+    return ((c[win:] - c[:-win]) / win)[win // 2: win // 2 + len(x)]
+
+
+def speech_gate(voice: np.ndarray, sr: int = SR) -> np.ndarray:
+    """0..1 curve, about 1 while the narrator speaks: smoothed |voice| over 8 % of its maximum, smoothed again."""
+    win = int(0.3 * sr)
+    speech = _smooth(np.abs(voice), win)
+    return _smooth(np.clip(speech / (speech.max() * 0.08 + 1e-9), 0, 1), win)
+
+
+def pad_gain_curve(gate: np.ndarray, reveals: list[float], sr: int = SR) -> np.ndarray:
+    """Pad gain: PAD_LEVEL ducked about 15 dB under speech; before each reveal a swell (+10 dB over 1.5 s from
+    reveal - 2.3 s), a hard cut at reveal - 0.8 s, silence to reveal + 1.6 s, back over 0.8 s."""
+    t = np.arange(len(gate)) / sr
+    g = PAD_LEVEL * (1 - PAD_DUCK * gate)
+    for r in reveals:
+        swell = 1 + 2.2 * np.clip((t - (r - 2.3)) / 1.5, 0, 1) * (t < r - 0.8)
+        g = (np.maximum(g, PAD_LEVEL * 0.4) * swell * (t >= r - 2.3) * (t < r - 0.8)
+             + g * ((t < r - 2.3) | (t >= r - 0.8)))
+        back = np.clip((t - (r + 1.6)) / 0.8, 0, 1)
+        g = np.where(t < r - 0.8, g, g * back)
+    return g
+
+
+def voice_over_sfx(voice: np.ndarray, sfx_bus: np.ndarray, sr: int = SR):
+    """(median, p10, worst) dB of voice RMS over SFX-bus RMS in 50 ms windows where the voice is above -40 dBFS
+    and the effects above -70 dBFS; Nones if they never overlap."""
+    w = int(0.05 * sr); m = min(len(voice), len(sfx_bus)) // w
+    vr = np.sqrt((voice[: m * w].astype(np.float64).reshape(m, w) ** 2).mean(1))
+    fr = np.sqrt((sfx_bus[: m * w].astype(np.float64).reshape(m, w) ** 2).mean(1))
+    both = (vr > db(-40)) & (fr > db(-70))
+    if not both.any():
+        return None, None, None
+    d = 20 * np.log10(vr[both] / fr[both])
+    return float(np.median(d)), float(np.percentile(d, 10)), float(d.min())
+
+
+def mix(voice: np.ndarray, shots: list[dict], total: float, sr: int = SR, seed: int = SEED):
+    """Narration + ducked pad + SFX bus -> (mono float32 mix, report). `voice` is mono float32 at 48 kHz, placed
+    at 0 s. Output length is max(len(voice), int((total + 0.5) * sr)). The mix is not normalised: write it
+    with `write_wav` (float, no clipping) and finish it with `master`."""
+    if sr != SR:
+        raise ValueError(f"sfx_v2 is built at {SR} Hz; resample the voice first (got {sr})")
+    voice = np.asarray(voice, dtype=np.float32)
+    if voice.ndim > 1:
+        voice = voice.mean(axis=1).astype(np.float32)
+    L = max(len(voice), int((total + 0.5) * sr))
+    track = np.zeros(L, np.float32)
+    track[: len(voice)] = voice
+    gate = speech_gate(track, sr)
+    cues, sfx, reveals = build_cues(shots, total, seed=seed)
+    sfx = np.pad(sfx, (0, max(0, L - len(sfx))))[:L]
+    pad_g = pad_gain_curve(gate, reveals, sr)
+    sfx_bus = sfx * (SFX_BUS * (1 - SFX_DUCK * gate))
+    out = (track + music_pad(total, L, sr) * pad_g + sfx_bus).astype(np.float32)
+    median, p10, worst = voice_over_sfx(track, sfx_bus, sr)
+    report = {
+        "cues": cues,
+        "reveals": reveals,
+        "voice_over_sfx_db_median": median,
+        "voice_over_sfx_db_p10": p10,
+        "voice_over_sfx_db_worst": worst,
+    }
+    return out, report
+
+
+# ---- file helpers and mastering ---------------------------------------------------------------------------------
+def load_audio(path: str | Path, sr: int = SR) -> np.ndarray:
+    """Decode any audio file to mono float32 at `sr` with ffmpeg."""
+    res = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", str(path), "-ac", "1", "-ar", str(sr),
+                          "-f", "f32le", "-"], capture_output=True)
+    if res.returncode:
+        raise RuntimeError(f"ffmpeg (decode) failed: {res.stderr.decode(errors='replace')[-1500:]}")
+    return np.frombuffer(res.stdout, dtype="<f4").copy()
+
+
+def write_wav(path: str | Path, mono: np.ndarray, sr: int = SR) -> Path:
+    """Write a mono 32-bit float WAV (no clipping before the limiter)."""
+    data = np.asarray(mono, dtype="<f4").tobytes()
+    fmt = (3).to_bytes(2, "little") + (1).to_bytes(2, "little") + sr.to_bytes(4, "little") \
+        + (sr * 4).to_bytes(4, "little") + (4).to_bytes(2, "little") + (32).to_bytes(2, "little")
+    body = b"WAVE" + b"fmt " + len(fmt).to_bytes(4, "little") + fmt + b"data" + len(data).to_bytes(4, "little") + data
+    path = Path(path)
+    path.write_bytes(b"RIFF" + len(body).to_bytes(4, "little") + body)
+    return path
+
+
+def loudness(path: str | Path) -> tuple[float, float]:
+    """(integrated LUFS, true peak dBFS) from ffmpeg's ebur128 summary."""
+    out = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-af", "ebur128=peak=true",
+                          "-f", "null", "-"], capture_output=True, text=True).stderr
+    summ = out[out.rfind("Summary"):]
+    i = re.search(r"I:\s+(-?[\d.]+)", summ)
+    pk = re.search(r"Peak:\s+(-?[\d.]+)", summ)
+    if not (i and pk):
+        raise RuntimeError(f"ffmpeg ebur128 gave no summary for {path}: {out[-800:]}")
+    return float(i.group(1)), float(pk.group(1))
+
+
+def master(in_wav: str | Path, out_wav: str | Path, target: float = -14.0, tries: int = 6) -> tuple[float, float]:
+    """Light compression (2:1 above -20 dB), make-up gain, limiter at 0.70 (about -3.1 dBFS sample peak), 48 kHz.
+    Loops the gain until integrated loudness is within 0.3 LU of `target`. Returns (LUFS, true peak dBFS).
+
+    The pilot stepped the gain by the plain LU error, which converges slowly once the limiter works (the approved
+    pilot chapter sat at -14.5 after 4 passes). From the second pass the step is scaled by the measured dB per LU
+    (secant step, slope clamped to 1..4)."""
+    g = 0.0
+    i = pk = None
+    prev = None
+    for _ in range(tries):
+        res = subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(in_wav), "-af",
+                              f"acompressor=threshold=-20dB:ratio=2:attack=10:release=150,volume={g}dB,"
+                              f"alimiter=limit=0.70:level=disabled", "-ar", str(SR), str(out_wav)],
+                             capture_output=True, text=True)
+        if res.returncode:
+            raise RuntimeError(f"ffmpeg (master) failed: {res.stderr[-1500:]}")
+        i, pk = loudness(out_wav)
+        if abs(i - target) <= 0.3:
+            break
+        slope = 1.0
+        if prev is not None and abs(i - prev[1]) > 0.05:
+            slope = min(4.0, max(1.0, (g - prev[0]) / (i - prev[1])))
+        prev = (g, i)
+        g = round(g + (target - i) * slope, 2)
+    return i, pk

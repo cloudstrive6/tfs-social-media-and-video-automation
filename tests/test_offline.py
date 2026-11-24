@@ -17,16 +17,18 @@ def test_day_units_match_schedule(monkeypatch):
 
     monkeypatch.setattr(slots, "paused_kinds", lambda: set())       # the full schedule, nothing on pause
 
-    units = slots.day_units(date(2026, 9, 28))
+    units = slots.day_units(date(2026, 12, 1))                       # Tuesday: a long-form day (cadence of 2026-11-24)
     kinds = [u.kind for u in units]
-    assert kinds.count("long_form") == 1 and kinds.count("vertical") == 3 and kinds.count("carousel") == 2
+    assert kinds.count("long_form") == 1 and kinds.count("vertical") == 3 and kinds.count("carousel") == 0
     vert0 = next(u for u in units if u.id.endswith("vert0"))
     assert set(vert0.platforms) == {"youtube_shorts", "instagram_reel", "facebook_reel", "tiktok"}
-    assert vert0.anchor.strftime("%H:%M") == "04:30"
+    assert vert0.anchor.strftime("%H:%M") == "07:30"
     assert len(set(vert0.platforms.values())) == 1                  # every platform at the same moment
-    caro0 = next(u for u in units if u.id.endswith("caro0"))
+    vert2 = next(u for u in units if u.id.endswith("vert2"))
+    assert set(vert2.platforms) == {"instagram_reel", "tiktok"}      # YT and FB get 2 short-form on long-form days
+    caro0 = next(u for u in slots.day_units(date(2026, 11, 30)) if u.id.endswith("caro0"))     # Monday
     assert set(caro0.platforms) == {"instagram_carousel", "facebook_post", "tiktok_carousel", "threads_carousel"}
-    assert caro0.anchor.strftime("%H:%M") == "08:30"
+    assert caro0.anchor.strftime("%H:%M") == "19:30"
 
 
 def test_schedule_override(data_dir, monkeypatch):
@@ -36,7 +38,7 @@ def test_schedule_override(data_dir, monkeypatch):
 
     (data_dir / "schedule_override.yaml").write_text("slots: {long_form: ['09:00']}\nyoutube_long: ['10:00']\n")
     assert config.schedule()["slots"]["long_form"] == ["09:00"]      # an old per-platform key is ignored
-    long0 = next(u for u in slots.day_units(date(2026, 9, 28)) if u.id.endswith("long0"))
+    long0 = next(u for u in slots.day_units(date(2026, 12, 1)) if u.id.endswith("long0"))
     assert long0.anchor.strftime("%H:%M") == "09:00"
 
 
@@ -1000,16 +1002,16 @@ def test_carousels_go_to_tiktok_photos_and_threads(data_dir, monkeypatch):
 def test_scheduling_uses_the_current_schedule(data_dir, monkeypatch):
     from tfs import db, pipeline
 
-    db.upsert_item("2026-09-29-caro0", "carousel", "2026-09-29T11:00:00+08:00", "producing",
-                   {"platforms": {"instagram_carousel": "2026-09-29T11:00:00+08:00",
-                                  "facebook_post": "2026-09-29T10:00:00+08:00"}})
+    db.upsert_item("2026-11-30-caro0", "carousel", "2026-11-30T11:00:00+08:00", "producing",
+                   {"platforms": {"instagram_carousel": "2026-11-30T11:00:00+08:00",
+                                  "facebook_post": "2026-11-30T10:00:00+08:00"}})
     monkeypatch.setattr(pipeline, "_notify_ready", lambda item: None)
     monkeypatch.setattr("tfs.archive.archive_item", lambda item: None)
     monkeypatch.delenv("THREADS_ACCESS_TOKEN", raising=False)
-    pipeline._schedule(db.get_item("2026-09-29-caro0"), slides=[])
+    pipeline._schedule(db.get_item("2026-11-30-caro0"), slides=[])
     posts = {p["platform"]: p["slot_at"] for p in db.queued_posts()}
-    assert posts == {"instagram_carousel": "2026-09-29T08:30:00+08:00", "facebook_post": "2026-09-29T08:30:00+08:00",
-                     "tiktok_carousel": "2026-09-29T08:30:00+08:00"}          # Threads waits until it's connected
+    assert posts == {"instagram_carousel": "2026-11-30T19:30:00+08:00", "facebook_post": "2026-11-30T19:30:00+08:00",
+                     "tiktok_carousel": "2026-11-30T19:30:00+08:00"}          # Threads waits until it's connected
 
 
 def test_post_now_publishes_on_every_carousel_platform(data_dir, monkeypatch):
