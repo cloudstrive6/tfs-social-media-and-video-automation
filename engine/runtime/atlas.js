@@ -56,7 +56,7 @@
     tl.fromTo(node, Object.assign({ opacity: 0 }, from || { y: 30 * U }), { opacity: 1, y: 0, x: 0, scale: 1, duration: 0.35, ease: "power2.out" }, s.t0);
     tl.to(node, { opacity: 0, duration: 0.25, ease: "power1.in" }, Math.max(s.t0 + 0.4, s.t1 - 0.25));
   }
-  const badge = (txt) => txt ? `<div style="display:inline-block;margin-top:${px(18)};font:700 ${px(V ? 24 : 27)} 'Segoe UI',sans-serif;letter-spacing:.5px;color:${C.muted};` +
+  const badge = (txt) => txt ? `<div style="display:inline-block;margin-top:${px(18)};font:700 ${px(V ? 24 : 27)} 'Segoe UI',sans-serif;letter-spacing:.5px;color:${C.muted};max-width:${Math.round(W * (V ? 0.84 : 0.62))}px;white-space:normal;line-height:1.3;` +
     `background:${C.sheet};border:${px(2)} solid ${C.muted};border-radius:${px(8)};padding:${px(6)} ${px(12)}">SOURCE: ${esc(txt)}</div>` : "";
   const centerBox = `position:absolute;left:50%;top:${V ? "34%" : "47%"};transform:translate(-50%,-50%);width:${V ? 88 : 72}%;text-align:center`;
 
@@ -203,8 +203,8 @@
     split(s) {
       const n = layer();
       n.innerHTML = `<div style="position:absolute;left:0;top:0;bottom:0;width:50%;background:${C.red}"></div><div style="position:absolute;right:0;top:0;bottom:0;width:50%;background:${C.teal}"></div>` +
-        `<div style="position:absolute;left:4%;top:${V ? 12 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.left)}</div>` +
-        `<div style="position:absolute;left:54%;top:${V ? 12 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.right)}</div>` +
+        `<div style="position:absolute;left:4%;top:${V ? 21 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.left)}</div>` +
+        `<div style="position:absolute;left:54%;top:${V ? 21 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.right)}</div>` +
         (s.text ? `<div style="position:absolute;left:50%;top:${V ? 46 : 64}%;transform:translateX(-50%);background:${C.paper};padding:${px(16)} ${px(30)};border-radius:${px(12)};` +
           `font:400 ${px(V ? 70 : 72)} Anton;color:${C.ink};white-space:nowrap">${esc(s.text)}</div>` : "") +
         (s.src ? `<div style="position:absolute;left:4%;top:${V ? 58 : 72}%">${badge(s.src)}</div>` : "");

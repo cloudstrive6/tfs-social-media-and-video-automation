@@ -57,7 +57,7 @@ def test_atlas_long_form_end_to_end(tmp_path, monkeypatch):
     starts, shots = pipeline._atlas_video({"id": "2026-12-01-long0", "kind": "long_form"}, d, script, (1920, 1080))
 
     kinds = [s["k"] for s in shots]
-    assert kinds[:2] == ["map", "bigtext"]                                  # no licensed photo -> type, never unlicensed
+    assert kinds[:3] == ["map", "map", "bigtext"]                          # traced map, the scene map, then type                                  # no licensed photo -> type, never unlicensed
     assert "title" in kinds                                                 # chapter card in the pause
     for a, b in zip(shots, shots[1:]):
         assert a["t1"] <= b["t0"] + 1e-6, (a, b)                      # nothing overlaps

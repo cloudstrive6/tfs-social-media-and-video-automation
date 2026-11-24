@@ -94,13 +94,24 @@ def assemble(clips: list, scenes: list, kind: str, read: Callable[[Path], np.nda
     return voice, starts, total, cards
 
 
+DASHES = ("\u2014", "\u2013")                 # em and en dashes never appear on screen (house style)
+
+
 def caption_words(clips: list, starts: list[float]) -> list[dict]:
     out = []
     for clip, st in zip(clips, starts):
         ws = clip.words or []
         for j, (w, s, e) in enumerate(ws):
+            dashed = any(dsh in w for dsh in DASHES)
+            for dsh in DASHES:
+                w = w.replace(dsh, " ")
+            w = " ".join(w.split())
+            if not w:                                    # a bare dash token: end the caption group there
+                if out:
+                    out[-1]["brk"] = True
+                continue
             out.append({"w": w, "t0": round(st + s, 3), "t1": round(st + e, 3),
-                        "brk": w.rstrip().endswith(SENTENCE_END) or j == len(ws) - 1})
+                        "brk": dashed or w.endswith(SENTENCE_END) or j == len(ws) - 1})
     return out
 
 
@@ -112,10 +123,11 @@ def _runtime(s: AtlasShot) -> dict:
     d: dict = {"k": s.k}
     if s.k == "map":
         d.update({k: v for k, v in {"view": s.view, "fill": s.fill, "label": s.label}.items() if v})
-        if s.draw:
-            d["draw"] = 1.6
+        d["draw"] = 1.6                                  # the red coastline only shows once traced; a repeat is a no-op
     elif s.k in ("bigtext", "title"):
-        d.update({"text": s.text, "sub": s.sub, "kicker": s.kicker, "src": s.src})
+        # the ink title card read as a dead frame (dry run hook score 2/10): hooks and questions are paper cards over
+        # the map; numbered chapter cards on the mat come from assemble(), not from the designer
+        d = {"k": "bigtext", "text": s.text, "sub": s.sub or s.kicker, "src": s.src}
     elif s.k == "doc":
         hl = [h for h in s.hl if h and h in s.body]
         d.update({"head": s.head, "sec": s.sec, "body": s.body, "hl": hl, "src": s.src})
@@ -133,7 +145,7 @@ def _runtime(s: AtlasShot) -> dict:
         d.update({"ph": s.ph.model_dump(), "nz": s.nz.model_dump(), "src": s.src})
     elif s.k == "split":
         d.update({"left": s.left, "right": s.right, "text": s.text, "src": s.src})
-    return {k: v for k, v in d.items() if v not in ("", None, [])} | {"k": s.k}
+    return {k: v for k, v in d.items() if v not in ("", None, [])} | {"k": d["k"]}
 
 
 def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], total: float, kind: str,
@@ -142,6 +154,8 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
     the rendered 3D shot (long-form) or None."""
     by_id = {s.scene_id: s for s in plan.scenes}
     out: list[dict] = []
+    if starts:                                           # the paper map is traced under the opening shot, always
+        out.append({"k": "map", "view": "ph", "fill": "ph", "draw": 1.6, "t0": round(starts[0], 3), "t1": round(starts[0], 3)})
     hero_used = False
     for i, (sc, clip, st) in enumerate(zip(scenes, clips, starts)):
         nxt = starts[i + 1] if i + 1 < len(starts) else total - LEAD + GAP

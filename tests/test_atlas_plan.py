@@ -65,6 +65,8 @@ def test_to_shots_anchors_fallbacks_and_hero():
 
     shots = ap.to_shots(plan, scenes, clips, starts, total, "long_form", resolve,
                         hero={"k": "broll", "kind": "video", "src": "assets/hero.mp4", "credit": ""})
+    opener = shots.pop(0)                                    # the map is always traced under the first shot
+    assert opener["k"] == "map" and opener["draw"] and opener["t0"] == opener["t1"] == 0.4
     ks = [(s["k"], s["t0"], s["t1"]) for s in shots]
     assert ks[0] == ("doc", 0.4, 3.4) and shots[0]["hl"] == ["one-third"]
     assert ks[1] == ("broll", 3.4, 5.4)
@@ -81,7 +83,7 @@ def test_min_shot_length_drops_flash_cuts():
     plan = AtlasPlan(scenes=[AtlasScene(scene_id=1, shots=[
         AtlasShot(k="map", view="ph"), AtlasShot(k="bigtext", at_word="ng", text="TOO SOON"),
         AtlasShot(k="bigtext", at_word="House", text="OK")])])
-    shots = ap.to_shots(plan, scenes, clips[:1], [0.4], 8.0, "vertical", lambda *a: None)
+    shots = ap.to_shots(plan, scenes, clips[:1], [0.4], 8.0, "vertical", lambda *a: None)[1:]
     assert [s["k"] for s in shots] == ["map", "bigtext"] and shots[1]["text"] == "OK"
     assert shots[0]["t1"] == shots[1]["t0"]
 
@@ -91,3 +93,20 @@ def test_caption_words_break_at_sentences():
     ws = ap.caption_words(clips, [0.4, 7.75])
     assert ws[4]["w"] == "House." and ws[4]["brk"] and not ws[0]["brk"] and ws[-1]["brk"]
     assert ws[0]["t0"] == 0.4 and ws[8]["t0"] == 7.75
+
+
+def test_captions_drop_dashes_and_break_there():
+    clips = [Clip(Path("a.wav"), 3.0, [("House,", 0.0, 0.3), ("Pangulo", 0.4, 0.8), ("\u2014", 0.8, 0.9),
+                                       ("may", 1.0, 1.2), ("isa\u2014pa", 1.3, 1.6)])]
+    ws = ap.caption_words(clips, [0.4])
+    assert [w["w"] for w in ws] == ["House,", "Pangulo", "may", "isa pa"]
+    assert ws[1]["brk"] and not ws[2]["brk"] and ws[3]["brk"]
+    assert not any(ch in w["w"] for w in ws for ch in ap.DASHES)
+
+
+def test_title_cards_become_paper_cards_over_the_map():
+    clips, scenes = _clips(), [Sc(1, "A")]
+    plan = AtlasPlan(scenes=[AtlasScene(scene_id=1, shots=[AtlasShot(k="title", text="THREE STEPS?", kicker="HOW A BILL")])])
+    shots = ap.to_shots(plan, scenes, clips[:1], [0.4], 8.0, "vertical", lambda *a: None)
+    assert shots[0]["k"] == "map" and shots[1] == {"k": "bigtext", "text": "THREE STEPS?", "sub": "HOW A BILL",
+                                                    "t0": 0.4, "t1": shots[1]["t1"]}

@@ -41,7 +41,8 @@ Return one `AtlasScene` per script scene, same `scene_id`s, in order. Each scene
 - `split`: `left` (red, Philippines) and `right` (teal, the other country) headings of at most 8 words,
   optional middle `text` question, plus `src`.
 - `bigtext`: one line of at most 8 words in CAPS, optional `sub`, optional `src`. Use sparingly.
-- `title`: the hook or episode title card: `text`, optional `kicker`. Shorts open with one; the engine
+- `title`: do not use. Open a Short with a `bigtext` hook (the engine traces the red map under it) and end it
+  with a `bigtext` question; numbered chapter cards for long-forms are added by the engine.
   adds numbered chapter cards for long-forms itself, so do not plan those.
 
 ## Rules
