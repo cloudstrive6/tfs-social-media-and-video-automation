@@ -1,0 +1,1240 @@
+{
+ "batchcomplete": true,
+ "continue": {
+  "gsroffset": 12,
+  "continue": "gsroffset||"
+ },
+ "query": {
+  "pages": [
+   {
+    "pageid": 17295476,
+    "ns": 6,
+    "title": "File:Regular Batasang Pambansa composition.svg",
+    "index": 1,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 93600,
+      "width": 1030,
+      "height": 352,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Regular_Batasang_Pambansa_composition.svg/3840px-Regular_Batasang_Pambansa_composition.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 683,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Regular_Batasang_Pambansa_composition.svg/3840px-Regular_Batasang_Pambansa_composition.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 683
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Regular_Batasang_Pambansa_composition.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Regular_Batasang_Pambansa_composition.svg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/17295476",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2011-11-10 09:58:28",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Regular Batasang Pambansa composition",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Self-published work|Regular Batasang Pambansa|Media needing categorization by number of seats (election apportionment diagrams)|Media needing categorization by color (election apportionment diagrams)|Election apportionment diagrams of the House of Representatives of the Philippines",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Final composition of the <a href=\"https://en.wikipedia.org/wiki/Regular_Batasang_Pambansa\" class=\"extiw\" title=\"w:Regular Batasang Pambansa\">Regular Batasang Pambansa</a>",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2011-11-10",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Howard_the_Duck\" title=\"User:Howard the Duck\">Howard the Duck</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/3.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/svg+xml"
+     }
+    ]
+   },
+   {
+    "pageid": 17296070,
+    "ns": 6,
+    "title": "File:Interim Batasang Pambansa composition.svg",
+    "index": 4,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 89925,
+      "width": 1030,
+      "height": 352,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Interim_Batasang_Pambansa_composition.svg/3840px-Interim_Batasang_Pambansa_composition.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 683,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Interim_Batasang_Pambansa_composition.svg/3840px-Interim_Batasang_Pambansa_composition.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 683
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b8/Interim_Batasang_Pambansa_composition.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Interim_Batasang_Pambansa_composition.svg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/17296070",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2011-11-10 11:37:16",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Interim Batasang Pambansa composition",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Self-published work|Interim Batasang Pambansa|Media needing categorization by number of seats (election apportionment diagrams)|Files needing categorization by arrangement (election apportionment diagrams)|Media needing categorization by color (election apportionment diagrams)|Media needing categorization by number of parties (election apportionment diagrams)|Media needing categorization by number of seats per party (election apportionment diagrams)|Media needing categorization by organization (election apportionment diagrams)|Media needing categorization by year (election apportionment diagrams)|Election apportionment diagrams of the House of Representatives of the Philippines",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Final composition of the <a href=\"https://en.wikipedia.org/wiki/Interim_Batasang_Pambansa\" class=\"extiw\" title=\"w:Interim Batasang Pambansa\">Interim Batasang Pambansa</a>.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2011-11-10",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Howard_the_Duck\" title=\"User:Howard the Duck\">Howard the Duck</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 3.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 3.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/3.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-3.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/svg+xml"
+     }
+    ]
+   },
+   {
+    "pageid": 18543700,
+    "ns": 6,
+    "title": "File:2011 Philippine State of the Nation Address.jpg",
+    "index": 7,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1051143,
+      "width": 3888,
+      "height": 2592,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/2011_Philippine_State_of_the_Nation_Address.jpg/3840px-2011_Philippine_State_of_the_Nation_Address.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1333,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/2011_Philippine_State_of_the_Nation_Address.jpg/3840px-2011_Philippine_State_of_the_Nation_Address.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1333
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/2011_Philippine_State_of_the_Nation_Address.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:2011_Philippine_State_of_the_Nation_Address.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/18543700",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2017-03-02 07:39:21",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "2011 Philippine State of the Nation Address",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "PD-PhilippinesGov|State of the Nation Address (Philippines)|Benigno Aquino III in 2011|Photographs of the national flag of the Philippines hanging vertically|Joint sessions of the Congress of the Philippines|Batasang Pambansa Session Hall",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "President <a href=\"https://en.wikipedia.org/wiki/Benigno_Aquino_III\" class=\"extiw\" title=\"en:Benigno Aquino III\">Benigno Aquino III</a> delivers the 2011 <a href=\"https://en.wikipedia.org/wiki/State_of_the_Nation_Address_(Philippines)\" class=\"extiw\" title=\"en:State of the Nation Address (Philippines)\">State of the Nation Address</a> (SONA) to a joint session of the <a href=\"https://en.wikipedia.org/wiki/Congress_of_the_Philippines\" class=\"extiw\" title=\"en:Congress of the Philippines\">Congress of the Philippines</a>.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2011-07-25",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external free\" href=\"http://www.pcoo.gov.ph/photos-jul2011/photo7-072511.htm\">http://www.pcoo.gov.ph/photos-jul2011/photo7-072511.htm</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Robert Viñas (<a href=\"https://en.wikipedia.org/wiki/Presidential_Communications_Group_(Philippines)\" class=\"extiw\" title=\"en:Presidential Communications Group (Philippines)\">Presidential Communications Operations Office</a>, <a href=\"https://en.wikipedia.org/wiki/President_of_the_Philippines\" class=\"extiw\" title=\"en:President of the Philippines\">Office of the President</a>)",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 40996440,
+    "ns": 6,
+    "title": "File:Philippine Assembly historical marker.jpg",
+    "index": 10,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 12244568,
+      "width": 3814,
+      "height": 5518,
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Philippine_Assembly_historical_marker.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "thumbwidth": 2000,
+      "thumbheight": 2894,
+      "thumbattribs": {
+       "src": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Philippine_Assembly_historical_marker.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 2894
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Philippine_Assembly_historical_marker.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Philippine_Assembly_historical_marker.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/40996440",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2024-09-11 03:54:16",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Philippine Assembly historical marker",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Batasang Pambansa Complex|First Philippine Assembly|Self-published work|Information field template with formatting|Historical markers of institutions in the Philippines|NHCP historical markers in Quezon City",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Philippine Assembly historical marker, Batasang Pambansa, Quezon City",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2015-06-08 12:45:18",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\">Self-photographed</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Ryomaandres\" title=\"User:Ryomaandres\">Kej Andrés (Ryomaandres)</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 94313909,
+    "ns": 6,
+    "title": "File:Maces of the Philippine House of Representatives and Batasang Pambansa.jpg",
+    "index": 6,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 433769,
+      "width": 1969,
+      "height": 1313,
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "thumbwidth": 2000,
+      "thumbheight": 1334,
+      "thumbattribs": {
+       "src": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1334
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/94313909",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2020-09-22 07:11:15",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Maces of the Philippine House of Representatives and Batasang Pambansa",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Congress of the Philippines|Ceremonial maces|PD-PhilippinesGov",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "The maces of the Philippine House of Representatives and the Batansang Pambansa as displayed in the Legislative Library, Archives and Museum.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2019",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "Official Facebook page of the Philippine House of Representatives (<a rel=\"nofollow\" class=\"external free\" href=\"https://www.facebook.com/HouseofRepsPH/\">https://www.facebook.com/HouseofRepsPH/</a>)",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Press and Public Affairs Bureau (PPAB), House of Representatives",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 107581519,
+    "ns": 6,
+    "title": "File:Seal of the Batasang Pambansa.svg",
+    "index": 5,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1128586,
+      "width": 467,
+      "height": 467,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Seal_of_the_Batasang_Pambansa.svg/3840px-Seal_of_the_Batasang_Pambansa.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 2000,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Seal_of_the_Batasang_Pambansa.svg/3840px-Seal_of_the_Batasang_Pambansa.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 2000
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Seal_of_the_Batasang_Pambansa.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Seal_of_the_Batasang_Pambansa.svg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/107581519",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2023-04-10 12:36:24",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Seal of the Batasang Pambansa",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "PD-PhilippinesGov|Self-published work|PD-self|Uploaded with derivativeFX|Seals of the Government of the Philippines",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Seal of the Batasang Pambansa, the unicameral legislature of the Philippines from 1978 to 1986.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2021-07-15",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<p>Own work based on: \n</p>\n<figure class=\"mw-halign-left\" typeof=\"mw:File/Thumb\"><a href=\"//commons.wikimedia.org/wiki/File:Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg/250px-Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"225\" height=\"150\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg/500px-Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"1969\" data-file-height=\"1313\"></a><figcaption>basis <a href=\"//commons.wikimedia.org/wiki/File:Maces_of_the_Philippine_House_of_Representatives_and_Batasang_Pambansa.jpg\" title=\"File:Maces of the Philippine House of Representatives and Batasang Pambansa.jpg\">Maces of the Philippine House of Representatives and Batasang Pambansa.jpg</a></figcaption></figure>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Mabuhay1946&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Mabuhay1946 (page does not exist)\">Mabuhay1946</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/svg+xml"
+     }
+    ]
+   },
+   {
+    "pageid": 120895751,
+    "ns": 6,
+    "title": "File:1986 Philippine presidential election results detailed (Batasang Pambansa).svg",
+    "index": 8,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1792499,
+      "width": 512,
+      "height": 617,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/1986_Philippine_presidential_election_results_detailed_%28Batasang_Pambansa%29.svg/3840px-1986_Philippine_presidential_election_results_detailed_%28Batasang_Pambansa%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 2410,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/1986_Philippine_presidential_election_results_detailed_%28Batasang_Pambansa%29.svg/3840px-1986_Philippine_presidential_election_results_detailed_%28Batasang_Pambansa%29.svg.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 2410
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/09/1986_Philippine_presidential_election_results_detailed_%28Batasang_Pambansa%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:1986_Philippine_presidential_election_results_detailed_(Batasang_Pambansa).svg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/120895751",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2022-07-22 11:16:00",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "1986 Philippine presidential election results detailed (Batasang Pambansa)",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Self-published work|Election maps of the Philippines",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "Batasang Pambansa/COMELEC detailed results of <a href=\"https://en.wikipedia.org/wiki/1986_Philippine_presidential_election\" class=\"extiw\" title=\"w:1986 Philippine presidential election\">w: 1986 Philippine presidential election</a>.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2022-07-22",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Baselle\" class=\"mw-redirect\" title=\"User:Baselle\">Baselle</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/svg+xml"
+     }
+    ]
+   },
+   {
+    "pageid": 121572814,
+    "ns": 6,
+    "title": "File:Batasang pambansa session hall - 2022.jpg",
+    "index": 2,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1407833,
+      "width": 1709,
+      "height": 1179,
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/a/af/Batasang_pambansa_session_hall_-_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "thumbwidth": 2000,
+      "thumbheight": 1380,
+      "thumbattribs": {
+       "src": "https://upload.wikimedia.org/wikipedia/commons/a/af/Batasang_pambansa_session_hall_-_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1380
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/af/Batasang_pambansa_session_hall_-_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Batasang_pambansa_session_hall_-_2022.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/121572814",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2022-08-10 08:22:01",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Batasang pambansa session hall - 2022",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "PD-PhilippinesGov|Photographs of people of the Philippines|Photographs of the national flag of the Philippines hanging vertically|Batasang Pambansa Session Hall",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "The session hall of the Batasang Pambansa complex after the 2022 renovations.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2022-08-11",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "House of Representatives of the Philippines Facebook page",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "House of Representatives of the Philippines Facebook page",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 134923896,
+    "ns": 6,
+    "title": "File:Commonwealth and Batasan Hills, Quezon City 39.jpg",
+    "index": 9,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 4353178,
+      "width": 5184,
+      "height": 3888,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Commonwealth_and_Batasan_Hills%2C_Quezon_City_39.jpg/3840px-Commonwealth_and_Batasan_Hills%2C_Quezon_City_39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1500,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Commonwealth_and_Batasan_Hills%2C_Quezon_City_39.jpg/3840px-Commonwealth_and_Batasan_Hills%2C_Quezon_City_39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1500
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/22/Commonwealth_and_Batasan_Hills%2C_Quezon_City_39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Commonwealth_and_Batasan_Hills,_Quezon_City_39.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/134923896",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2023-07-25 08:38:29",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Commonwealth and Batasan Hills, Quezon City 39",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Batasang Pambansa Complex|2023 State of the Nation Address (Philippines)|Self-published work|Philippines photographs taken on 2023-07-24|Photographs by E911a",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "2023 State of the Nation Address (Philippines) coverage",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2023-07-24 15:44:38",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:E911a\" title=\"User:E911a\">E911a</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 134923898,
+    "ns": 6,
+    "title": "File:Commonwealth and Batasan Hills, Quezon City 40.jpg",
+    "index": 11,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 5387544,
+      "width": 5184,
+      "height": 3888,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Commonwealth_and_Batasan_Hills%2C_Quezon_City_40.jpg/3840px-Commonwealth_and_Batasan_Hills%2C_Quezon_City_40.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1500,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Commonwealth_and_Batasan_Hills%2C_Quezon_City_40.jpg/3840px-Commonwealth_and_Batasan_Hills%2C_Quezon_City_40.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1500
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Commonwealth_and_Batasan_Hills%2C_Quezon_City_40.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Commonwealth_and_Batasan_Hills,_Quezon_City_40.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/134923898",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2023-07-25 08:38:32",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Commonwealth and Batasan Hills, Quezon City 40",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Batasang Pambansa Complex|2023 State of the Nation Address (Philippines)|Self-published work|Police motorcycles in the Philippines|Philippines photographs taken on 2023-07-24|Photographs by E911a",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "2023 State of the Nation Address (Philippines) coverage",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2023-07-24 15:44:38",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:E911a\" title=\"User:E911a\">E911a</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 134924203,
+    "ns": 6,
+    "title": "File:State of the Nation Address Philippines (2023-07-24) E911a 39.jpg",
+    "index": 12,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 5047029,
+      "width": 5184,
+      "height": 3888,
+      "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/State_of_the_Nation_Address_Philippines_%282023-07-24%29_E911a_39.jpg/3840px-State_of_the_Nation_Address_Philippines_%282023-07-24%29_E911a_39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1500,
+      "thumbattribs": {
+       "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/State_of_the_Nation_Address_Philippines_%282023-07-24%29_E911a_39.jpg/3840px-State_of_the_Nation_Address_Philippines_%282023-07-24%29_E911a_39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1500
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/State_of_the_Nation_Address_Philippines_%282023-07-24%29_E911a_39.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:State_of_the_Nation_Address_Philippines_(2023-07-24)_E911a_39.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/134924203",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2023-07-25 08:43:08",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "State of the Nation Address Philippines (2023-07-24) E911a 39",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Batasang Pambansa Complex|2023 State of the Nation Address (Philippines)|Self-published work|Philippines photographs taken on 2023-07-24|Files with coordinates missing SDC location of creation|Photographs by E911a",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "GPSLatitude": {
+        "value": "14.681600",
+        "source": "commons-desc-page"
+       },
+       "GPSLongitude": {
+        "value": "121.096600",
+        "source": "commons-desc-page"
+       },
+       "GPSMapDatum": {
+        "value": "WGS-84",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "2023 State of the Nation Address (Philippines) is the 85th State of the Nation Addresses (Philippines)",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2023-07-24 16:20:29",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:E911a\" title=\"User:E911a\">E911a</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Creative Commons Attribution-Share Alike 4.0",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "true",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Copyrighted": {
+        "value": "True",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   },
+   {
+    "pageid": 171636411,
+    "ns": 6,
+    "title": "File:Batasang Pambansa Plenary Hall.jpg",
+    "index": 3,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 224838,
+      "width": 1536,
+      "height": 1023,
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Batasang_Pambansa_Plenary_Hall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "thumbwidth": 2000,
+      "thumbheight": 1332,
+      "thumbattribs": {
+       "src": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Batasang_Pambansa_Plenary_Hall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+       "decoding": "async",
+       "loading": "lazy",
+       "width": 2000,
+       "height": 1332
+      },
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Batasang_Pambansa_Plenary_Hall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Batasang_Pambansa_Plenary_Hall.jpg",
+      "descriptionshorturl": "https://commons.wikimedia.org/wiki/Special:Redirect/page/171636411",
+      "extmetadata": {
+       "DateTime": {
+        "value": "2025-08-05 05:09:32",
+        "source": "mediawiki-metadata",
+        "hidden": ""
+       },
+       "ObjectName": {
+        "value": "Batasang Pambansa Plenary Hall",
+        "source": "mediawiki-metadata"
+       },
+       "CommonsMetadataExtension": {
+        "value": 1.2,
+        "source": "extension",
+        "hidden": ""
+       },
+       "Categories": {
+        "value": "Congress of the Philippines|PD-PhilippinesGov",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "Assessments": {
+        "value": "",
+        "source": "commons-categories",
+        "hidden": ""
+       },
+       "ImageDescription": {
+        "value": "The plenary hall of the Batasang Pambansa Complex, the current seat of the Philippine House of Representatives.",
+        "source": "commons-desc-page"
+       },
+       "DateTimeOriginal": {
+        "value": "2023",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://econgress.gov.ph/constitutional-mandate/\">econgress.gov.ph</a>",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"https://en.wikipedia.org/wiki/Congress_of_the_Philippines\" class=\"extiw\" title=\"w:Congress of the Philippines\">Congress of the Philippines</a>",
+        "source": "commons-desc-page"
+       },
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "UsageTerms": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "AttributionRequired": {
+        "value": "false",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Copyrighted": {
+        "value": "False",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "Restrictions": {
+        "value": "",
+        "source": "commons-desc-page",
+        "hidden": ""
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-templates",
+        "hidden": ""
+       }
+      },
+      "mime": "image/jpeg"
+     }
+    ]
+   }
+  ]
+ }
+}

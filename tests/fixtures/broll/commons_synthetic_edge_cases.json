@@ -1,0 +1,715 @@
+{
+ "batchcomplete": true,
+ "query": {
+  "pages": [
+   {
+    "pageid": 9001,
+    "ns": 6,
+    "title": "File:Senate building CC BY 2.0.jpg",
+    "index": 1,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 3000,
+      "height": 1980,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Senate_building_CC_BY_2.0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Senate_building_CC_BY_2.0.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Senate_building_CC_BY_2.0.jpg/2000px-Senate_building_CC_BY_2.0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC BY 2.0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc-by-2.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/2.0",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "<a href=\"//commons.wikimedia.org/wiki/User:Lakad\">Lakad &amp; Co</a>",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9002,
+    "ns": 6,
+    "title": "File:EDSA traffic CC BY-NC.jpg",
+    "index": 2,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 4000,
+      "height": 2640,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/EDSA_traffic_CC_BY-NC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:EDSA_traffic_CC_BY-NC.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/EDSA_traffic_CC_BY-NC.jpg/2000px-EDSA_traffic_CC_BY-NC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC BY-NC 2.0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc-by-nc-2.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-nc/2.0",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Flickr user",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9003,
+    "ns": 6,
+    "title": "File:Jeepney CC BY-ND.jpg",
+    "index": 3,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 4000,
+      "height": 2640,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Jeepney_CC_BY-ND.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Jeepney_CC_BY-ND.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Jeepney_CC_BY-ND.jpg/2000px-Jeepney_CC_BY-ND.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC BY-ND 4.0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc-by-nd-4.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-nd/4.0",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Someone",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9004,
+    "ns": 6,
+    "title": "File:Manila Bay GFDL.jpg",
+    "index": 4,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 4000,
+      "height": 2640,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Manila_Bay_GFDL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Manila_Bay_GFDL.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Manila_Bay_GFDL.jpg/2000px-Manila_Bay_GFDL.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "GFDL",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "gfdl",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Old uploader",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9005,
+    "ns": 6,
+    "title": "File:News still fair use.jpg",
+    "index": 5,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 4000,
+      "height": 2640,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/News_still_fair_use.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:News_still_fair_use.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/News_still_fair_use.jpg/2000px-News_still_fair_use.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "Fair use",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "fair use",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Broadcaster",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9006,
+    "ns": 6,
+    "title": "File:No licence at all.jpg",
+    "index": 6,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 4000,
+      "height": 2640,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/No_licence_at_all.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:No_licence_at_all.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/No_licence_at_all.jpg/2000px-No_licence_at_all.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "Artist": {
+        "value": "Nobody",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9007,
+    "ns": 6,
+    "title": "File:Small CC0.jpg",
+    "index": 7,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 1200,
+      "height": 792,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Small_CC0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Small_CC0.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Small_CC0.jpg/2000px-Small_CC0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Tiny",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9008,
+    "ns": 6,
+    "title": "File:Rizal Park scan.tif",
+    "index": 8,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 5000,
+      "height": 3300,
+      "mime": "image/tiff",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Rizal_Park_scan.tif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Rizal_Park_scan.tif",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Rizal_Park_scan.tif/2000px-Rizal_Park_scan.tif.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Archive",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9009,
+    "ns": 6,
+    "title": "File:Quezon City Hall CC0.png",
+    "index": 9,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 2400,
+      "height": 1584,
+      "mime": "image/png",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Quezon_City_Hall_CC0.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Quezon_City_Hall_CC0.png",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Quezon_City_Hall_CC0.png/2000px-Quezon_City_Hall_CC0.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc0",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Mapper",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9010,
+    "ns": 6,
+    "title": "File:Pasig River timelapse.webm",
+    "index": 10,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 50000000,
+      "width": 1920,
+      "height": 1267,
+      "mime": "video/webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Pasig_River_timelapse.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Pasig_River_timelapse.webm",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Pasig_River_timelapse.webm/2000px-Pasig_River_timelapse.webm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC BY-SA 4.0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc-by-sa-4.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by-sa/4.0",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Vlogger",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      },
+      "duration": 30.0
+     }
+    ]
+   },
+   {
+    "pageid": 9011,
+    "ns": 6,
+    "title": "File:Cebu skyline drone.webm",
+    "index": 11,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 40000000,
+      "width": 1920,
+      "height": 1267,
+      "mime": "video/webm",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Cebu_skyline_drone.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Cebu_skyline_drone.webm",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Cebu_skyline_drone.webm/2000px-Cebu_skyline_drone.webm.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC BY 4.0",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc-by-4.0",
+        "source": "commons-desc-page"
+       },
+       "LicenseUrl": {
+        "value": "https://creativecommons.org/licenses/by/4.0",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Drone Pilot",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      },
+      "duration": 24.5
+     }
+    ]
+   },
+   {
+    "pageid": 9012,
+    "ns": 6,
+    "title": "File:Intramuros wall 1900.jpg",
+    "index": 12,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 2600,
+      "height": 1716,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Intramuros_wall_1900.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Intramuros_wall_1900.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Intramuros_wall_1900.jpg/2000px-Intramuros_wall_1900.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "PD-US",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Unknown author<span style=\"display: none;\">Unknown author</span>",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9013,
+    "ns": 6,
+    "title": "File:Schoolchildren at a flag ceremony.jpg",
+    "index": 13,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 3000,
+      "height": 1980,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Schoolchildren_at_a_flag_ceremony.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Schoolchildren_at_a_flag_ceremony.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Schoolchildren_at_a_flag_ceremony.jpg/2000px-Schoolchildren_at_a_flag_ceremony.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "Public domain",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "pd",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Philippine News Agency",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "pna.gov.ph",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "Mga bata at the flag ceremony",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9014,
+    "ns": 6,
+    "title": "File:Legislative hall CC BY 3.0 PH.jpg",
+    "index": 14,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 3000,
+      "height": 1980,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Legislative_hall_CC_BY_3.0_PH.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Legislative_hall_CC_BY_3.0_PH.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Legislative_hall_CC_BY_3.0_PH.jpg/2000px-Legislative_hall_CC_BY_3.0_PH.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "CC BY 3.0 ph",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "cc-by-3.0-ph",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Pia Santos",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "pageid": 9015,
+    "ns": 6,
+    "title": "File:Ambiguous attribution.jpg",
+    "index": 15,
+    "imagerepository": "local",
+    "imageinfo": [
+     {
+      "size": 1000000,
+      "width": 3000,
+      "height": 1980,
+      "mime": "image/jpeg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Ambiguous_attribution.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "descriptionurl": "https://commons.wikimedia.org/wiki/File:Ambiguous_attribution.jpg",
+      "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Ambiguous_attribution.jpg/2000px-Ambiguous_attribution.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "thumbwidth": 2000,
+      "thumbheight": 1320,
+      "extmetadata": {
+       "LicenseShortName": {
+        "value": "Attribution",
+        "source": "commons-desc-page"
+       },
+       "License": {
+        "value": "attribution",
+        "source": "commons-desc-page"
+       },
+       "Artist": {
+        "value": "Someone",
+        "source": "commons-desc-page"
+       },
+       "Credit": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "ImageDescription": {
+        "value": "",
+        "source": "commons-desc-page"
+       },
+       "Categories": {
+        "value": "Test category",
+        "source": "commons-desc-page"
+       }
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

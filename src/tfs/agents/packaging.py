@@ -120,7 +120,7 @@ def motion_plan(item: dict, script: Script, dossier: str) -> "MotionPlan":
     )
 
 
-def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool) -> "AtlasPlan":
+def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool, notes: str = "") -> "AtlasPlan":
     """Atlas Designer (style v2): maps, real photos, documents, cards and charts for every scene, each cutaway
     anchored on the word it shows."""
     from ..models import AtlasPlan
@@ -131,7 +131,8 @@ def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool) -> "Atl
         "atlas_designer",
         f"{fmt}\n\n{_ctx(item)}\n\n"
         f"# Script (final, fact-checked; one AtlasScene per scene id, at_word copied from that scene's text)\n"
-        f"{script.model_dump_json()}\n\n# Dossier (exact law text for doc shots, facts for cards)\n{dossier[:30000]}",
+        f"{script.model_dump_json()}\n\n# Dossier (exact law text for doc shots, facts for cards)\n{dossier[:30000]}"
+        + (f"\n\n# Review team notes on the last render: fix these scenes{notes}" if notes else ""),
         AtlasPlan,
     )
 

@@ -909,7 +909,7 @@ def test_paid_images_are_off():
     from tfs.config import channel
     from tfs.media import images
 
-    assert channel()["video"]["engine"] == "vector" and channel()["video"]["fps_vector"] == 60
+    assert channel()["video"]["engine"] in ("vector", "atlas") and channel()["video"]["fps_vector"] == 60
     with pytest.raises(RuntimeError, match="vector engine"):
         images.generate("anything", __import__("pathlib").Path("never.png"))
 

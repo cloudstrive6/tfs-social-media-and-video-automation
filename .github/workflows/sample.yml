@@ -6,7 +6,7 @@ on:
     inputs:
       kind:
         type: choice
-        options: [vertical, carousel]
+        options: [vertical, carousel, long_form]
         default: vertical
       topic:
         description: optional topic (blank = today's top trend)

@@ -144,7 +144,8 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
     out: list[dict] = []
     hero_used = False
     for i, (sc, clip, st) in enumerate(zip(scenes, clips, starts)):
-        end = starts[i + 1] if i + 1 < len(starts) else total - LEAD + GAP
+        nxt = starts[i + 1] if i + 1 < len(starts) else total - LEAD + GAP
+        end = min(nxt, st + float(clip.duration) + GAP)    # chapter pauses belong to the chapter card
         planned = by_id.get(sc.id)
         shots = list(planned.shots) if planned and planned.shots else [AtlasShot(k="map", view="ph")]
         timed = []

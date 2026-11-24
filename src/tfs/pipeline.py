@@ -301,6 +301,8 @@ def _vector_stills(item: dict, briefs: list[str], purpose: str, size: tuple[int,
 
 def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
     """Images, voice, render and (long form) thumbnail; every step cached, so a fix only redoes what it touched."""
+    if _engine() == "atlas":
+        return _build_atlas(item, d, script, hook)
     if _engine() == "vector":
         return _build_vector(item, d, script, hook)
     kind = item["kind"]
@@ -349,6 +351,96 @@ def _build_vector(item: dict, d: Path, script: Script, hook: HookReview) -> tupl
                                    "and simple, nothing important in the bottom third (the headline goes there)",
                                    (1920, 1080), d / "work_thumb")
             shutil.copy(png, art)
+        thumb_path = d / "thumbnail.jpg"
+        if not thumb_path.exists():
+            compose.thumbnail(art, best.overlay_text, thumb_path)
+    return video, starts, thumb_path, thumb_moment
+
+
+HERO_CLIP = "assets/broll/hero_ph_push.mp4"   # approved 3D push into Metro Manila (same in every episode)
+
+
+def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> tuple[list[float], list[dict]]:
+    """Style v2: narrator -> Atlas Designer -> licensed photos -> HyperFrames picture -> SFX and music mix ->
+    master -14 LUFS -> mux. Captions are drawn by the runtime. Returns (scene starts, shots)."""
+    import subprocess
+
+    import numpy as np
+
+    from .config import ROOT
+    from .media import atlas, atlas_plan, broll_pick, sfx_v2
+    from .models import AtlasPlan
+
+    kind = item["kind"]
+    vertical = size[1] > size[0]
+    work = d / "work"
+    work.mkdir(parents=True, exist_ok=True)
+    clips = tts.synthesize(_voiced(script, d), d / "audio")
+    voice, starts, total, chapter_cards = atlas_plan.assemble(clips, script.scenes, kind)
+    fixes = _fixes(d)                                 # review-team notes on a finished render re-plan the whole video
+    done = fixes.setdefault("replanned", {})
+    pending = {k: n for k, n in fixes["images"].items()
+               if k.isdigit() and fixes["attempts"].get(k, 0) > done.get(k, 0)}
+    notes = "".join(f"\n- scene {k}: {n}" + (" (failed twice: use only a map or a bigtext card)"
+                                              if k in fixes["drop"] else "") for k, n in sorted(pending.items()))
+    if pending:
+        (d / "atlas.json").unlink(missing_ok=True)
+        done.update({k: fixes["attempts"][k] for k in pending})
+        (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+    plan = cached(d / "atlas.json", AtlasPlan,
+                  lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=notes))
+    picker = broll_pick.Picker(d, item["id"])
+    hero = {"k": "broll", "kind": "video", "src": "assets/hero.mp4", "credit": ""} if kind == "long_form" else None
+    shots = sorted(atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind, picker, hero) + chapter_cards,
+                   key=lambda s: s["t0"])
+    assets = dict(picker.assets)
+    if any(s.get("src") == "assets/hero.mp4" for s in shots):
+        assets["assets/hero.mp4"] = ROOT / HERO_CLIP
+    (d / "atlas_shots.json").write_text(json.dumps(shots, ensure_ascii=False, indent=1), encoding="utf-8")
+    sp = atlas.spec(item["id"].replace(".", "-"), size, shots, atlas_plan.caption_words(clips, starts), total)
+    picture = work / "picture.mp4"
+    atlas.render(sp, work, picture, assets)
+    mixed, report = sfx_v2.mix(voice.astype(np.float32), shots, total)
+    raw, mastered = work / "mix_raw.wav", work / "mix.wav"
+    sfx_v2.write_wav(raw, mixed)
+    lufs, peak = sfx_v2.master(raw, mastered)
+    report.update(lufs=lufs, peak=peak, licence_problems=picker.problems())
+    (d / "sound_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=1, default=str),
+                                         encoding="utf-8")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(picture), "-i", str(mastered), "-map", "0:v",
+                    "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest", str(d / "video.mp4")],
+                   check=True)
+    render.srt(clips, starts, d / "captions.srt")
+    log.info("atlas %s: %d shots, %d photos, %.1f LUFS, peak %.1f, sfx p10 %.1f dB", item["id"], len(shots),
+             len(picker.assets), lufs, peak, report.get("voice_over_sfx_db_p10") or 0)
+    return starts, shots
+
+
+def _build_atlas(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
+    import subprocess
+
+    kind = item["kind"]
+    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
+    size = (vcfg["width"], vcfg["height"])
+    video, starts_file, shots_file = d / "video.mp4", d / "starts.json", d / "atlas_shots.json"
+    if not video.exists():
+        starts, _ = _atlas_video(item, d, script, size)
+        starts_file.write_text(json.dumps(starts))
+    starts = json.loads(starts_file.read_text())
+    thumb_path, thumb_moment = None, "(no custom thumbnail)"
+    if kind == "long_form":
+        plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
+        best = plan.concepts[0]
+        thumb_moment = best.moment
+        art = d / "thumb_art.png"
+        if not art.exists():                          # the strongest real frame: the hero push, else the first photo
+            shots = json.loads(shots_file.read_text(encoding="utf-8"))
+            pick = next((s for s in shots if s.get("src") == "assets/hero.mp4"), None) or \
+                next((s for s in shots if s.get("k") == "broll"), shots[0])
+            t = round(pick["t0"] + 0.8 * (pick["t1"] - pick["t0"]), 2)
+            art.parent.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", str(t), "-i", str(video), "-frames:v", "1",
+                            str(art)], check=True)
         thumb_path = d / "thumbnail.jpg"
         if not thumb_path.exists():
             compose.thumbnail(art, best.overlay_text, thumb_path)

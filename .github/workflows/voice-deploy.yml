@@ -1,0 +1,39 @@
+# Style v2 narrator: deploy the VoxCPM2 app (tfs-voice) to Modal, then narrate one test line and keep it as an
+# artifact (real L4 speed and cost, and a clip to listen to). Runs on push when the app or the master clip changes.
+name: voice-deploy
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: test line to narrate
+        required: false
+        default: "Anim na taon ang termino ng presidente, at bawal ang re-election. Sino ang nagbabantay sa kanya?"
+  push:
+    paths: [modal_apps/tfs_voice.py, assets/voice/**, .github/workflows/voice-deploy.yml]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+      LINE: ${{ inputs.text || 'Anim na taon ang termino ng presidente, at bawal ang re-election. Sino ang nagbabantay sa kanya?' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q modal==1.6.4
+      - name: Weights into the Volume (CPU, once)
+        run: modal run modal_apps/tfs_voice.py::download_weights
+      - name: Deploy
+        run: modal deploy modal_apps/tfs_voice.py
+      - name: Test line (timed)
+        run: |
+          start=$(date +%s)
+          modal run modal_apps/tfs_voice.py --text "$LINE" --out out/voice --takes 1
+          echo "wall seconds: $(( $(date +%s) - start ))" | tee out/voice/timing.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-test
+          path: out/voice

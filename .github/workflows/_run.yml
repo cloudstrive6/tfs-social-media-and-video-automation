@@ -74,6 +74,8 @@ jobs:
       B2_APP_KEY: ${{ secrets.B2_APP_KEY }}
       REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
       REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}          # style v2 narrator (tfs-voice on Modal)
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
       TFS_COMMAND: ${{ inputs.command }}
       HYPERFRAMES_NO_TELEMETRY: "1"
       DO_NOT_TRACK: "1"

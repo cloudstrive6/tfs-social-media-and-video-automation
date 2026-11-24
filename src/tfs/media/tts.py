@@ -119,6 +119,9 @@ def _fishaudio(text: str, out: Path) -> list:
 def synthesize(scenes: list, out_dir: Path) -> list[Clip]:
     """One mp3 per scene (enables per-character voices and exact scene timing). Cached on disk."""
     provider = channel()["tts"]["provider"]
+    if provider == "voxcpm":                      # style v2 narrator (VoxCPM2 clone of the approved voice, on Modal)
+        from . import tts_voxcpm
+        return tts_voxcpm.synthesize(scenes, out_dir)
     keep_tags = channel()["tts"]["elevenlabs"]["model_id"] == "eleven_v3"
     texts = [clean(s.text, keep_tags) for s in scenes]
     out_dir.mkdir(parents=True, exist_ok=True)
