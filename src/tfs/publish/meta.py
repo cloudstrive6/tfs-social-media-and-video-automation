@@ -202,6 +202,70 @@ def fb_reel(video: Path, description: str) -> str:
     raise AssertionError("unreachable")
 
 
+CHUNK = 64 * 1024 * 1024        # resumable Page video upload, 64 MB per transfer call
+
+
+def _video_call(page: str, files: dict | None = None, **params) -> dict:
+    """Page /videos on Meta's video host (graph-video), which takes large uploads."""
+    params["access_token"] = _token()
+    r = requests.post(f"https://graph-video.facebook.com/{env('META_GRAPH_VERSION', 'v23.0')}/{page}/videos",
+                      data=params, files=files, timeout=1800)
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"Graph API {page}/videos: {data['error'].get('message')}")
+    return data
+
+
+def _existing_video(page: str, title: str, hours: int = 12) -> str | None:
+    from datetime import datetime
+
+    try:
+        vids = _call("GET", f"{page}/videos", fields="id,title,created_time", limit="15").get("data", [])
+    except RuntimeError:
+        return None
+    cutoff = time.time() - hours * 3600
+    for v in vids:
+        try:
+            when = datetime.strptime(v.get("created_time", ""), "%Y-%m-%dT%H:%M:%S%z").timestamp()
+        except ValueError:
+            when = time.time()
+        if (v.get("title") or "").strip() == title.strip() and when >= cutoff:
+            return v["id"]
+    return None
+
+
+def fb_video(video: Path, title: str, description: str) -> str:
+    """Long-form video on the Facebook Page (style v2 cadence: 3 a week with the YouTube long-forms), uploaded in
+    resumable chunks. Safe to repeat: an upload already made in the last 12 h with the same title is returned."""
+    page = require_env("META_PAGE_ID")
+    existing = _existing_video(page, title)
+    if existing:
+        return existing
+    size = video.stat().st_size
+    start = _video_call(page, upload_phase="start", file_size=str(size))
+    session, offset = start["upload_session_id"], int(start.get("start_offset", 0))
+    end = int(start.get("end_offset", min(size, CHUNK)))
+    with video.open("rb") as f:
+        while offset < size:
+            f.seek(offset)
+            chunk = f.read(max(1, end - offset))
+            step = _video_call(page, files={"video_file_chunk": ("chunk", chunk, "application/octet-stream")},
+                               upload_phase="transfer", upload_session_id=session, start_offset=str(offset))
+            offset, end = int(step["start_offset"]), int(step["end_offset"])
+    for attempt in range(3):                     # same unknown-error behaviour as Reels on the finish step
+        try:
+            _video_call(page, upload_phase="finish", upload_session_id=session, title=title, description=description,
+                        published="true")
+            return start["video_id"]
+        except RuntimeError as e:
+            if not any(t in str(e).lower() for t in TRANSIENT) or attempt == 2:
+                raise
+            time.sleep(30 * (attempt + 1))
+            if _existing_video(page, title):
+                return start["video_id"]
+    raise AssertionError("unreachable")
+
+
 def fb_photos(images: list[Path], message: str) -> str:
     page = require_env("META_PAGE_ID")
     ids = [_page_photo(p) for p in images]

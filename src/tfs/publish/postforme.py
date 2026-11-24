@@ -25,6 +25,7 @@ PLATFORMS = {
     "instagram_carousel": ("instagram", "timeline"),
     "facebook_reel": ("facebook", "reels"),
     "facebook_post": ("facebook", "timeline"),
+    "facebook_video": ("facebook", "timeline"),     # long-form on the Page (style v2 cadence)
     "tiktok": ("tiktok", None),
     "tiktok_carousel": ("tiktok", None),          # photo post: the slides as a swipeable TikTok photo carousel
 }

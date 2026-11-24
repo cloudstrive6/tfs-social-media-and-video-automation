@@ -747,7 +747,7 @@ def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
 
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
-                  "instagram_carousel": "IG Carousel", "facebook_reel": "FB Reel", "facebook_post": "FB Post",
+                  "instagram_carousel": "IG Carousel", "facebook_reel": "FB Reel", "facebook_post": "FB Post", "facebook_video": "FB Video",
                   "tiktok": "TikTok", "tiktok_carousel": "TikTok Photos", "threads_carousel": "Threads"}
 
 
@@ -805,7 +805,7 @@ def _notify_ready(item: dict) -> None:
 def _post_link(platform: str, remote_id: str) -> str:
     if platform in ("youtube", "youtube_shorts"):
         return f"https://youtu.be/{remote_id}"
-    if platform in ("facebook_reel", "facebook_post"):
+    if platform in ("facebook_reel", "facebook_post", "facebook_video"):
         return f"https://www.facebook.com/{remote_id}"
     if platform in ("instagram_reel", "instagram_carousel"):
         return "https://www.instagram.com/thefilipinostandard/"
@@ -882,9 +882,10 @@ def _publish_one(post: dict) -> tuple[str, str]:
     caption = {"youtube": seo.youtube_description, "youtube_shorts": seo.youtube_description,
                "instagram_reel": seo.instagram_caption, "instagram_carousel": seo.instagram_caption,
                "facebook_reel": seo.facebook_caption, "facebook_post": seo.facebook_caption,
+               "facebook_video": seo.facebook_caption,
                "tiktok": seo.tiktok_caption, "tiktok_carousel": seo.tiktok_caption,
                "threads_carousel": limits.threads_text(seo.instagram_caption)}[platform]
-    title = (data["title"] if platform == "youtube" else limits.tiktok_photo_title(data.get("title") or "")
+    title = (data["title"] if platform in ("youtube", "facebook_video") else limits.tiktok_photo_title(data.get("title") or "")
              if platform == "tiktok_carousel" else seo.shorts_title)
 
     if _provider(platform) == "postforme":
@@ -905,6 +906,8 @@ def _publish_one(post: dict) -> tuple[str, str]:
             return "published", meta.ig_reel(video, caption)
         case "facebook_reel":
             return "published", meta.fb_reel(video, caption)
+        case "facebook_video":
+            return "published", meta.fb_video(video, title, caption)
         case "tiktok":
             return "published", tiktok.post_video(video, caption)
         case "instagram_carousel":
