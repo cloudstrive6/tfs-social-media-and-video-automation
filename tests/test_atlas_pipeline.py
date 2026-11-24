@@ -73,3 +73,7 @@ def test_atlas_long_form_end_to_end(tmp_path, monkeypatch):
     probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type", "-of", "csv=p=0",
                             str(d / "video.mp4")], capture_output=True, text=True).stdout.split()
     assert sorted(probe) == ["audio", "video"] and (d / "captions.srt").exists()
+    from tfs.models import ShotList
+    review = ShotList.model_validate_json((d / "shots.json").read_text(encoding="utf-8"))   # the review team's view
+    assert [s.scene_id for s in review.shots] == [1, 2] and "paper map" in review.shots[0].card_title
+    assert "3D map push" in review.shots[1].card_title

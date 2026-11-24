@@ -360,6 +360,41 @@ def _build_vector(item: dict, d: Path, script: Script, hook: HookReview) -> tupl
 HERO_CLIP = "assets/broll/hero_ph_push.mp4"   # approved 3D push into Metro Manila (same in every episode)
 
 
+ATLAS_CARD = {"map": "map", "doc": "document", "cards": "stat", "bars": "bars", "timeline": "timeline"}
+
+
+def _atlas_describe(s: dict) -> str:
+    k = s["k"]
+    if k == "broll":
+        what = "3D map push into Metro Manila" if s.get("src") == "assets/hero.mp4" else f"real photo ({s.get('credit', '')})"
+        return f"{what} with a red label '{s.get('word', '')}'"
+    if k == "map":
+        return f"paper map, view {s.get('view', 'ph')}" + (f", label '{s['label']}'" if s.get("label") else "")
+    if k == "doc":
+        return f"document on paper: {s.get('head', '')} {s.get('sec', '')}, highlighted {s.get('hl', [])}"
+    if k in ("cards", "bars", "timeline", "seats"):
+        return f"{k}: " + "; ".join(" ".join(str(v) for v in it.values() if v) for it in s.get("items", []))
+    if k == "compare":
+        return f"compare card: {s.get('ph', {})} vs {s.get('nz', {})}"
+    return f"{k}: {s.get('text') or s.get('left', '')} {s.get('right', '')}".strip()
+
+
+def _atlas_shotlist(script: Script, starts: list[float], total: float, shots: list[dict]) -> ShotList:
+    """The review team's view of an atlas video: per scene, what its shots are meant to show."""
+    from .models import Shot
+
+    bounds = list(starts) + [total]
+    out = []
+    for i, sc in enumerate(script.scenes):
+        mine = [s for s in shots if bounds[i] - 0.01 <= s["t0"] < bounds[i + 1]]
+        first = mine[0]["k"] if mine else "map"
+        out.append(Shot(scene_id=sc.id, kind="card", style="story", image_prompt="",
+                        card_type=ATLAS_CARD.get(first, "none"),
+                        card_title=" | then ".join(_atlas_describe(s) for s in mine)[:330] or "paper map",
+                        card_lines=[], reuse_of_scene=0, motion="static"))
+    return ShotList(shots=out)
+
+
 def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> tuple[list[float], list[dict]]:
     """Style v2: narrator -> Atlas Designer -> licensed photos -> HyperFrames picture -> SFX and music mix ->
     master -14 LUFS -> mux. Captions are drawn by the runtime. Returns (scene starts, shots)."""
@@ -397,6 +432,8 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
     if any(s.get("src") == "assets/hero.mp4" for s in shots):
         assets["assets/hero.mp4"] = ROOT / HERO_CLIP
     (d / "atlas_shots.json").write_text(json.dumps(shots, ensure_ascii=False, indent=1), encoding="utf-8")
+    (d / "shots.json").write_text(_atlas_shotlist(script, starts, total, shots).model_dump_json(indent=1),
+                                  encoding="utf-8")       # what the review team expects each scene to show
     sp = atlas.spec(item["id"].replace(".", "-"), size, shots, atlas_plan.caption_words(clips, starts), total)
     picture = work / "picture.mp4"
     atlas.render(sp, work, picture, assets)

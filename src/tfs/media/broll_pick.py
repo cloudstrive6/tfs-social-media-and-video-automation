@@ -30,7 +30,7 @@ class Picker:
 
     def __call__(self, query: str, word: str, t0: float, t1: float) -> dict | None:
         try:
-            cands = self._search(query, limit=20)
+            cands = self._search(f"{query} filetype:bitmap", limit=20)   # photos only, no PDF scans
         except Exception:
             log.exception("commons search failed for %r", query)
             return None

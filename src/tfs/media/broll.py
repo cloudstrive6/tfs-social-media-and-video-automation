@@ -8,7 +8,7 @@ grade_assets.py and update_asset_log.py). Policy (docs: Bryce-Brain wiki/answers
 - Philippine government works (RA 8293 s.176) are treated like news clips: government MOVING footage is a fair-use
   clip, and automated episodes use no fair-use clips at all, so it is rejected here. Government STILL photos are
   allowed, flagged `government_origin` and credited and logged like everything else.
-- Photos must be JPEG or PNG and at least 1600 px wide; videos (webm, ogv) follow the same licence rule.
+- Photos must be JPEG or PNG and at least 1280 px wide; videos (webm, ogv) follow the same licence rule.
 - Every asset gets a row in `<item_dir>/licences.json` (source URL, licence, author, credit, date read, where used).
 
 Wikimedia etiquette: one identifying User-Agent on every request, polite pacing, back off on 429/503.
@@ -41,7 +41,7 @@ USER_AGENT = ("TheFilipinoStandardBot/1.0 (https://github.com/cloudstrive6/tfs-s
 MAX_TRIES = 3
 MIN_INTERVAL = 1.0              # seconds between requests to Wikimedia (politeness)
 MAX_WAIT = 120.0                # cap on one back-off wait
-MIN_PHOTO_WIDTH = 1600
+MIN_PHOTO_WIDTH = 1280                     # 1080 px verticals; the paper grade softens photos (was 1600 until 2026-11-24)
 MAX_VIDEO_BYTES = 400_000_000   # originals above this are not downloaded (a 55 min ceremony webm is 600 MB)
 PHOTO_MIMES = {"image/jpeg", "image/png"}
 VIDEO_EXTS = {".webm", ".ogv"}
