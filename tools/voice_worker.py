@@ -1,9 +1,11 @@
 """TFS local narration worker: the RTX 3080 narrates first, Modal only as the fallback (Bryce, 2026-11-24).
 
 Loop (every 2 minutes): read the narration queue in R2 (src/tfs/media/voice_queue.py). When jobs wait:
-1. GPU in use by another process (nvidia-smi)? Ask the Taas Noo render for a slot with the agreed file handshake:
-   write D:/AI-Video/gpu/requests/tfs-voice.json and wait for D:/AI-Video/gpu/granted/tfs-voice, which render.sh
-   writes at a batch boundary. Never stop another session's render.
+1. GPU in use by another process (nvidia-smi)? Ask the Taas Noo render for a slot with the agreed file handshake
+   (agreed with that session 2026-11-24, live from Taas Noo story 4): write D:/AI-Video/gpu/requests/tfs-voice.json
+   ({from, need_minutes, needs_commit_gb, deadline_utc}) and wait for D:/AI-Video/gpu/granted/tfs-voice, which render.sh
+   writes at a batch boundary (oldest request first, one at a time, usually within 45 min; skipped when a Taas Noo publish
+   is under 12 h away). The render waits until the grant is deleted or need_minutes + 15 passes. Never stop its render.
 2. Free commit memory at least 25 GB (VoxCPM2 fails with "paging file is too small" below that)? If not, release the
    slot at once: the cloud narrates on Modal at the job's deadline.
 3. Narrate every waiting job in one model load (tools/voice_local_gen.py in the VoxCPM venv), upload the WAVs,
@@ -84,7 +86,7 @@ def wait_for_slot(jobs: list[dict]) -> bool:
     REQUEST.parent.mkdir(parents=True, exist_ok=True)
     GRANTED.parent.mkdir(parents=True, exist_ok=True)
     earliest = datetime.fromisoformat(jobs[0]["deadline"])
-    REQUEST.write_text(json.dumps({"session": "tfs-voice", "need_minutes": need_minutes(jobs),
+    REQUEST.write_text(json.dumps({"from": "TFS Threads and Video Automation (tfs-voice worker)", "need_minutes": need_minutes(jobs),
                                    "needs_commit_gb": NEED_COMMIT_GB, "deadline_utc": earliest.isoformat(),
                                    "requested": datetime.now(timezone.utc).isoformat()}), encoding="utf-8")
     log.info("asked for a GPU slot (%d min) for %d jobs", need_minutes(jobs), len(jobs))
