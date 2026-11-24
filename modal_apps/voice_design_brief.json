@@ -1,0 +1,16 @@
+{
+ "purpose": "TFS history storyteller narrator, designed from the Epic History delivery study of 2026-11-24 (no cloning)",
+ "text": "Marso, labinlimang daan at dalawampu't isa. Tatlong barko ang dumaong sa isla ng Homonhon. Hindi alam ng mga tao roon na magbabago ang buong kapuluan, magpakailanman. Pitong libong isla, mahigit isandaang wika, at tatlong siglong pamamahala ng iisang korona... Pero may mga taong ayaw sumuko.",
+ "voices": {
+  "S1": "A Filipino man about thirty-two years old, warm clean baritone, calm authority, documentary storyteller, slow measured pace with long dramatic pauses, falling intonation, natural Tagalog",
+  "S2": "A Filipino man in his early thirties, deep and resonant history narrator, grave and cinematic, unhurried, pauses before every turn of the story, educated Manila accent",
+  "S3": "A Filipino man about thirty years old, intimate and thoughtful storyteller, soft but clear low voice, like telling a legend by lamplight, slow and patient, natural Tagalog",
+  "S4": "A Filipino man in his mid thirties, rich baritone, dignified epic narrator for a historical documentary, steady slow rhythm, strong but restrained emphasis, clear Tagalog diction",
+  "S5": "A Filipino man about thirty-three years old, warm low voice with quiet intensity, cinematic documentary narration, slow pace, long silences between sentences, natural Filipino accent"
+ },
+ "seeds": [
+  7,
+  19,
+  31
+ ]
+}

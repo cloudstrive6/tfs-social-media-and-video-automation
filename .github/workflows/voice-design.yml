@@ -1,0 +1,27 @@
+# One-off VoxCPM2 voice design on Modal (text descriptions only, no cloning). Runs on push to its own branch
+# and keeps the takes as a private artifact (Actions artifacts need repo access to download).
+name: voice-design
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/voice-design]
+    paths: [modal_apps/tfs_voice_design.py, modal_apps/voice_design_brief.json, .github/workflows/voice-design.yml]
+jobs:
+  design:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q modal==1.6.4
+      - run: modal run modal_apps/tfs_voice_design.py --out out/design
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-design
+          path: out/design
+          retention-days: 7
