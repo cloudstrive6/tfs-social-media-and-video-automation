@@ -9,9 +9,11 @@ import mimetypes
 from functools import lru_cache
 from pathlib import Path
 
-import boto3
-
+# config first: it injects truststore (Avast inspects TLS on the PC). boto3 imported before that keeps the stock
+# SSLContext, whose options setter then recurses forever once truststore has replaced ssl.SSLContext.
 from ..config import env, now, require_env
+
+import boto3  # noqa: E402
 
 
 @lru_cache
