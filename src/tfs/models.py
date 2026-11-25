@@ -355,7 +355,7 @@ class AtlasShot(BaseModel):
     word: str = ""                # broll: brick-red word pill
     hero: bool = False            # broll: the 3D Metro Manila push (long-form, at most one)
     # ---- Atlas blocks v3 (2026-11-25): every field below is optional and word-anchored
-    stamp: str = ""               # any shot: a slammed label ("VOLUNTARY", "HINDI TOTOO", "ALLEGED"), at most 3 words
+    stamp: str = ""               # any shot: a slammed English label ("VOLUNTARY", "FALSE", "ALLEGED"), at most 3 words
     stamp_word: str = ""          # the word the stamp lands on ("" = 0.5 s into the shot)
     stamp_color: Literal["red", "teal", "ink", "gold", ""] = ""
     focus: str = ""               # globe: country or city the globe turns and zooms to ("Philippines", "Manila")

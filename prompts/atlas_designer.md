@@ -24,7 +24,7 @@ shots add 3 to 5 word-anchored builds between them (see "Build, don't cut").
 - `broll`: a real photo of a place or object. `broll_query` is a Wikimedia Commons search that will find
   it (for example "Batasang Pambansa plenary hall", "Senate of the Philippines session hall",
   "Malacanang Palace", "Beehive Wellington", "EDSA Shrine"). `word` is a 1 to 4 word brick-red pill in
-  CAPS that can carry the number ("ONE-THIRD OF THE HOUSE"). Only buildings, rooms, landmarks, documents,
+  CAPS that can carry the number ("ONE-THIRD OF ALL HOUSE MEMBERS"). Only buildings, rooms, landmarks, documents,
   objects and crowds seen from afar. Never a living person as the subject, never children, never a
   logo or a TV screen. `hero: true` (long-form only, at most once) is the 3D push into Metro Manila: use it
   when the story first turns to the national government.
@@ -37,6 +37,8 @@ shots add 3 to 5 word-anchored builds between them (see "Build, don't cut").
   When the script says the answer is zero, make that a card whose `big` is "0" or ends ": 0": the engine
   drops the music and lands a deep hit there, so save it for the real reveal.
 - `bars`: 2 or 3 items of `label`, `value` text and `frac` (0 to 1), plus `src`. For thresholds and shares.
+- `seats`: 1 to 3 rows of dots for a vote or a membership: `label` (whose: "ALL 24 SENATORS"), `count` (filled
+  dots, the votes needed or cast) and `of` (all seats), `color`, plus `src`. For thresholds like 16 of 24.
 - `timeline`: 2 to 4 items of `date` and `text`, optional `foot` (a one-line verdict).
 - `compare`: `ph` and `nz` sides with `name`, `big`, `small`, plus `src`. For the Philippines vs New Zealand.
 - `split`: `left` (red, Philippines) and `right` (teal, the other country) headings of at most 8 words,
@@ -77,17 +79,18 @@ step lands on a spoken word. Give a step its word with `at_word` (items, rows, c
   `rows` (`text` at most 30 characters, `color` red for the key point) that stack beside it one per spoken point,
   and honesty `chips` ("ILLUSTRATIVE", "ALLEGED · NOT PROVEN", "FILE PHOTO") on the word that needs them. When no
   honest photo can exist, leave `broll_query` empty and set `icon` (person, building, house, coins, document,
-  ballot): a drawn icon stands in. A media card counts as a real photo for the photo rule.
+  ballot): a flat line pictogram stands in ("person" is a head-and-shoulders outline with no face, never a
+  drawn character). A media card counts as a real photo for the photo rule.
 - `stamp` (on any shot): a slammed label of 1 to 3 words in CAPS with `stamp_word`, the word it lands on, and
   `stamp_color` (red by default; teal for a "true" verdict). Use it on the turn of the video: "VOLUNTARY",
-  "NOT A TAX", "HINDI TOTOO", "ALLEGED", "NO BILL WILL COME". At most 2 per Short, 4 per long-form. A stamp states
+  "NOT A TAX", "FALSE", "NOT TRUE", "ALLEGED", "NO BILL WILL COME" (English only, like every on-screen word). At most 2 per Short, 4 per long-form. A stamp states
   what the dossier supports; never stamp a person or a party.
 - `key_words` (per scene, not per shot): 1 or 2 words copied exactly from the scene text that carry the point of
   their sentence; the captions box them in red. A chart's spoken key number is boxed automatically.
 
 ## Rules
 - Card and bar text states facts, never labels for your own reasoning: `big` is a number, a date, a threshold or
-  the rule's name ("2/3 OF THE SENATE", "6 YEARS", "ART. VII SEC. 4"), and `small` says what it means. Never
+  the rule's name ("2/3 OF ALL SENATORS", "1/3 OF ALL HOUSE MEMBERS", "6 YEARS", "ART. VII SEC. 4"), and `small` says what it means. Never
   words like PARAPHRASE, STEELMAN, VALID CONCERN, ONE WORD, FABRICATED. Bar `value` text is at most 4 words.
 - Every number the narrator says is on screen while it is said: a `cards`, `bars` or `seats` shot anchored on
   that number's word. Peso amounts use the ₱ sign.
