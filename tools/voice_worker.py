@@ -66,7 +66,10 @@ _BOOT = ("import runpy,site,sys; b=list(sys.path); site.addsitedir(sys.argv[1]);
 
 
 def vox_cmd(script: Path, *args: str) -> list[str]:
-    """Run a script in the VoxCPM venv through its base interpreter (no venv launcher, see the note above)."""
+    """Run a script in the VoxCPM venv through its base interpreter (no venv launcher, see the note above).
+    Without a pyvenv.cfg (CI, or a moved venv) fall back to the venv's own python.exe."""
+    if not (VOX_VENV / "pyvenv.cfg").exists():
+        return [str(VOX_VENV / "Scripts" / "python.exe"), "-I", str(script), *args]
     base, sp = venv_base(VOX_VENV)
     return [str(base), "-I", "-c", _BOOT, str(sp), str(script), *args]
 POLL_S = 120
