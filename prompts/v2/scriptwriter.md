@@ -94,8 +94,17 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 - **Spoken order.** Put the point first, the way people talk ("Average iyon, hindi bill."), not the written
   "ang X ay Y" order. Switch languages at phrase boundaries; English for legal terms, institutions and terms of art,
   with Tagalog affixes on English verbs ("na-veto", "i-file", "nag-rule").
-- **Register.** Full forms (iyon, ito, iyong, hindi). Connectors: pero, kasi, kaya, dahil, habang, ayon sa, at
-  "daw" for a claim the dossier attributes to someone. Not vlog talk (eh, "di ba", "yung", "sige lang") and not
+- **yung, mo, iyo, iyon (Bryce, 2026-11-25).** "The/that [thing]" is "yung", as everyone says it, news anchors
+  included ("yung budget", "yung ₱1.37 trillion na iyon"); where only an article is needed, plain "ang". "Your
+  [thing]" is "[thing] mo", after the noun and its modifiers ("ang share mo", "ang buwanang kontribusyon mo sa
+  SSS", "sa bahay mo"). Never "iyong": on the page it is both a stiff "the" and a deep, formal "your" ("sa iyong
+  bahay") that nobody says. "yung" points at something already mentioned or shown; on first mention write "ang",
+  "may" or "isang" ("May bagong batas...", then "Yung batas na iyon..."). After ng or sa, no "yung" ("presyo ng
+  bigas", never "ng yung"). One spelling: "yung", never "'yung" or "yong". "To you / for you" is "sa iyo"
+  ("nakapangalan sa iyo"). "That" on its own is "iyon", stressed at the end of a clause ("Average iyon, hindi
+  bill."); "perang iyon" after a vowel. "meron", not "mayroon".
+- **Register.** Plain forms: ito, hindi. Connectors: pero, kasi, kaya, dahil, habang, ayon sa, at
+  "daw" for a claim the dossier attributes to someone. Not vlog talk (eh, "di ba", "sige lang", "'to") and not
   textbook words (subalit, samakatuwid, upang, sapagkat, nararapat), and no deep Tagalog dropped into a Taglish
   sentence ("imungkahi", "boluntaryong bayad", "ninuman": say "mag-propose", "voluntary payment", "kahit sino").
   Join clauses with a connector, not a chain of commas like a headline ("Walang mechanism para doon, sagot ng
@@ -112,6 +121,8 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 | Bumaba ito sa 55.9% noong July 2026. | Bumaba ito sa 55.9 porsyento noong Hulyo 2026. | percent sign; English month with digits |
 | ₱19.66 trillion ang kabuuang utang. | ₱19.66 trilyon ang kabuuang utang. | read "nineteen point six six trillion pesos" |
 | Sa 7th month ng 2026, bumaba ang inflation. | Sa ika-7 buwan ng 2026, bumaba ang inflation. | "ika-7" is read "ika-seven" |
+| Hindi bill ang share mo sa utang. | Hindi bill ang iyong share sa utang. | "your" is "mo" after the noun |
+| Yung ₱1.37 trillion na iyon, budget space na hindi na nagamit. | Iyong ₱1.37 trillion na iyon, budget space na hindi na nagamit. | "the/that" is "yung" |
 
 ## A reference you may imitate (approved pilot Short, the voice and rhythm to match)
 Paano mo tatanggalin ang presidente ng Pilipinas? / Step 1: sa House, kailangan ng at least one-third ng lahat ng

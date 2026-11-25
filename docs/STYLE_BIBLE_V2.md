@@ -33,8 +33,9 @@ Audience: Filipinos in the Philippines and abroad, 18 to 45, curious, tired of n
   pesos", "twenty twenty-six"). Never Tagalog number words. Fractions in words ("one-third").
 - **A number and its unit are in the same language**, the way Filipinos speak ("seven months", never "seven
   buwan"): "sa loob ng 7 months ng 2026", "mula January hanggang July 2026", "sa 7th month", "July 15, 2026", "₱1.37 trillion",
-  "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). Full forms
-  (iyon, ito), no vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
+  "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). "yung" for
+  "the/that [thing]" and "[thing] mo" for "your", never "iyong" (Bryce, 2026-11-25); "sa iyo" and "iyon" stay.
+  No vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
   pairs: Bryce-Brain `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.
 - **Questions, not slogans.** Open with the question the viewer has, and return to it at the end with what they
   now know.

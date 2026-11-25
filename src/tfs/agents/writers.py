@@ -141,7 +141,7 @@ def narration_edit(script: Script) -> Script:
         retry = llm.structured(
             "narration_editor",
             f"# Script\n{edited.model_dump_json()}\n\n# Unnatural Taglish still in this script: fix each one "
-            f"(rules 7 to 9), change nothing else\n{feedback}",
+            f"(rules 7 to 10), change nothing else\n{feedback}",
             Script,
         )
     except Exception as e:                          # the first edit is good enough to keep; never lose it here

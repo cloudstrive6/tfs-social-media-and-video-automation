@@ -32,6 +32,8 @@ NATURAL = [
     "Hindi, average lang iyon: ₱19.66 trillion, hinati sa 115 million na Pilipino. [S1][S18]",
     "Bumaba ito sa 55.9% noong July 2026.",
     "Ayon sa Article 7, Section 20 ng 1987 Constitution, ang Republika ang nangungutang.",
+    "Hindi iyon bill na nakapangalan sa iyo.",
+    "Yung budget na iyon ang pinag-uusapan, hindi ang share mo.",
 ]
 
 
@@ -55,6 +57,13 @@ def test_each_rule_names_the_fix():
     assert "Babayaran" in problems("Bayaran mo ba iyon?")[0]
     assert "Gawin ba" in problems("Gawin ba iyon ng Senado?")[0]
     assert "sa loob ng 3 years" in problems("Natapos ito sa 3 years.")[0]
+    # Bryce, 2026-11-25: "iyong" is "yung" (the/that) or "mo" (your); "sa iyo" and "iyon" are fine.
+    msg = problems("Hindi bill ang iyong share sa utang.")[0]
+    assert "yung" in msg and "share mo" in msg
+    assert problems("Iyong budget na iyon ang pinag-uusapan.")
+    assert "spell it" in problems("'Yung budget na iyon ang pinag-uusapan.")[0]
+    assert "after ng or sa" in problems("Tumaas ang presyo ng yung bigas.")[0]
+    assert problems("Yung budget na iyon, napunta sa bahay mo.") == []
 
 
 def test_script_problems_name_the_scene():
@@ -100,6 +109,7 @@ def test_briefs_carry_the_language_rules(monkeypatch, tmp_path):
     assert "A number and its unit are in the same language" in sw
     assert "Babayaran" in sw and "Babayaran" in ed
     assert '"7 buwan" becomes "7 months"' in ed
+    assert '"iyong" never stays' in ed and "Never \"iyong\"" in sw
     assert "A number and its unit are in the same language" in config.style_bible()
 
 

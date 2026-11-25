@@ -33,6 +33,13 @@ _NOT_VERBS = {"saan", "nasaan", "kailan", "kanino", "ilan", "alin", "kailangan",
               "paaralan", "simbahan", "hukuman", "lungsod", "senador", "ganoon", "ganiyan"}
 
 
+# "iyong" is two words on the page (Bryce, 2026-11-25): "that/the X" (iyon + -ng), which everyone says "yung",
+# and formal "your X" (iyo + -ng), which people say "X mo". Either way the narrator would read it stiffly.
+_IYONG = re.compile(r"\biyong\b", re.I)
+_YUNG_SPELLING = re.compile(r"(?<![\w'])(?:'yung|'yong|yong)\b", re.I)    # one caption spelling: "yung"
+_NG_YUNG = re.compile(r"\b(?:ng|sa)\s+yung\b", re.I)
+
+
 def _is_root(word: str) -> bool:
     w = word.lower()
     if w in _NOT_VERBS or len(w) < 5:
@@ -69,6 +76,13 @@ def problems(text: str) -> list[str]:
         tl = m.group(1) or m.group(2)
         out.append(f'"{m.group(0).strip()}": dates with digits use English months '
                    f'("{_EN_MONTHS[_TL_MONTHS.index(tl)]}")')
+    for m in _IYONG.finditer(t):
+        out.append(f'"{m.group(0)}": write "yung [thing]" when it means "the/that", or "[thing] mo" when it means '
+                   f'"your" ("ang share mo", not "ang iyong share")')
+    for m in _YUNG_SPELLING.finditer(t):
+        out.append(f'"{m.group(0)}": spell it "yung" so captions stay consistent')
+    for m in _NG_YUNG.finditer(t):
+        out.append(f'"{m.group(0)}": no "yung" after ng or sa; write "{m.group(0).split()[0]} [thing]"')
     for m in _ROOT_Q.finditer(t):
         if _is_root(m.group(1)):
             out.append(f'"{m.group(0).strip(" ,.?!")}": a question about what will happen needs the aspect form '

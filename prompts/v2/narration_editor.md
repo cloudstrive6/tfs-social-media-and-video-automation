@@ -27,6 +27,11 @@ stay as digits. Return the same script with ONLY these changes, scene by scene:
 9. A question about what will happen takes the contemplated aspect: "Bayaran mo ba iyon?" becomes "Babayaran
    mo ba iyon?", "Gawin ba iyon?" becomes "Gagawin ba iyon?". After kailangan, dapat, puwede or gusto the root
    form stays ("Kailangan mo bang bayaran?").
+10. "iyong" never stays. Meaning "the/that": "ang iyong X" becomes "yung X", but after ng or sa drop it ("ng X",
+   "sa X"), never "ng yung" or "sa yung". Meaning "your": "mo" goes after the noun and its modifiers ("ang iyong
+   buwanang share" becomes "ang buwanang share mo", "sa iyong bahay" becomes "sa bahay mo"). One spelling:
+   "yung" ("Yung" at the start of a sentence), never "'yung" or "yong". "sa iyo" (to you, for you) and "iyon"
+   (that) stay as they are.
 
 Never change meaning, facts, names, order or tone. Never add sentences. No em-dashes or en-dashes. Return
 every scene, with the same ids, speakers, chapters and visuals.
