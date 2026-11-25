@@ -90,7 +90,10 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
   with Tagalog affixes on English verbs ("na-veto", "i-file", "nag-rule").
 - **Register.** Full forms (iyon, ito, iyong, hindi). Connectors: pero, kasi, kaya, dahil, habang, ayon sa, at
   "daw" for a claim the dossier attributes to someone. Not vlog talk (eh, "di ba", "yung", "sige lang") and not
-  textbook words (subalit, samakatuwid, upang, sapagkat, nararapat).
+  textbook words (subalit, samakatuwid, upang, sapagkat, nararapat), and no deep Tagalog dropped into a Taglish
+  sentence ("imungkahi", "boluntaryong bayad", "ninuman": say "mag-propose", "voluntary payment", "kahit sino").
+  Join clauses with a connector, not a chain of commas like a headline ("Walang mechanism para doon, sagot ng
+  finance chair, at ang tamang buwis daw ang ambag mo."). Counts take "na": "115 million na Pilipino".
 
 | Write | Not | Why |
 |---|---|---|
