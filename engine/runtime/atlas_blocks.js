@@ -30,11 +30,13 @@ window.TFS_BLOCKS = function (ctx) {
     if (!st || !st.text) return;
     const at = typeof st.at === "number" ? st.at : s.t0 + 0.5;
     const c = col(st.color, C.red);
+    // long stamps shrink to fit about 82% of the width (Anton caps advance about 0.5 em; dry run 3 ran edge to edge)
+    const fs = Math.min((V ? 78 : 70) * U, (0.82 * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
     const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
     // verticals: in the band between the panels (top 20 to 55%) and the captions (72%), so it never hides the number
     const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 61 : 15);
     n.innerHTML = `<div style="position:absolute;left:50%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
-      `<div class="stp" style="font:400 ${px(V ? 78 : 70)}/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
+      `<div class="stp" style="font:400 ${fs.toFixed(0)}px/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
       `border:${px(7)} solid ${c};border-radius:${px(10)};padding:${px(8)} ${px(26)};background:rgba(248,242,228,.94);` +
       `box-shadow:0 0 ${px(26)} ${c}88, inset 0 0 0 ${px(3)} rgba(248,242,228,.94), inset 0 0 0 ${px(6)} ${c}55;` +
       `text-shadow:0 0 ${px(12)} ${c}66">${esc(st.text)}</div></div>`;
@@ -190,7 +192,7 @@ window.TFS_BLOCKS = function (ctx) {
     const callout = s.callout ? `<div class="co" style="position:absolute;left:${(X(last) + 28 * U - cw * 0.0).toFixed(0)}px;top:${(Y(pts[last].num) < ch * 0.45 ? Y(pts[last].num) + 34 * U : Y(pts[last].num) - 70 * U).toFixed(0)}px;` +
       `transform:translateX(-100%);font:400 ${px(V ? 46 : 42)}/1 Anton;color:#fff;background:${C.red};padding:${px(6)} ${px(14)};border-radius:${px(8)};white-space:nowrap;opacity:0">${esc(s.callout)}</div>` : "";
     n.innerHTML = panel(kicker(s.head) +
-      `<div class="big" style="font:400 ${px(V ? 92 : 84)}/1 Anton;color:${C.red};margin-bottom:${px(16)};white-space:nowrap">${esc(L.figAt(s.big, 0))}</div>` +
+      `<div class="big" style="font:400 ${px(V ? 92 : 84)}/1 Anton;color:${C.red};margin-bottom:${px(16)};white-space:nowrap;opacity:0">${esc(L.figAt(s.big, 0))}</div>` +
       `<div style="position:relative">${svg}${callout}</div>` + (s.src ? `<div>${badge(s.src)}</div>` : ""),
       `left:50%;top:${V ? 19 : 14}%;transform:translateX(-50%)`);
     inOut(n, s, { y: 30 * U });
@@ -198,6 +200,7 @@ window.TFS_BLOCKS = function (ctx) {
     const coAt = typeof s.calloutAt === "number" && s.calloutAt >= drawAt ? s.calloutAt : drawAt + drawDur + 0.05;
     const q = (c) => n.querySelector(c);
     tl.to(q(".d0"), { opacity: 1, duration: 0.15 }, drawAt - 0.2);
+    tl.to(q(".big"), { opacity: 1, duration: 0.15 }, drawAt - 0.2);   // the headline appears as it starts counting
     tl.to(q(".ln"), { attr: { "stroke-dashoffset": 0 }, duration: drawDur, ease: "none" }, drawAt);
     tl.to(q(".ar"), { attr: { "fill-opacity": 0.12 }, duration: 0.5 }, drawAt + drawDur);
     tl.fromTo(q(".d1"), { opacity: 0, scale: 0.3, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2)" }, drawAt + drawDur);
@@ -314,7 +317,7 @@ window.TFS_BLOCKS = function (ctx) {
       `<div style="font:800 ${px(26)} Montserrat;color:${C.ink};margin-bottom:${px(10)}">${esc(s.label || "")}</div>` +
       `<div class="bo" style="position:relative;width:${bw}px;height:${px(76)};border:${px(4)} solid ${C.ink};border-radius:${px(12)};background:#fff;overflow:hidden;transform-origin:0 50%;transform:scaleX(0)">` +
       `<div class="bs" style="position:absolute;left:0;top:0;bottom:0;width:0;background:${C.red}"></div></div>` +
-      `<div class="bn" style="font:400 ${px(V ? 96 : 92)}/1 Anton;color:${C.red};margin-top:${px(18)};white-space:nowrap">${esc(L.figAt(s.big, 0))}</div>` +
+      `<div class="bn" style="font:400 ${px(V ? 96 : 92)}/1 Anton;color:${C.red};margin-top:${px(18)};white-space:nowrap;opacity:0">${esc(L.figAt(s.big, 0))}</div>` +
       (s.small ? `<div class="bt" style="display:inline-block;font:800 ${px(26)} Montserrat;color:#fff;background:${C.ink};padding:${px(6)} ${px(12)};border-radius:${px(6)};margin-top:${px(8)};opacity:0">${esc(s.small)}</div>` : "") +
       `<div>${chips}</div>` + (s.src ? `<div>${badge(s.src)}</div>` : ""), `left:50%;top:${V ? 22 : 18}%;transform:translateX(-50%)`);
     inOut(n, s, { y: 30 * U });
@@ -326,6 +329,7 @@ window.TFS_BLOCKS = function (ctx) {
     const cAt = times(s.chips || [], s, fillAt - s.t0 + 1.6, 0.6);
     n.querySelectorAll(".bc").forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: 1.2 }, { opacity: 1, scale: 1, duration: 0.2 }, cAt[i]));
     const bn = q(".bn");
+    tl.to(bn, { opacity: 1, duration: 0.15 }, fillAt);                 // no "₱0.00" on screen before the count starts
     TICK.push((t) => { if (t >= s.t0 - 0.05 && t <= s.t1 + 0.05) bn.textContent = L.figAt(s.big, o2(L.prog(t, fillAt, 1.2))); });
   };
 
