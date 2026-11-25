@@ -176,6 +176,9 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
         step = len(picks) / cap
         picks = sorted({int(i * step) for i in range(cap)})
     frames: list[tuple[str, Path, dict]] = []
+    from .media.atlas_plan import settled_time
+    atlas_shots = json.loads((d / "atlas_shots.json").read_text(encoding="utf-8")) \
+        if (d / "atlas_shots.json").exists() else []
     if kind == "vertical":
         frames.append(("hook", grab(video, 0.4, frame_dir / "hook.jpg"),
                        {"meant_to_show": f"opening frame with the on-screen hook: {hook_text}"}))
@@ -190,6 +193,8 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
         if (shot and shot.kind == "reuse") or scene.id in (reused or set()):
             info["reused"] = True
         t = (bounds[i] + bounds[i + 1]) / 2
+        if atlas_shots:                  # atlas: judge the scene once its count-ups and rows have landed, not mid-count
+            t = settled_time(atlas_shots, bounds[i], bounds[i + 1])
         frames.append((f"scene {scene.id}", grab(video, t, frame_dir / f"scene{scene.id:03d}.jpg"), info))
     if thumbnail and thumbnail.exists():
         frames.append(("thumbnail", thumbnail, {"meant_to_show": "YouTube thumbnail (16:9); must read at phone size"}))

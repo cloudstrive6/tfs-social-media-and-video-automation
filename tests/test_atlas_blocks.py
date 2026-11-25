@@ -293,3 +293,112 @@ def test_chart_numbers_must_agree_with_their_labels():
            {"k": "waffle", "t0": 2, "big": "6%", "frac": 0.28},
            {"k": "barchart", "t0": 3, "items": [{"value": "₱876.2B", "num": 876}, {"value": "₱1.37T", "num": 3000}]}]
     assert [p.split(" at ")[0] for p in ap.chart_problems(bad)] == ["linechart", "waffle", "barchart"]
+
+
+# ---------------------------------------------------------------- planner fixes (2026-11-25, "fix the planner first")
+def test_photo_must_be_named_by_its_own_metadata():
+    from types import SimpleNamespace as C
+
+    from tfs.media.broll_pick import mentions
+    road = C(title="File:Commonwealth Avenue flyover.jpg", description="Traffic on a highway", categories=["Roads"])
+    hall = C(title="File:Batasang Pambansa plenary hall.jpg", description="", categories=["House of Representatives"])
+    assert not mentions("House of Representatives plenary hall Philippines", road)
+    assert mentions("House of Representatives plenary hall Philippines", hall)
+
+
+def test_rejected_photos_become_type_cards_or_honest_pictograms():
+    shots = [{"k": "broll", "t0": 0, "t1": 2, "src": "assets/b01.jpg", "kind": "photo", "credit": "x", "word": "THE HOUSE"},
+             {"k": "media", "t0": 2, "t1": 5, "src": "assets/b02.jpg", "kind": "photo", "credit": "x",
+              "name": "A MANILA STREET CROWD (FILE)", "role": "File photo. The people the total is divided by",
+              "chips": [{"text": "FILE PHOTO"}, {"text": "AN AVERAGE"}], "rows": [{"text": "One"}]},
+             {"k": "cards", "t0": 5, "t1": 7, "items": []}]
+    out = ap.drop_photos(shots, {"assets/b01.jpg", "assets/b02.jpg"})
+    assert out[0] == {"k": "bigtext", "text": "THE HOUSE", "t0": 0, "t1": 2}
+    m = out[1]
+    assert "src" not in m and "credit" not in m and m["icon"] == "person"
+    assert m["name"] == "A MANILA STREET CROWD" and "photo" not in m["role"].lower()
+    assert m["chips"] == [{"text": "AN AVERAGE"}] and m["rows"] == [{"text": "One"}]
+
+
+def test_media_without_photo_never_claims_one_and_reads_any_row_field():
+    shot = AtlasShot(k="media", broll_query="crowd street Manila", name="A MANILA STREET CROWD (FILE)",
+                     chips=[AtlasItem(text="FILE PHOTO"), AtlasItem(label="AN AVERAGE")],
+                     rows=[AtlasItem(small="Floated on 2026-11-23"), AtlasItem(label="His reason: trust"),
+                           AtlasItem(big="NOT A BILL")])
+    shots = ap.to_shots(_plan_one(shot), [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)
+    m = [s for s in shots if s["k"] == "media"][0]
+    assert m["icon"] == "person" and m["name"] == "A MANILA STREET CROWD"
+    assert [c["text"] for c in m["chips"]] == ["AN AVERAGE"]
+    assert [r["text"] for r in m["rows"]] == ["Floated on 23 Nov 2026", "His reason: trust", "NOT A BILL"]
+
+
+def test_bigtext_headline_in_big_still_shows():
+    plan = _plan_one(AtlasShot(k="cards"), AtlasShot(k="bigtext", at_word="average", big="A CRISIS OF TRUST"))
+    shots = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)
+    assert [s.get("text") for s in shots if s["k"] == "bigtext"] == ["A CRISIS OF TRUST"]
+
+
+def test_hook_card_opens_the_short_and_scene_one_never_repeats_it():
+    plan = AtlasPlan(scenes=[AtlasScene(scene_id=1, shots=[
+        AtlasShot(k="bigtext", text="DO YOU OWE ₱170,598?"), AtlasShot(k="cards", at_word="Voluntary", items=[AtlasItem(big="X")]),
+        AtlasShot(k="linechart", at_word="170,598", big="₱170,598", items=[AtlasItem(num=1), AtlasItem(num=2)])])])
+    shots = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None,
+                        hook="Do you personally owe PHP 170,598?")
+    hook = shots[1]
+    assert hook["k"] == "bigtext" and hook["text"] == "DO YOU PERSONALLY OWE ₱170,598?" and hook["t0"] == 0.0 and hook["instant"]
+    rest = [s for s in shots[2:]]
+    assert all(s["k"] != "bigtext" for s in rest) and rest[0]["t0"] >= ap.HOOK_HOLD - 0.01
+    assert hook["t1"] == rest[0]["t0"]
+
+
+def test_doc_without_text_is_a_type_card_and_a_doc_is_never_lost_to_a_missing_word():
+    plan = _plan_one(AtlasShot(k="map", view="ph"), AtlasShot(k="doc", at_word="nowhere", head="PD 1177", sec="SECTION 31",
+                                                               body="All expenditures for principal and interest on public debt"))
+    shots = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)
+    assert [s["k"] for s in shots[1:]] == ["map", "doc"]
+    plan = _plan_one(AtlasShot(k="doc", head="PD 1177", sec="SECTION 31", body=""))
+    shots = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)
+    assert shots[1]["k"] == "bigtext" and shots[1]["text"] == "SECTION 31" and shots[1]["sub"] == "PD 1177"
+
+
+def test_every_spoken_number_must_be_on_screen_on_its_word():
+    words = [{"w": "₱19.66", "t0": 2.0}, {"w": "trillion", "t0": 2.4}, {"w": "at", "t0": 3.0}, {"w": "12%", "t0": 5.0},
+             {"w": "noong", "t0": 6.0}, {"w": "2026.", "t0": 6.3}, {"w": "₱42.3", "t0": 8.0}, {"w": "hanggang", "t0": 8.5}]
+    shots = [{"k": "linechart", "t0": 1.5, "t1": 4.5, "big": "₱19.66 TRILLION"},
+             {"k": "map", "t0": 4.5, "t1": 7.5},
+             {"k": "cards", "t0": 7.5, "t1": 10, "items": [{"big": "₱42.3B TO ₱118.5B"}]}]
+    probs = ap.number_problems(shots, words, [0.0], [Sc(1)])
+    assert [p.split("'")[1] for _, p in probs] == ["12%"]        # years are not numbers to show; 42.3 matches 42.3B
+
+
+def test_scene_repeating_the_card_over_map_layout_is_flagged():
+    shots = [{"k": "bigtext", "t0": 0, "t1": 2.2, "hook": True},
+             {"k": "map", "t0": 2.2, "t1": 4}, {"k": "bigtext", "t0": 4, "t1": 6},
+             {"k": "map", "t0": 6, "t1": 8}, {"k": "bigtext", "t0": 8, "t1": 10},
+             {"k": "cards", "t0": 10, "t1": 12}, {"k": "barchart", "t0": 12, "t1": 15}]
+    probs = ap.composition_problems(shots, [0.0, 6.0, 10.0], [Sc(1), Sc(2), Sc(3)])
+    assert [sid for sid, _ in probs] == [2, 3]
+
+
+def test_fix_rounds_only_replace_flagged_scenes():
+    old = AtlasPlan(scenes=[AtlasScene(scene_id=i, shots=[AtlasShot(k="map")]) for i in (1, 2, 3)])
+    new = AtlasPlan(scenes=[AtlasScene(scene_id=i, shots=[AtlasShot(k="cards")]) for i in (1, 2, 3)])
+    merged = ap.merge_plans(old, new, {2})
+    assert [s.shots[0].k for s in merged.scenes] == ["map", "cards", "map"]
+
+
+def test_short_shots_still_land_every_step_and_review_frames_wait_for_the_build():
+    times = ap.step_times([None, None, None], 10.0, 12.6, 0.7, 1.25)
+    assert times[-1] <= 12.6 - 0.6 + 1e-6 and times == sorted(times)
+    js = node("L.stepTimes([{},{},{}], 10, 12.6, 0.7, 1.25)")
+    assert [round(x, 3) for x in js] == times
+    shots = [{"k": "linechart", "t0": 4.0, "t1": 9.0, "bigAt": 4.5}, {"k": "map", "t0": 9.0, "t1": 10.0}]
+    assert ap.settled_time(shots, 4.0, 10.0) >= 4.5 + 2.25
+    assert ap.settled_time(shots, 4.0, 10.0) <= 9.0 - 0.3 + 1e-6
+
+
+def test_vertical_panels_stay_inside_the_safe_area():
+    js = BLOCKS.read_text(encoding="utf-8")
+    assert 'right:${V ? "12%" : "8%"}' in js                          # side list clear of the button strip
+    for line in ('W * (V ? 0.7 : 0.66)', 'W * (V ? 0.7 : 0.6)'):    # chart panels within about 88% of the width
+        assert line in js

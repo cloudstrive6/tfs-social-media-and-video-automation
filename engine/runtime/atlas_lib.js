@@ -180,8 +180,12 @@
   /** Start times for n build steps: the step's own `at` when given and inside the shot, else spread evenly
    * after `lead` seconds with at least `minGap` between them. */
   function stepTimes(items, t0, t1, lead = 0.5, minGap = 0.9) {
-    const n = items.length;
-    const gap = Math.max(minGap, (t1 - t0 - lead - 1.0) / Math.max(1, n));
+    const n = items.length, dur = t1 - t0;
+    let gap = Math.max(minGap, (dur - lead - 1.0) / Math.max(1, n));
+    if (n > 1 && lead + (n - 1) * gap > dur - 0.6) {          // a short shot: squeeze so every step still lands
+      gap = Math.max(0.25, (dur - 0.6 - lead) / (n - 1));
+      lead = Math.max(0.2, Math.min(lead, dur - 0.6 - (n - 1) * gap));
+    }
     return items.map((it, i) => {
       const at = it && typeof it.at === "number" ? it.at : null;
       return at !== null && at >= t0 && at < t1 ? at : t0 + lead + i * gap;

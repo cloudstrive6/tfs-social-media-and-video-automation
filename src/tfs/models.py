@@ -280,3 +280,13 @@ class AtlasScene(BaseModel):
 
 class AtlasPlan(BaseModel):
     scenes: list[AtlasScene]
+
+
+class PhotoCheck(BaseModel):
+    index: int                    # 1-based, in the order the photos were listed
+    shows: str                    # what the photo actually shows, in a few words
+    matches: bool                 # True when it shows what its on-screen label names (or a fair stand-in for it)
+
+
+class PhotoVerdicts(BaseModel):
+    photos: list[PhotoCheck]

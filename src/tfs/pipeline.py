@@ -187,7 +187,38 @@ def _atlas_shotlist(script: Script, starts: list[float], total: float, shots: li
     return ShotList(shots=out)
 
 
-def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> tuple[list[float], list[dict]]:
+def _photo_check(item: dict, d: Path, script: Script, shots: list[dict], assets: dict) -> set[str]:
+    """One vision call per video: does each picked photo show what its on-screen label names? Returns the srcs that
+    do not (debt Shorts: a highway labelled THE HOUSE OF REPRESENTATIVES). Any failure keeps the photos."""
+    from . import llm
+    from .models import PhotoVerdicts
+
+    photos = [s for s in shots if s.get("src") in assets and s.get("kind", "photo") == "photo"
+              and s.get("k") in ("broll", "media")]
+    if not photos:
+        return set()
+    lines = []
+    for n, s in enumerate(photos, 1):
+        label = " / ".join(x for x in (s.get("word"), s.get("name"), s.get("role")) if x) or "(no label)"
+        lines.append(f"{n}. {Path(assets[s['src']]).name}: on-screen label \"{label}\"")
+    try:
+        got = llm.structured_with_images(
+            "photo_checker", f"Topic: {item.get('topic', '')}\n\nPhotos, in order:\n" + "\n".join(lines),
+            [assets[s["src"]] for s in photos], PhotoVerdicts)
+    except UsageLimitError:
+        raise
+    except Exception:
+        log.exception("photo check failed; keeping the photos")
+        return set()
+    bad = {photos[v.index - 1]["src"] for v in got.photos if not v.matches and 1 <= v.index <= len(photos)}
+    (d / "photo_check.json").write_text(got.model_dump_json(indent=1), encoding="utf-8")
+    if bad:
+        log.warning("atlas %s: photos that do not show their label: %s", item["id"], sorted(bad))
+    return bad
+
+
+def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int], hook_text: str = ""
+                 ) -> tuple[list[float], list[dict]]:
     """Style v2: narrator -> Atlas Designer -> licensed photos -> HyperFrames picture -> SFX and music mix ->
     master -14 LUFS -> mux. Captions are drawn by the runtime. Returns (scene starts, shots)."""
     import subprocess
@@ -208,37 +239,51 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
         deadline = now()
     clips = tts.synthesize(_voiced(script, d), d / "audio", item=item["id"], deadline=deadline)
     voice, starts, total, chapter_cards = atlas_plan.assemble(clips, script.scenes, kind)
-    fixes = _fixes(d)                                 # review-team notes on a finished render re-plan the whole video
+    fixes = _fixes(d)                       # review-team notes on a finished render re-plan only the flagged scenes
     done = fixes.setdefault("replanned", {})
     pending = {k: n for k, n in fixes["images"].items()
                if k.isdigit() and fixes["attempts"].get(k, 0) > done.get(k, 0)}
     notes = "".join(f"\n- scene {k}: {n}" + (" (failed twice: use only a map or a bigtext card)"
                                               if k in fixes["drop"] else "") for k, n in sorted(pending.items()))
+    old_plan = None
     if pending:
+        if (d / "atlas.json").exists():
+            old_plan = AtlasPlan.model_validate_json((d / "atlas.json").read_text(encoding="utf-8"))
         (d / "atlas.json").unlink(missing_ok=True)
         done.update({k: fixes["attempts"][k] for k in pending})
         (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
     plan = cached(d / "atlas.json", AtlasPlan,
                   lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=notes))
-    # plan QC (Atlas blocks v3): no scene family on screen longer than MAX_FAMILY_RUN seconds, and every chart's plotted
-    # numbers agree with its printed figures (a debt Short once showed a chart that disagreed with its headline). Checked
-    # on a dry pass (every photo assumed found) before any photo is fetched; a failing plan is re-planned once.
+    if old_plan is not None:                         # fix rounds converge: scenes that passed keep their plan
+        plan = atlas_plan.merge_plans(old_plan, plan, {int(k) for k in pending})
+        (d / "atlas.json").write_text(plan.model_dump_json(indent=2), encoding="utf-8")
+    hook = hook_text if kind == "vertical" else ""
+    # plan QC (2026-11-25): scene families (no run over MAX_FAMILY_RUN s), charts that agree with their own figures,
+    # every spoken number on a card or chart on its word, and no scene repeating the previous card-over-map layout.
+    # Checked on a dry pass (every photo assumed found) before any photo is fetched; only the flagged scenes are
+    # re-planned, once, and merged into the plan.
     dry = atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind,
-                              lambda q, w, a, b: {"kind": "photo", "src": "dry.jpg", "credit": ""}, None)
-    problems = atlas_plan.variety_problems(dry) + atlas_plan.chart_problems(dry)
-    if problems and not fixes.get("variety_replanned"):
-        log.warning("atlas %s: variety QC failed, re-planning once: %s", item["id"], problems)
-        fixes["variety_replanned"] = problems
+                              lambda q, w, a, b: {"kind": "photo", "src": "dry.jpg", "credit": ""}, None, hook=hook)
+    probs = atlas_plan.plan_problems(dry, atlas_plan.caption_words(clips, starts), starts, script.scenes)
+    if probs and not fixes.get("plan_replanned"):
+        log.warning("atlas %s: plan QC failed, re-planning scenes %s once: %s", item["id"], sorted(probs), probs)
+        fixes["plan_replanned"] = {str(k): v for k, v in probs.items()}
         (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+        prev = plan
         (d / "atlas.json").unlink(missing_ok=True)
-        vnotes = notes + "".join(f"\n- whole video, variety: {p}" for p in problems)
-        plan = cached(d / "atlas.json", AtlasPlan,
-                      lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=vnotes))
+        pnotes = notes + "".join(f"\n- scene {sid}: {p}" for sid, ps in sorted(probs.items()) for p in ps)
+        fresh = cached(d / "atlas.json", AtlasPlan,
+                       lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=pnotes))
+        plan = atlas_plan.merge_plans(prev, fresh, set(probs))
+        (d / "atlas.json").write_text(plan.model_dump_json(indent=2), encoding="utf-8")
     picker = broll_pick.Picker(d, item["id"])
     hero = {"k": "broll", "kind": "video", "src": "assets/hero.mp4", "credit": ""} if kind == "long_form" else None
-    shots = sorted(atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind, picker, hero) + chapter_cards,
-                   key=lambda s: s["t0"])
-    assets = dict(picker.assets)
+    shots = sorted(atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind, picker, hero, hook=hook)
+                   + chapter_cards, key=lambda s: s["t0"])
+    bad = _photo_check(item, d, script, shots, dict(picker.assets))
+    if bad:                                          # a photo that does not show its label is never shown with it
+        shots = atlas_plan.drop_photos(shots, bad)
+    assets = {k: v for k, v in picker.assets.items() if k not in bad}
     if any(s.get("src") == "assets/hero.mp4" for s in shots):
         assets["assets/hero.mp4"] = ROOT / HERO_CLIP
     (d / "atlas_shots.json").write_text(json.dumps(shots, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -247,6 +292,8 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
     words = atlas_plan.mark_keys(atlas_plan.caption_words(clips, starts), plan, script.scenes, starts, total, shots)
     (d / "atlas_qc.json").write_text(json.dumps({
         "families": atlas_plan.family_runs(shots), "variety_problems": atlas_plan.variety_problems(shots),
+        "plan_problems": atlas_plan.plan_problems(shots, words, starts, script.scenes),
+        "photos_rejected": sorted(bad),
         "builds": [[s["k"], s["t0"], atlas_plan.builds(s)] for s in shots],
         "key_words": [w["w"] for w in words if w.get("key")]}, ensure_ascii=False, indent=1), encoding="utf-8")
     sp = atlas.spec(item["id"].replace(".", "-"), size, shots, words, total)
@@ -285,7 +332,7 @@ def _build_atlas(item: dict, d: Path, script: Script, hook: HookReview) -> tuple
     size = (vcfg["width"], vcfg["height"])
     video, starts_file, shots_file = d / "video.mp4", d / "starts.json", d / "atlas_shots.json"
     if not video.exists():
-        starts, _ = _atlas_video(item, d, script, size)
+        starts, _ = _atlas_video(item, d, script, size, hook.on_screen_hook_text)
         starts_file.write_text(json.dumps(starts))
     starts = json.loads(starts_file.read_text())
     thumb_path, thumb_moment = None, "(no custom thumbnail)"

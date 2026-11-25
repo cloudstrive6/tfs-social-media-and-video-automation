@@ -31,6 +31,7 @@ GAP = 0.35
 LEAD = 0.4
 CHAPTER_PAD = 2.6
 MIN_SHOT = 1.6
+HOOK_HOLD = 2.2          # seconds the on-screen hook card holds before scene 1's own shots
 SENTENCE_END = (".", "?", "!")
 
 
@@ -65,7 +66,11 @@ def step_times(ats: list, t0: float, t1: float, lead: float = 0.5, min_gap: floa
     """Start times of n build steps: the anchored time when it falls inside the shot, else an even spread after
     `lead` (same rule as TFSLIB.stepTimes in engine/runtime/atlas_lib.js)."""
     n = len(ats)
-    gap = max(min_gap, (t1 - t0 - lead - 1.0) / max(1, n))
+    dur = t1 - t0
+    gap = max(min_gap, (dur - lead - 1.0) / max(1, n))
+    if n > 1 and lead + (n - 1) * gap > dur - 0.6:      # a short shot: squeeze the spread so every step still lands
+        gap = max(0.25, (dur - 0.6 - lead) / (n - 1))
+        lead = max(0.2, min(lead, dur - 0.6 - (n - 1) * gap))
     return [round(a, 3) if a is not None and t0 <= a < t1 else round(t0 + lead + i * gap, 3) for i, a in enumerate(ats)]
 
 
@@ -154,13 +159,16 @@ def _media(s: AtlasShot, resolve: Resolver, t0: float, t1: float) -> dict:
     chips. With no licensed photo it shows a drawn icon instead, never an unlicensed or misleading image."""
     d: dict = {"k": "media"}
     got = resolve(s.broll_query, s.word or s.name, t0, t1) if s.broll_query else None
+    name, role = s.name, s.role
+    chips = [{"text": item_text(c).upper()} for c in s.chips[:2] if item_text(c)]
     if got:
         d.update({kk: v for kk, v in got.items() if kk in ("kind", "src", "credit")})
-    else:
-        d["icon"] = s.icon or "building"
-    d.update({kk: v for kk, v in {"name": s.name, "role": s.role}.items() if v})
-    rows = [{"text": r.text, "color": r.color} for r in s.rows[:4] if r.text]
-    chips = [{"text": c.text.upper()} for c in s.chips[:2] if c.text]
+    else:                                # no matching photo: a pictogram, and nothing on screen that claims a photo
+        d["icon"] = s.icon or icon_for(s.broll_query + " " + s.name)
+        name, role = _no_photo_words(name), _no_photo_words(role)
+        chips = [c for c in chips if not PHOTO_WORDS.search(c["text"])]
+    d.update({kk: v for kk, v in {"name": name, "role": role}.items() if v})
+    rows = [{"text": item_text(r), "color": r.color} for r in s.rows[:4] if item_text(r)]
     if rows:
         d["rows"] = rows
     if chips:
@@ -177,7 +185,10 @@ def _runtime(s: AtlasShot) -> dict:
     elif s.k in ("bigtext", "title"):
         # the ink title card read as a dead frame (dry run hook score 2/10): hooks and questions are paper cards over
         # the map; numbered chapter cards on the mat come from assemble(), not from the designer
-        d = {"k": "bigtext", "text": s.text, "sub": s.sub or s.kicker, "src": s.src}
+        d = {"k": "bigtext", "text": s.text or s.big, "sub": s.sub or s.kicker or s.small, "src": s.src}
+    elif s.k == "doc" and not s.body.strip():
+        d = {"k": "bigtext", "text": (s.sec or s.head or "THE LAW").upper(), "sub": s.head if s.sec else "",
+             "src": s.src}
     elif s.k == "doc":
         hl = [h for h in s.hl if h and h in s.body]
         d.update({"head": s.head, "sec": s.sec, "body": s.body, "hl": hl, "src": s.src})
@@ -288,7 +299,7 @@ def _anchor(d: dict, s: AtlasShot, words: list, st: float, t0: float, t1: float)
             keys += [a for a in ats if a is not None]
     if k in ("media", "balance"):
         for field in ("rows", "chips"):
-            src = [x for x in getattr(s, field) if x.text][:len(d.get(field, []))]
+            src = [x for x in getattr(s, field) if item_text(x)][:len(d.get(field, []))]
             if not src:
                 continue
             lead, gap = STEPS[field]
@@ -311,9 +322,10 @@ def _anchor(d: dict, s: AtlasShot, words: list, st: float, t0: float, t1: float)
 
 
 def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], total: float, kind: str,
-             resolve: Resolver, hero: dict | None = None) -> list[dict]:
+             resolve: Resolver, hero: dict | None = None, hook: str = "") -> list[dict]:
     """Absolute-time atlas shots. `resolve` finds a licensed photo for a broll query; `hero` is the broll dict of
-    the rendered 3D shot (long-form) or None."""
+    the rendered 3D shot (long-form) or None. `hook` is the checked on-screen hook text: on a Short it is the opening
+    card at 0.0 s (the feed thumbnail), and scene 1 never repeats it as another card."""
     by_id = {s.scene_id: s for s in plan.scenes}
     out: list[dict] = []
     if starts:                                           # the paper map is traced under the opening shot, always, and is
@@ -325,14 +337,33 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
         planned = by_id.get(sc.id)
         shots = list(planned.shots) if planned and planned.shots else [AtlasShot(k="map", view="ph")]
         timed = []
+        if i == 0 and hook.strip() and kind == "vertical":
+            # the hook card owns the first frame; a card in scene 1 would repeat its composition, so scene 1 keeps
+            # only its other kinds (they follow the hook card)
+            shots = [s for s in shots if s.k not in ("bigtext", "title")]
         for j, s in enumerate(shots):
             wt = None if j == 0 else word_time(clip.words or [], s.at_word)
+            if j > 0 and wt is None and s.k == "doc" and s.body.strip():
+                wt = round(j * float(clip.duration) / len(shots), 3)     # the law text is never lost to a missing word
+                log.info("scene %s: doc anchor %r not found; placed at %.2f s", sc.id, s.at_word, wt)
             if j > 0 and wt is None:
                 log.info("scene %s: anchor %r not found; shot dropped", sc.id, s.at_word)
                 continue
             timed.append((st + (wt or 0.0), s))
+        if i == 0 and hook.strip() and kind == "vertical":
+            hook_end = min(end, st + max(HOOK_HOLD, float(clip.duration) if not timed else HOOK_HOLD))
+            card = {"k": "bigtext", "text": hook_card(hook), "t0": 0.0, "t1": round(hook_end, 3), "instant": True,
+                    "hook": True}
+            out.append(card)
+            timed = [(max(t0, hook_end), s) for t0, s in timed]
+            timed = [x for x in timed if end - x[0] >= MIN_SHOT]
+            if not timed:
+                out[-1]["t1"] = round(end, 3)
+                continue
         timed.sort(key=lambda x: x[0])
-        timed[0] = (st, timed[0][1])
+        hooked = i == 0 and hook.strip() and kind == "vertical"
+        if not hooked:
+            timed[0] = (st, timed[0][1])
         kept = [timed[0]]                                # too short to read: drop it and let the previous shot hold
         for j, (t0, s) in enumerate(timed[1:], 1):
             nxt = timed[j + 1][0] if j + 1 < len(timed) else end
@@ -361,8 +392,9 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
             d.update(t0=round(t0, 3), t1=round(t1, 3))
             if d.get("src"):
                 d["src"] = clean_src(d["src"])
+            tidy_text(d)
             _anchor(d, s, clip.words or [], st, t0, t1)
-            if i == 0 and j == 0:                        # the first frame is the thumbnail in the feed: the opening
+            if i == 0 and j == 0 and not hooked:         # the first frame is the thumbnail in the feed: the opening
                 d.update(t0=0.0, instant=True)           # shot is fully on screen from 0.0 s, no fade
             if out and out[-1]["t1"] > d["t0"]:
                 out[-1]["t1"] = d["t0"]
@@ -493,4 +525,273 @@ def chart_problems(shots: list[dict]) -> list[str]:
                 if not _close(v1 / v0, n1 / n0, 0.05):
                     out.append(f"barchart at {at}: bar heights {n0}:{n1} do not match printed values {v0:g}:{v1:g}")
                     break
+    return out
+
+
+# ---------------------------------------------------------------- planner fixes (2026-11-25, "fix the planner first")
+PHOTO_WORDS = re.compile(r"\b(FILE\s*PHOTO|PHOTO|FILE|IMAGE|PICTURE|FOOTAGE)\b", re.I)
+MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEPT", "OCT", "NOV", "DEC"]
+ICON_WORDS = [("person", ("crowd", "people", "person", "citizen", "voter", "worker", "family", "taxpayer")),
+              ("coins", ("money", "peso", "cash", "budget", "debt", "tax", "fund", "bank", "coin")),
+              ("document", ("law", "decree", "document", "bill", "constitution", "ruling", "report", "record")),
+              ("ballot", ("vote", "election", "ballot", "comelec")),
+              ("house", ("house", "home", "housing", "barangay"))]
+
+
+def item_text(it: AtlasItem) -> str:
+    """The words of a side-list row or chip, from whichever field the designer filled (debt6: rows came back in
+    `small` and `label`, and were dropped as empty)."""
+    return (it.text or it.label or it.big or it.small or "").strip()
+
+
+def icon_for(words: str) -> str:
+    w = words.lower()
+    for icon, keys in ICON_WORDS:
+        if any(k in w for k in keys):
+            return icon
+    return "building"
+
+
+def _no_photo_words(text: str) -> str:
+    """A label without "(FILE)", "FILE PHOTO" and the like, for a card that shows a pictogram, not a photo."""
+    t = re.sub(r"\((?:[^)]*\b(?:FILE|PHOTO|IMAGE)\b[^)]*)\)", "", text or "", flags=re.I)
+    t = re.sub(r"\b(?:A\s+)?FILE\s+(?:PHOTO|IMAGE)\b\.?", "", t, flags=re.I)
+    return " ".join(t.split()).strip(" .,;")
+
+
+def hook_card(text: str) -> str:
+    """The on-screen hook as a card: caps, peso sign for PHP."""
+    t = re.sub(r"\bPHP\s*", "₱", text.strip(), flags=re.I)
+    return t.upper()
+
+
+def _nice_date(m: re.Match) -> str:
+    y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    if not (1 <= mo <= 12 and 1 <= d <= 31):
+        return m.group(0)
+    return f"{d} {MONTHS[mo - 1].title() if mo != 9 else 'Sept'} {y}"
+
+
+ISO = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
+TEXT_FIELDS = ("text", "sub", "big", "small", "label", "head", "sec", "name", "role", "word", "callout", "src")
+
+
+def tidy_text(d: dict) -> None:
+    """On-screen words read as English: machine dates ("2026-11-23") become "23 Nov 2026" (caps in caps text).
+    Exact quotes (`body`, `hl`) are never touched."""
+    def fix(v: str) -> str:
+        out = ISO.sub(_nice_date, v)
+        if out != v and v.upper() == v:
+            out = out.upper()
+        return out
+    for k in TEXT_FIELDS:
+        if isinstance(d.get(k), str):
+            d[k] = fix(d[k])
+    for f in ("items", "rows", "chips"):
+        for it in d.get(f, []) or []:
+            for k in TEXT_FIELDS:
+                if isinstance(it.get(k), str):
+                    it[k] = fix(it[k])
+    if isinstance(d.get("stamp"), dict):
+        d["stamp"]["text"] = fix(d["stamp"]["text"])
+
+
+# ---------------------------------------------------------------- numbers: every spoken number is on screen
+SCALES = {"thousand": 1e3, "k": 1e3, "million": 1e6, "m": 1e6, "milyon": 1e6, "billion": 1e9, "bilyon": 1e9,
+          "b": 1e9, "bn": 1e9, "trillion": 1e12, "trilyon": 1e12, "t": 1e12}
+NUM = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*(%|percent|[a-zA-Z]+)?")
+
+
+def _values(text: str) -> list[float]:
+    out = []
+    for m in NUM.finditer(str(text or "")):
+        v = float(m.group(1).replace(",", ""))
+        unit = (m.group(2) or "").lower()
+        out.append(v * SCALES.get(unit, 1.0))
+    return out
+
+
+def _is_year(tok: str) -> bool:
+    return bool(re.fullmatch(r"(19|20)\d\d[.,?!]?", tok))
+
+
+def spoken_numbers(words: list[dict]) -> list[tuple[float, str, float]]:
+    """(time, as said, value) for every number in the captions except years: "₱19.66" followed by "trillion" is
+    1.966e13, "12%" is 12, "866" "million" is 8.66e8."""
+    out = []
+    for i, w in enumerate(words):
+        tok = w["w"]
+        if not re.search(r"\d", tok) or _is_year(tok):
+            continue
+        m = NUM.search(tok)
+        if not m:
+            continue
+        v = float(m.group(1).replace(",", ""))
+        unit = (m.group(2) or "").lower()
+        said = tok
+        if not unit and i + 1 < len(words):
+            nxt = re.sub(r"[^a-z%]", "", words[i + 1]["w"].lower())
+            if nxt in SCALES or nxt in ("percent", "%"):
+                unit, said = nxt, f"{tok} {words[i + 1]['w']}"
+        out.append((w["t0"], said.strip(" ,.?!"), v * SCALES.get(unit, 1.0) if unit else -v))
+    return out              # a bare number (no scale word after it) is negative: it may match the screen at any scale
+
+
+def _shot_values(s: dict) -> list[float]:
+    vals = []
+    for k in TEXT_FIELDS:
+        if isinstance(s.get(k), str) and k != "src":
+            vals += _values(s[k])
+    for f in ("items", "rows", "chips"):
+        for it in s.get(f, []) or []:
+            for k in ("big", "small", "label", "value", "text", "date"):
+                vals += _values(it.get(k, ""))
+    if isinstance(s.get("stamp"), dict):
+        vals += _values(s["stamp"].get("text", ""))
+    if s.get("k") == "doc":
+        vals += _values(s.get("body", "")) + _values(s.get("sec", ""))
+    return vals
+
+
+def _scene_of(t: float, starts: list[float]) -> int:
+    i = 0
+    for j, st in enumerate(starts):
+        if t >= st - 1e-6:
+            i = j
+    return i
+
+
+def number_problems(shots: list[dict], words: list[dict], starts: list[float], scenes: list) -> list[tuple[int, str]]:
+    """(scene id, problem) for each spoken number that no card or chart on screen shows while it is said (from
+    0.3 s before the word to 2.5 s after it)."""
+    out = []
+    for t, said, v in spoken_numbers(words):
+        on = [s for s in shots if s["t1"] > t - 0.3 and s["t0"] < t + 2.5 and s["t1"] - s["t0"] > 0.01]
+        want = [v] if v >= 0 else [-v * k for k in (1, 1e3, 1e6, 1e9, 1e12)]
+        if any(abs(x - y) <= 0.015 * max(abs(y), 1e-9) for s in on for x in _shot_values(s) for y in want):
+            continue
+        sid = scenes[_scene_of(t, starts)].id if scenes else 0
+        out.append((sid, f"'{said}' is spoken at {t:.1f} s but no card or chart shows it then; put it on a card or "
+                         f"chart anchored on that word"))
+    return out
+
+
+# ---------------------------------------------------------------- composition: no two scenes look the same
+CARD_OVER_MAP = {"bigtext", "cards", "map"}
+
+
+def composition_problems(shots: list[dict], starts: list[float], scenes: list) -> list[tuple[int, str]]:
+    """(scene id, problem) where a scene repeats the previous scene's card-over-map composition (the same kinds in
+    the same order, all of them map, bigtext or cards), or a card cuts straight to another card across scenes."""
+    per: list[list[str]] = [[] for _ in starts]
+    first_last: list[list[dict]] = [[] for _ in starts]
+    for s in shots:
+        if s["t1"] - s["t0"] <= 0.01 or s.get("hook"):
+            continue
+        i = _scene_of(s["t0"] + 0.01, starts)
+        per[i].append(s["k"])
+        first_last[i].append(s)
+    out = []
+    for i in range(1, len(starts)):
+        a, b = per[i - 1], per[i]
+        sid = scenes[i].id if scenes else i + 1
+        if a and b and a == b and set(b) <= CARD_OVER_MAP:
+            out.append((sid, f"repeats the previous scene's layout ({' then '.join(b)} over the map); use a different "
+                             f"block (chart, checklist, media card, document or globe)"))
+        elif first_last[i - 1] and first_last[i] and first_last[i - 1][-1]["k"] in ("bigtext", "cards") \
+                and first_last[i][0]["k"] in ("bigtext", "cards"):
+            out.append((sid, "opens with a card straight after the previous scene's card; open with a different block"))
+    return out
+
+
+def variety_scenes(shots: list[dict], starts: list[float], scenes: list) -> list[tuple[int, str]]:
+    """Variety problems tied to the scenes they cover, so only those scenes are re-planned."""
+    out = []
+    for fam, a, b in family_runs(shots):
+        if b - a > MAX_FAMILY_RUN + 0.05:
+            ids = sorted({scenes[_scene_of(t, starts)].id for t in (a + 0.01, (a + b) / 2, b - 0.01)})
+            mid = ids[len(ids) // 2]
+            out.append((mid, f"{fam} holds the screen {b - a:.1f} s ({a:.1f} to {b:.1f} s); change this scene to "
+                             f"another family or return to the map"))
+    return out
+
+
+def chart_scenes(shots: list[dict], starts: list[float], scenes: list) -> list[tuple[int, str]]:
+    out = []
+    for s in shots:
+        for p in chart_problems([s]):
+            out.append((scenes[_scene_of(s["t0"] + 0.01, starts)].id, p))
+    return out
+
+
+def plan_problems(shots: list[dict], words: list[dict], starts: list[float], scenes: list) -> dict[int, list[str]]:
+    """Every planner QC problem by scene id: variety, chart consistency, numbers on screen, composition."""
+    by: dict[int, list[str]] = {}
+    for sid, p in (variety_scenes(shots, starts, scenes) + chart_scenes(shots, starts, scenes)
+                   + number_problems(shots, words, starts, scenes) + composition_problems(shots, starts, scenes)):
+        by.setdefault(sid, []).append(p)
+    return by
+
+
+def merge_plans(old: AtlasPlan, new: AtlasPlan, redo: set[int]) -> AtlasPlan:
+    """Fix rounds converge: take the re-planned scenes only for the flagged ids and keep every other scene as it
+    passed (debt6: re-planning the whole video moved appeal 6, 6, 5)."""
+    fresh = {s.scene_id: s for s in new.scenes}
+    return AtlasPlan(scenes=[fresh[s.scene_id] if s.scene_id in redo and s.scene_id in fresh else s
+                             for s in old.scenes])
+
+
+def settled_time(shots: list[dict], a: float, b: float) -> float:
+    """A review frame time inside [a, b) where the scene's main shot has finished building (count-ups done, rows
+    in), so reviewers never judge a number mid-count. Falls back to the middle of the scene."""
+    mid = (a + b) / 2
+    inside = [s for s in shots if s["t1"] > a + 0.05 and s["t0"] < b - 0.05 and s["t1"] - s["t0"] > 0.01]
+    if not inside:
+        return mid
+    s = max(inside, key=lambda x: min(x["t1"], b) - max(x["t0"], a))
+    t0, t1 = max(s["t0"], a), min(s["t1"], b)
+    ready = t0 + 1.0
+    for f in ("items", "rows", "chips", "places", "highlight"):
+        for it in s.get(f, []) or []:
+            if isinstance(it.get("at"), (int, float)):
+                ready = max(ready, it["at"] + 0.8)
+    for k, extra in (("bigAt", 2.4), ("calloutAt", 0.6)):
+        if isinstance(s.get(k), (int, float)):
+            ready = max(ready, s[k] + extra)
+    if isinstance(s.get("stamp"), dict):
+        ready = max(ready, s["stamp"].get("at", t0) + 0.6)
+    big_at = s.get("bigAt") if isinstance(s.get("bigAt"), (int, float)) else None
+    if s["k"] == "linechart":                                  # line draw and count-up: 2.25 s
+        ready = max(ready, (big_at if big_at is not None and big_at < s["t1"] - 1 else s["t0"] + 0.55) + 2.4)
+    elif s["k"] == "balance":                                  # count-up: 1.2 s, tag 1.25 s after
+        ready = max(ready, (big_at if big_at is not None and big_at >= s["t0"] + 0.6 else s["t0"] + 0.9) + 1.5)
+    elif s["k"] == "waffle":                                   # grid wipe, fill, label
+        ready = max(ready, s["t0"] + 2.6, (big_at or 0) + 0.4)
+    elif s["k"] == "globe":                                    # rotation and zoom
+        ready = max(ready, s["t0"] + 3.2)
+    return round(min(max(ready, mid if mid < t1 - 0.3 else t0), t1 - 0.3), 2)
+
+
+def drop_photos(shots: list[dict], bad: set[str]) -> list[dict]:
+    """Shots whose photo did not pass the photo check: a b-roll cutaway becomes a type card of its word; a media card
+    keeps its layout with a pictogram and loses every word that claims a photo."""
+    out = []
+    for s in shots:
+        if s.get("src") not in bad:
+            out.append(s)
+            continue
+        if s["k"] == "broll":
+            text = (s.get("word") or "").upper()
+            if text:
+                out.append({kk: v for kk, v in s.items() if kk in ("t0", "t1", "instant", "stamp", "keyAt")}
+                           | {"k": "bigtext", "text": text})
+            elif out:
+                out[-1]["t1"] = s["t1"]
+            continue
+        m = {kk: v for kk, v in s.items() if kk not in ("src", "credit", "kind")}
+        m["icon"] = icon_for(" ".join(str(s.get(x, "")) for x in ("name", "role", "word")))
+        m["name"], m["role"] = _no_photo_words(s.get("name", "")), _no_photo_words(s.get("role", ""))
+        m = {kk: v for kk, v in m.items() if v not in ("", None)}
+        m["chips"] = [c for c in s.get("chips", []) if not PHOTO_WORDS.search(c.get("text", ""))]
+        out.append(m)
     return out

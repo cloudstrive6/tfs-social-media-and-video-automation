@@ -88,6 +88,19 @@ step lands on a spoken word. Give a step its word with `at_word` (items, rows, c
 - `key_words` (per scene, not per shot): 1 or 2 words copied exactly from the scene text that carry the point of
   their sentence; the captions box them in red. A chart's spoken key number is boxed automatically.
 
+## Fields the engine reads (a field the kind does not use is ignored)
+- `bigtext`: the headline goes in `text`, never in `big`. `sub` is one short line.
+- `media` rows and chips, and `checklist` rows: the words go in each item's `text`.
+- Dates on screen are written the English way: "23 Nov 2026", "Sept 2026", never "2026-11-23".
+- A chart's printed figures are the narrated figures: a line chart's `big` is the number the narrator says and its
+  last point; a waffle's `big` is `frac` as a percentage; bar values are in the ratio of their `num`.
+
+## Scene 1 of a Short
+The engine opens every Short on the checked on-screen hook as a card at 0.0 s (the feed thumbnail) and holds it
+about 2 seconds. Do not plan a `bigtext` or `title` in scene 1: it would repeat the hook's layout and is dropped.
+Plan scene 1's first real visual instead (a map move, a globe, a chart, a media card), anchored on the word that
+introduces it.
+
 ## Rules
 - Card and bar text states facts, never labels for your own reasoning: `big` is a number, a date, a threshold or
   the rule's name ("2/3 OF ALL SENATORS", "1/3 OF ALL HOUSE MEMBERS", "6 YEARS", "ART. VII SEC. 4"), and `small` says what it means. Never
@@ -119,6 +132,8 @@ step lands on a spoken word. Give a step its word with `at_word` (items, rows, c
   never turned into a count: "0 MECHANISMS" becomes a quote with who said it.
 - A file photo's lower third names the place or body; its date line says what happened and when, never as if the
   photo was taken that day ("SENATE SESSION HALL (FILE)").
+- Never two scenes in a row with the same layout (for example map with a label, then a card, twice), and never a
+  card straight after a card across a scene change; the engine checks and re-plans those scenes.
 - Build, don't cut: a shot that stays up gains a new element every 1.5 to 3 seconds on spoken words (rows,
   bars, chips, a stamp, a callout) instead of changing layout. No chart stays static for more than about 3 s.
 - Variety: never the same kind three times in a row; at least one real photo every 20 seconds in a

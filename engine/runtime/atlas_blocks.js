@@ -31,10 +31,10 @@ window.TFS_BLOCKS = function (ctx) {
     const at = typeof st.at === "number" ? st.at : s.t0 + 0.5;
     const c = col(st.color, C.red);
     // long stamps shrink to fit about 82% of the width (Anton caps advance about 0.5 em; dry run 3 ran edge to edge)
-    const fs = Math.min((V ? 78 : 70) * U, (0.82 * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
+    const fs = Math.min((V ? 66 : 70) * U, (0.82 * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
     const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
     // verticals: in the band between the panels (top 20 to 55%) and the captions (72%), so it never hides the number
-    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 65 : 15);
+    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 62 : 15);
     n.innerHTML = `<div style="position:absolute;left:50%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
       `<div class="stp" style="font:400 ${fs.toFixed(0)}px/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
       `border:${px(7)} solid ${c};border-radius:${px(10)};padding:${px(8)} ${px(26)};background:rgba(248,242,228,.94);` +
@@ -173,7 +173,7 @@ window.TFS_BLOCKS = function (ctx) {
   build.linechart = function (s) {
     const n = layer(true);
     const pts = (s.items || []).filter((it) => typeof it.num === "number").slice(0, 12);
-    const cw = Math.round(W * (V ? 0.78 : 0.66)), ch = Math.round(H * (V ? 0.2 : 0.34)), pad = 18 * U;
+    const cw = Math.round(W * (V ? 0.7 : 0.66)), ch = Math.round(H * (V ? 0.2 : 0.34)), pad = 18 * U;   // panel within 88% of a vertical
     const nums = pts.map((p) => p.num), lo0 = Math.min(...nums), hi0 = Math.max(...nums), sp = (hi0 - lo0) || Math.abs(hi0) || 1;
     const lo = lo0 - sp * 0.15, hi = hi0 + sp * 0.12;
     const X = (i) => pad + i * (cw - 2 * pad) / Math.max(1, pts.length - 1), Y = (v) => ch - pad - (v - lo) / (hi - lo) * (ch - 2 * pad);
@@ -226,7 +226,7 @@ window.TFS_BLOCKS = function (ctx) {
   build.barchart = function (s) {
     const n = layer(true);
     const items = (s.items || []).slice(0, 4);
-    const cw = Math.round(W * (V ? 0.78 : 0.6)), ch = Math.round(H * (V ? 0.26 : 0.4));
+    const cw = Math.round(W * (V ? 0.7 : 0.6)), ch = Math.round(H * (V ? 0.26 : 0.4));
     const max = Math.max(...items.map((it) => Math.abs(it.num) || 0), 1e-9);
     const slot = cw / items.length, bw = Math.min(slot * 0.56, 190 * U), base = ch;
     const hgt = (it) => Math.max(6 * U, (Math.abs(it.num) || 0) / max * ch * 0.72);
@@ -310,7 +310,7 @@ window.TFS_BLOCKS = function (ctx) {
   // ------------------------------------------------------------------ balance bar: the whole, the sliver, the count-up
   build.balance = function (s) {
     const n = layer(true);
-    const bw = Math.round(W * (V ? 0.78 : 0.6));
+    const bw = Math.round(W * (V ? 0.7 : 0.6));
     const frac = Math.max(0.012, Math.min(1, s.frac || 0));
     const chips = (s.chips || []).map((c) => `<span class="bc" style="display:inline-block;margin:${px(10)} ${px(10)} 0 0;font:700 ${px(18)} ${MONO};letter-spacing:2px;` +
       `color:${C.ink};border:${px(2)} solid ${C.ink};border-radius:${px(6)};padding:${px(4)} ${px(8)};opacity:0">${esc(c.text)}</span>`).join("");
@@ -374,7 +374,7 @@ window.TFS_BLOCKS = function (ctx) {
     const n = layer();
     const rows = (s.rows || []).slice(0, 4);
     const side = rows.length > 0;
-    const cardW = Math.round(W * (V ? (side ? 0.48 : 0.56) : (side ? 0.36 : 0.36)));
+    const cardW = Math.round(W * (V ? (side ? 0.44 : 0.56) : (side ? 0.36 : 0.36)));
     const cardH = Math.round(cardW * (V ? 1.25 : 0.8));
     const left = V ? (side ? W * 0.05 : (W - cardW) / 2) : (side ? W * 0.08 : (W - cardW) / 2);
     const top = H * (V ? 0.2 : 0.16);
@@ -390,7 +390,7 @@ window.TFS_BLOCKS = function (ctx) {
     const chips = (s.chips || []).map((c, i) => `<div class="mc" style="position:absolute;left:${px(16)};top:${px(16 + i * 46)};font:700 ${px(V ? 19 : 18)} ${MONO};letter-spacing:2px;` +
       `color:${C.red};background:rgba(248,242,228,.95);border:${px(3)} solid ${C.red};border-radius:${px(6)};padding:${px(4)} ${px(10)};white-space:nowrap;opacity:0">${esc(c.text)}</div>`).join("");
     const credit = s.credit ? `<div style="font:700 ${px(15)}/1.3 ${MONO};letter-spacing:.5px;color:${C.muted};margin-top:${px(8)};max-width:${cardW}px">${esc(s.credit.toUpperCase())}</div>` : "";
-    const list = side ? `<div style="position:absolute;left:${V ? (left + cardW + W * 0.04).toFixed(0) : (left + cardW + W * 0.04).toFixed(0)}px;right:${V ? "5%" : "8%"};top:${(top + 10 * U).toFixed(0)}px">` +
+    const list = side ? `<div style="position:absolute;left:${V ? (left + cardW + W * 0.04).toFixed(0) : (left + cardW + W * 0.04).toFixed(0)}px;right:${V ? "12%" : "8%"};top:${(top + 10 * U).toFixed(0)}px">` +
       rows.map((r) => `<div class="sl" style="margin-bottom:${px(16)};background:${C.sheet};border:${px(3)} solid ${r.color === "red" ? C.red : C.ink};` +
         `border-left:${px(12)} solid ${col(r.color, C.ink)};border-radius:${px(10)};padding:${px(12)} ${px(14)};font:800 ${px(V ? 27 : 27)}/1.22 Montserrat;` +
         `color:${r.color === "red" ? C.red : C.ink};box-shadow:${px(5)} ${px(5)} 0 ${C.ink};opacity:0">${esc(r.text)}</div>`).join("") + `</div>` : "";
