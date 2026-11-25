@@ -36,7 +36,7 @@ window.TFS_BLOCKS = function (ctx) {
     const fs = Math.min((V ? 66 : 70) * U, ((SAFE ? 0.72 : 0.82) * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
     const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
     // verticals: in the band between the panels (top 20 to 55%) and the captions (72%), so it never hides the number
-    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 62 : 15);
+    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 67 : 15);   // verticals: below source boxes (about 60%), above the captions (72%)
     n.innerHTML = `<div style="position:absolute;left:${SAFE ? 46 : 50}%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
       `<div class="stp" style="font:400 ${fs.toFixed(0)}px/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
       `border:${px(7)} solid ${c};border-radius:${px(10)};padding:${px(8)} ${px(26)};background:rgba(248,242,228,.94);` +

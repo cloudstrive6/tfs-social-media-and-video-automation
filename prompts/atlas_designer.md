@@ -61,6 +61,8 @@ step lands on a spoken word. Give a step its word with `at_word` (items, rows, c
   allowed), "x" (not covered, false, not allowed) or "warn" (partly, missing context). An "x" row turns red, a
   "warn" row gold. Optional row `label` tag ("COVERED", "NOT IN THE LAW"). Use it for what a law covers or does
   not, and for fact-check verdicts. Each row's `at_word` is the word that states that point.
+  Write each row as a plain positive statement and let the mark answer it: "A way to pay the debt directly" with
+  "x" means there is none. Never put a negative row under an "x" ("No way to pay" with an x reads as the opposite).
 - `linechart`: `head`, 3 to 12 `items` of `label` (dates, first and last are printed) and `num` (the value), and
   `big`, the headline figure counted up while the line draws ("₱19.66 TRILLION"; `big_word` is the spoken word of
   that number), plus `callout` at the end dot ("+12.6% IN A YEAR"). For a number that grew or fell over time.
