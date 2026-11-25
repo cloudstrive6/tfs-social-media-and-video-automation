@@ -16,7 +16,13 @@ from ..config import data_dir, item_dir, now
 from ..models import CreativeNotes, ReviewReport
 
 log = logging.getLogger(__name__)
-AGENTS = ("motion_designer", "carousel_designer", "thumbnail_artist")
+OLD_AGENTS = ("motion_designer", "carousel_designer", "thumbnail_artist")
+V2_AGENTS = ("atlas_designer", "thumbnail_artist")      # style v2: the cartoon designers are retired
+
+
+def agents() -> tuple[str, ...]:
+    from ..config import _v2
+    return V2_AGENTS if _v2() else OLD_AGENTS
 EVERY = timedelta(hours=12)
 MIN_PIECES = 2
 
@@ -65,7 +71,7 @@ def run(force: bool = False) -> CreativeNotes | None:
         log.info("creative director: %d reviewed pieces since the last pass; waiting for more", len(pieces))
         return None
     current = {a: (notes_dir() / f"{a}.md").read_text(encoding="utf-8") if (notes_dir() / f"{a}.md").exists() else ""
-               for a in AGENTS}
+               for a in agents()}
     result = llm.structured(
         "creative_director",
         "# Current standing notes\n" + json.dumps(current, ensure_ascii=False, indent=1)
@@ -74,7 +80,7 @@ def run(force: bool = False) -> CreativeNotes | None:
     )
     changed = []
     for note in result.agent_notes:
-        if note.agent not in AGENTS:
+        if note.agent not in agents():
             continue
         text = "\n".join(f"- {n}" for n in note.notes[:8])
         if text != current.get(note.agent, "").strip():

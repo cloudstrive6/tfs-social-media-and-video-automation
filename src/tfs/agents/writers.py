@@ -15,7 +15,7 @@ def _brief(item: dict) -> str:
                       ensure_ascii=False, default=str)
 
 
-WORDS_PER_SECOND = 1.8          # Josh at speed 1.1, Taglish with numbers written out as words
+WORDS_PER_SECOND = 1.8          # Taglish narration pace, numbers read in English
 
 
 def max_words(kind: str) -> int:

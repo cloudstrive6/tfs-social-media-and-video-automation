@@ -14,9 +14,8 @@ channel:
     tiktok: ""                          # add later
 
 pillars:                                # target share of the weekly slate
-  now_explained: 0.35
-  history_retold: 0.30
-  why_were_like_this: 0.20
+  now_explained: 0.40
+  how_it_works: 0.45                    # style v2: one rule or system (Know Your Government, Built to Fail)
   myths_factchecks: 0.15
 
 # Claude. backend: claude_code = Claude Max subscription via the Claude Code CLI (CLAUDE_CODE_OAUTH_TOKEN);

@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-Pillar = Literal["now_explained", "history_retold", "why_were_like_this", "myths_factchecks"]
+Pillar = Literal["now_explained", "how_it_works", "myths_factchecks"]   # style v2 pillars (cartoon-era ones deleted)
 Kind = Literal["long_form", "vertical", "carousel"]
 
 

@@ -1,8 +1,8 @@
 # The Filipino Standard: Style Bible v2 (atlas style)
 
 Approved by the owner on 2026-11-24 after the revamp pilot ("Built to Fail" chapter and the "Know Your Government"
-Short on how to remove a president). Every writing and review agent loads this file when the video engine is
-`atlas`. It replaces the cartoon-era bible (skits, Kuya Standard voice, rituals, running gags) for these videos.
+Short on how to remove a president). Every writing and review agent loads this file. It is the channel's only
+style bible: the cartoon-era bible and briefs were deleted on 2026-11-25 (Bryce: "remove/delete the old-style").
 
 ## 1. What we make
 - **Built to Fail** (long-form, 8 to 15 min): one Philippine system per episode (term limits, impeachment, the

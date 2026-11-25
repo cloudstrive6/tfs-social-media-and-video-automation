@@ -4,7 +4,7 @@
 
 | # | Agent | Prompt | Does | Output |
 |---|---|---|---|---|
-| 1 | **Trend Scout** | `prompts/trend_scout.md` | Every 3 h: pulls Google Trends PH, 5 news feeds, X/Twitter PH trends, YouTube + Google autocomplete for 13 seed keywords, Reddit (optional), YouTube mostPopular PH (optional), and the civic calendar. Stores every value so the next run can measure **acceleration**, then ranks topics that are about to peak. | `topics` table |
+| 1 | **Trend Scout** | `prompts/v2/trend_scout.md` | Every 3 h: pulls Google Trends PH, 5 news feeds, X/Twitter PH trends, YouTube + Google autocomplete for 13 seed keywords, Reddit (optional), YouTube mostPopular PH (optional), and the civic calendar. Stores every value so the next run can measure **acceleration**, then ranks topics that are about to peak. | `topics` table |
 | 2 | **Editor-in-Chief** | `editor_in_chief.md` | When a slot enters the production window (≈8 h ahead), assigns the freshest fitting topic, balancing pillar mix and avoiding repeats. | brief per item |
 | 3 | **Researcher** | `researcher.md` | Anthropic web search (≤25 searches), primary sources first. Timeline, facts with `[S#]` citations, people (established vs. alleged), surprising angles, historical roots. | `dossier.md` |
 | 4 | **Head Writer** | `scriptwriter.md` | Historically-style script in Taglish: cold-open skit → pop-quiz hook → "Standard Issue #N" → chapters with open loops → system reveal → callback ending. Scene-by-scene with visual cues. | `script_r*.json` |
@@ -27,7 +27,7 @@
 | 21 | **Visual Critic** (prevention) | `visual_critic.md` | Before the full render, looks at a mid-scene still of every scene (HyperFrames snapshots, seconds instead of minutes) with the plan, the line and the dossier. It flags wrong card facts, real people, clipped or overlapping text, broken staging and scenes that don't match the line; the Motion Designer fixes the flagged scenes. Up to 2 rounds. | `critic_r*.json` |
 | 22 | **Creative Director** (learning) | `creative_director.md` | Twice a day, reads the Visual QA and Visual Critic notes on the latest pieces and turns recurring problems into up to 8 standing instructions each for the Motion Designer, Carousel Designer and Thumbnail Artist (appended to their prompts), so the same weaknesses don't come back. Sends a short summary to Telegram. | `creative_notes/*.md` |
 
-Every agent's system prompt = `docs/STYLE_BIBLE.md` + its role prompt + the analyst's standing notes
+Every agent's system prompt = `docs/STYLE_BIBLE_V2.md` + its role prompt (`prompts/v2/`) + the analyst's standing notes
 (prompt-cached, so the shared prefix is billed at the cache rate).
 
 ## Flow

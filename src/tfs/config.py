@@ -51,8 +51,12 @@ def schedule() -> dict:
 
 
 def paused_kinds() -> set[str]:
-    """Production kinds on pause (schedule.yaml `paused`): not planned, produced or posted."""
-    return set(schedule().get("paused") or [])
+    """Production kinds on pause (schedule.yaml `paused`): not planned, produced or posted. With the atlas engine,
+    carousels also pause until a style v2 carousel brief exists (their slide art and copy are cartoon-era)."""
+    paused = set(schedule().get("paused") or [])
+    if _v2() and not (ROOT / "prompts" / "v2" / "carousel_designer.md").exists():
+        paused.add("carousel")
+    return paused
 
 
 def sources() -> dict:
@@ -92,15 +96,27 @@ def notes_dir(kind: str) -> Path:
 
 
 def style_bible() -> str:
-    name = "STYLE_BIBLE_V2.md" if _v2() else "STYLE_BIBLE.md"
-    return (ROOT / "docs" / name).read_text(encoding="utf-8")
+    """Style Bible v2 is the only bible; the cartoon-era one was deleted on 2026-11-25."""
+    return (ROOT / "docs" / "STYLE_BIBLE_V2.md").read_text(encoding="utf-8")
+
+
+V2_NATIVE = {"atlas_designer"}      # written for the atlas engine from the start; lives in prompts/
+
+
+class RetiredBriefError(RuntimeError):
+    """An agent with no style v2 brief was asked for: the cartoon-era briefs are deleted, never a fallback."""
 
 
 def load_prompt(agent: str) -> str:
-    """Agent prompt (the style v2 brief in prompts/v2/ when the atlas engine is on and one exists) plus any standing
-    notes the analyst has written for it."""
-    v2 = ROOT / "prompts" / "v2" / f"{agent}.md"
-    prompt = (v2 if _v2() and v2.exists() else ROOT / "prompts" / f"{agent}.md").read_text(encoding="utf-8")
+    """Agent prompt plus any standing notes for it. Only style v2 briefs exist (prompts/v2/, plus the atlas designer,
+    written for atlas from the start); the cartoon-era briefs were deleted (Bryce, 2026-11-25: "any of the old-style
+    elements ... Remove and Do Not Use since that is flawed", then "remove/delete the old-style")."""
+    path = ROOT / "prompts" / "v2" / f"{agent}.md"
+    if not path.exists():
+        if agent not in V2_NATIVE:
+            raise RetiredBriefError(f"no style v2 brief for '{agent}'; the cartoon-era briefs are deleted")
+        path = ROOT / "prompts" / f"{agent}.md"
+    prompt = path.read_text(encoding="utf-8")
     notes = notes_dir("analyst_notes") / f"{agent}.md"
     if notes.exists():
         prompt += "\n\n## Standing notes from the Growth Analyst\n" + notes.read_text(encoding="utf-8")

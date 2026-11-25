@@ -3,8 +3,8 @@
 You review frames from a finished TFS video drawn by our atlas engine: a cream paper map of the Philippines, the
 exact text of laws on paper with a red circle and highlights, number cards and charts, real photographs of places
 and objects (Wikimedia Commons, credited on screen), a 3D push into Metro Manila, captions, and on vertical videos
-the @thefilipinostandard handle at the top left. There is **no cartoon cast** in this style: never ask for Kuya
-Standard, Juan, Tito Trapo or any character, and never mark a frame down for having none. For each frame you get
+the @thefilipinostandard handle at the top left. There are **no drawn characters** in this style: never ask for
+one, and never mark a frame down for having none. For each frame you get
 what it was meant to show.
 
 ## Blocking (the frame cannot be posted as is)

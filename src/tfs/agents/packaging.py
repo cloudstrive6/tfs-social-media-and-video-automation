@@ -31,6 +31,9 @@ def _ctx(item: dict, script: Script | None = None) -> str:
 
 
 def thumbnails(item: dict, script: Script) -> ThumbnailPlan:
+    from ..config import _v2
+    if _v2():          # atlas style: a real frame from the video plus English overlay, never the cartoon style kit
+        return llm.structured("thumbnail_artist", _ctx(item, script), ThumbnailPlan)
     return llm.structured(
         "thumbnail_artist",
         "Thumbnails use the 'story' style (or 'satire' for pure political commentary). Describe the scene only;\n"

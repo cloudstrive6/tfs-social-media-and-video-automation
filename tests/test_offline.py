@@ -1008,6 +1008,9 @@ def test_scheduling_uses_the_current_schedule(data_dir, monkeypatch):
     monkeypatch.setattr(pipeline, "_notify_ready", lambda item: None)
     monkeypatch.setattr("tfs.archive.archive_item", lambda item: None)
     monkeypatch.delenv("THREADS_ACCESS_TOKEN", raising=False)
+    monkeypatch.setattr(pipeline, "paused_kinds", lambda: set())     # carousels pause under style v2
+    monkeypatch.setattr("tfs.slots.paused_kinds", lambda: set())
+    monkeypatch.setattr("tfs.post_now.paused_kinds", lambda: set())
     pipeline._schedule(db.get_item("2026-11-30-caro0"), slides=[])
     posts = {p["platform"]: p["slot_at"] for p in db.queued_posts()}
     assert posts == {"instagram_carousel": "2026-11-30T19:30:00+08:00", "facebook_post": "2026-11-30T19:30:00+08:00",
@@ -1032,6 +1035,9 @@ def test_post_now_publishes_on_every_carousel_platform(data_dir, monkeypatch):
     monkeypatch.setattr(pipeline, "produce", lambda item_id: pipeline._schedule(db.get_item(item_id), slides=[]))
     monkeypatch.setattr(pipeline, "_notify_ready", lambda item: None)
     monkeypatch.setattr("tfs.archive.archive_item", lambda item: None)
+    monkeypatch.setattr(pipeline, "paused_kinds", lambda: set())     # carousels pause under style v2
+    monkeypatch.setattr("tfs.slots.paused_kinds", lambda: set())
+    monkeypatch.setattr("tfs.post_now.paused_kinds", lambda: set())
     monkeypatch.setenv("THREADS_ACCESS_TOKEN", "t")
     published = []
     monkeypatch.setattr(pipeline, "publish_due", lambda: published.extend(p["platform"] for p in db.queued_posts()))
@@ -1087,14 +1093,14 @@ def test_creative_director_notes_reach_the_designers(data_dir, monkeypatch):
     def fake(agent, user, schema):
         seen["user"] = user
         return CreativeNotes(summary="Floating props keep coming up.",
-                             agent_notes=[AgentNote(agent="motion_designer", notes=["Props go in hands."]),
+                             agent_notes=[AgentNote(agent="atlas_designer", notes=["Props go in hands."]),
                                           AgentNote(agent="scriptwriter", notes=["not ours to edit"])])
 
     monkeypatch.setattr(creative.llm, "structured", fake)
     monkeypatch.setattr(creative.notify, "send", lambda text: None)
     assert creative.due() and creative.run()
     assert "documents float" in seen["user"]
-    assert "Props go in hands." in config.load_prompt("motion_designer")
+    assert "Props go in hands." in config.load_prompt("atlas_designer")
     assert not (creative.notes_dir() / "scriptwriter.md").exists() and not creative.due()
 
 

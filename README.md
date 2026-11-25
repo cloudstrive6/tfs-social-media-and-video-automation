@@ -5,13 +5,13 @@ Historically-style Taglish scripts engineered for retention, fact-checks them ag
 risk, narrates, illustrates, edits and publishes to YouTube, Shorts, Instagram, Facebook and TikTok
 on a fixed daily schedule — then studies the analytics and retunes itself weekly.
 
-- **What we're copying and why:** [docs/STYLE_BIBLE.md](docs/STYLE_BIBLE.md)
+- **Style (the only one):** [docs/STYLE_BIBLE_V2.md](docs/STYLE_BIBLE_V2.md); the cartoon-era style was deleted on 2026-11-25
 - **Agents, flow, costs:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **Accounts, keys, go-live:** [docs/SETUP.md](docs/SETUP.md)
 
 ```
 config/     channel (brand, models, quality gates, voice, image style), schedule (PHT slots), sources
-prompts/    one system prompt per agent
+prompts/v2/ one system prompt per agent (style v2; prompts/atlas_designer.md too)
 src/tfs/    agents/ (Claude), media/ (TTS, images, cards, FFmpeg render, thumbnails, slides),
             publish/ (YouTube, Meta, Post for Me for TikTok), state.py (R2), pipeline.py (orchestrator), cli.py
 .github/    run (the automation), verify, preview-styles, telegram-setup, ci; all go through _run.yml
