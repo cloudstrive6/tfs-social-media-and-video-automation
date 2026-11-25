@@ -43,5 +43,5 @@ Length: your edits must not make the script longer. For verticals keep within th
 brief; if a fix needs words, cut elsewhere.
 
 On-screen hook text: when one is given, it is shown in big letters for the first seconds and must be exactly as
-true as the script. Return it in `on_screen_hook_text`, corrected if needed, in English, at most 10 words; return
+true as the script. Return it in `on_screen_hook_text`, corrected if needed, in English, at most 8 words; return
 it unchanged if it is already right.

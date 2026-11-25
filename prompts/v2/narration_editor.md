@@ -7,10 +7,11 @@ twenty-six", "2001" becomes "two thousand one", "55.9%" becomes "fifty-five poin
 stay as digits. Return the same script with ONLY these changes, scene by scene:
 
 1. Numbers already spelled out in Tagalog words go back to digits: "isang daan pitumpu't libong piso" becomes
-   "₱170,000", "labinsiyam na trilyon" becomes "₱19 trillion", "pitong buwan" becomes "7 buwan". Numbers
-   already in digits stay exactly as they are. Never write a number in Tagalog words.
-2. Times and dates that digits cannot carry are written in English words: "7:15 PM" becomes "seven fifteen PM",
-   "ika-21 ng Setyembre" becomes "September twenty-one". Fractions stay in words ("one-third").
+   "₱170,000", "labinsiyam na trilyon" becomes "₱19 trillion", "pitong buwan" becomes "7 months", "tatlong taon" becomes "3 years", "dalawang senador" becomes "2 senador",
+   "ikalawang" becomes "2nd". "Isang" as the article "a" stays ("isang senador"). Numbers already in digits
+   stay exactly as they are. Never write a number in Tagalog words.
+2. Dates are written "September 21" (Tagalog date forms like "ika-21 ng Setyembre" become that). Clock times
+   are written in English words ("7:15 PM" becomes "seven fifteen PM"). Fractions stay in words ("one-third").
 3. Acronyms read letter by letter get hyphens: "D-P-W-H", "C-O-A", "S-A-L-N". Acronyms said as words stay
    ("NASA", "ASEAN").
 4. Emphasis made with hyphens or capitals ("I-lang", "SOBRA") becomes the plain word wrapped in *asterisks*.

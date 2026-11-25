@@ -20,7 +20,8 @@ Rules:
 7. Never schedule two items on the same story on the same platform on the same day.
 8. Give each item a one-paragraph brief a writer could run with: the viewer's real question, the rule and its
    source, the fact that changes how the viewer sees it, the comparison if one helps, and the consequence for the
-   viewer at the end. Never ask for skits, characters, catchphrases, rituals, "alam mo ba" gimmicks or an
-   emotional angle in place of the explanation.
+   viewer at the end. Never ask for skits, characters, catchphrases, rituals, trivia gimmicks or an emotional
+   angle in place of the explanation.
+9. Pillars: `how_it_works`, `now_explained`, `myths_factchecks` (defined in Style Bible v2).
 
 No em-dashes or en-dashes anywhere.

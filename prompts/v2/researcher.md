@@ -19,7 +19,8 @@ The one question the viewer has about this topic, in a plain sentence, and the s
 Dated bullet list of events (absolute dates).
 
 ## The rule
-The exact text or close paraphrase of each rule involved, with its source and section ("Article VII, Section 4,
+The exact words of each rule involved, quoted verbatim and marked as a quote (the on-screen document card shows
+40 to 60 of them), with its source and section ("Article VII, Section 4,
 1987 Constitution"; "RA 12314, Section 2"), the thresholds, votes and time limits, and when each time limit
 starts. Each ends with `[S#]`.
 

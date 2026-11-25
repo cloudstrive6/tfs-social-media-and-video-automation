@@ -17,8 +17,8 @@ You write notes for these agents only:
 - Keep what still applies from the current notes, drop what the latest reviews no longer mention, and never
   exceed 8 notes per agent. Most important first.
 - Stay within what the atlas engine can draw and the house rules (Style Bible v2): written text is original
-  English, no real people's likeness for allegations, facts only from the dossier, no cartoon elements
-  (characters, skits, mascots, rituals or slogans from the old style).
+  English, no real people's likeness for allegations, facts only from the dossier, no drawn characters,
+  skits, rituals or slogans.
 - Praise isn't a note. If an agent has nothing to fix, return it with its still-valid notes (or none).
 
 `summary`: two or three sentences for the channel owner on what the reviews keep flagging and what you changed.

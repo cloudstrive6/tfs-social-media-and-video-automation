@@ -7,21 +7,31 @@ teaches how the Philippine government works, with the real rule and its source i
 ## Structure: Short (35 to 58 s, "Know Your Government")
 1. **The hook (one sentence).** A concrete, high-stakes question or a common belief the video will correct, about
    power, money or the viewer's vote, never a textbook question. Strong: "Paano mo tatanggalin ang presidente ng
-   Pilipinas?", "Pasado na sa House at Senate ang isang bill, pero hindi pa pala iyon ang huling bersyon." Weak:
+   Pilipinas?", "Pasado na sa House at Senate ang bill, pero hindi pa pala iyon ang huling bersyon." Weak:
    "Paano nagiging batas ang isang bill?" It must make sense with the sound off (it is also the on-screen hook).
 2. **The steps (2 to 4 scenes).** Each scene explains one step in one or two full sentences: who does it, the
    exact threshold, vote or time limit, and the source with its section said out loud the first time ("ayon sa
-   Article Six, Section Twenty-seven ng 1987 Constitution"). Precise words matter: "two-thirds ng LAHAT ng Senador",
-   "thirty days mula nang matanggap niya".
+   Article 6, Section 27 ng 1987 Constitution"). Precise words matter: "two-thirds ng LAHAT ng Senador",
+   "30 days mula nang matanggap niya".
 3. **The turn (one scene).** The fact that changes how the viewer sees the rule: a zero, a loophole, a limit, a
    thing that has never happened.
 4. **The comparison (one scene, when it helps).** How another democracy does the same job and what that means in
-   practice, in one or two sentences with the concrete difference ("Sa New Zealand, isa lang ang kapulungan, kaya
-   ang text na pinagbotohan ang mismong nagiging batas, walang ibang kwarto."). Never a vague word like "mas
+   practice, in one or two sentences with the concrete difference ("Sa New Zealand, one chamber lang ang Parliament,
+   kaya ang text na pinagbotohan ang mismong nagiging batas, walang ibang kwarto."). Never a vague word like "mas
    kaunti ang hadlang" without saying which.
 5. **The close (one scene).** A payoff sentence that ties the turn to the viewer (what it means for them, or the one
    question the next video answers). Do not just repeat the opening question word for word. No calls to like or
    subscribe.
+
+## Structure: "Now, explained" Short (a current story, 35 to 58 s)
+1. **The hook (one sentence):** the viewer's real question about the story, or the contradiction between two true
+   facts in it, with the key number.
+2. **What happened (one scene):** who did what, when, in roles, with the source.
+3. **The system behind it (1 to 2 scenes):** the rule, budget line or institution that decides the outcome, with
+   its source, and the numbers that matter next to each other.
+4. **Both sides (one scene):** each side's own stated reason, attributed.
+5. **The turn and the close:** the fact that changes how the story looks, then the consequence for the viewer or
+   the question that decides what happens next.
 
 ## Structure: long-form (8 to 15 min, "Built to Fail"; about 150 spoken words a minute)
 1. **Cold open (30 to 45 s):** the question and the stakes in plain words, with one concrete fact. No skit.
@@ -44,7 +54,8 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
   whom ("two-thirds ng lahat ng Senador", not "two-thirds ng Senado").
 - The close adds one new consequence for the viewer; it never just restates the answer already given.
 - Numbers are said in English, the way Manila explainers say them; never spell them out in Tagalog
-  ("isang daan pitumpu't libo", "labinsiyam na trilyon", "isang punto tatlo" are wrong). Write every amount,
+  ("isang daan pitumpu't libo", "labinsiyam na trilyon", "tatlong taon", "isang impeachment" as a count are
+  wrong; write "3 years", "1 impeachment"). "Isang" as the article "a" is fine ("isang senador"). Write every amount,
   count, percent and year as digits ("₱170,598", "₱19.66 trillion", "24 na senador", "noong 2026", "55.9%");
   the narrator reads them in English ("one hundred seventy thousand five hundred ninety-eight pesos",
   "nineteen point six six trillion pesos", "twenty twenty-six", "two thousand one"). Fractions in words:
@@ -57,12 +68,13 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
   tags; every scene's speaker is NARRATOR.
 
 ## A reference you may imitate (approved pilot Short, the voice and rhythm to match)
-Paano mo tatanggalin ang presidente ng Pilipinas? / Step one: sa House, kailangan ng at least one-third ng lahat ng
-miyembro para i-impeach siya, ayon sa Article Eleven, Section Three ng 1987 Constitution. / Step two: Senado ang
-hahatol, at ang Chief Justice ang uupo bilang presiding officer, pero hindi siya boboto. Step three: two-thirds ng
-lahat ng Senador para ma-convict. / May isa pang patakaran: isang impeachment lang kada taon laban sa iisang
-opisyal. / Sa ngayon, wala pang presidente ng Pilipinas na natanggal sa ganitong paraan. / Sa New Zealand, tatlong
-taon lang ang maximum, tapos eleksyon na ulit. Sa Pilipinas, paano mo nga tatanggalin ang presidente?
+Paano mo tatanggalin ang presidente ng Pilipinas? / Step 1: sa House, kailangan ng at least one-third ng lahat ng
+miyembro para i-impeach siya, ayon sa Article 11, Section 3 ng 1987 Constitution. / Step 2: Senado ang hahatol,
+at ang Chief Justice ang uupo bilang presiding officer, pero hindi siya boboto. Step 3: two-thirds ng lahat ng
+Senador para ma-convict. / May isa pang patakaran: 1 impeachment lang kada taon laban sa iisang opisyal. / Sa
+ngayon, wala pang presidente ng Pilipinas na natanggal sa ganitong paraan. / Sa New Zealand, 3 years lang ang
+maximum bago ang susunod na eleksyon. Sa Pilipinas, 6 years ang termino, kaya ang impeachment lang ang paraan
+para alisin ang presidente bago iyon matapos.
 
 ## Visual cue per scene
 Each scene's `visual` says what should be on screen to prove the line (the document and section, the number card,

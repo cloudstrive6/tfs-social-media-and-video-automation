@@ -23,13 +23,13 @@ the question sharper, never by turning it into slogans. The voice in Style Bible
 
 ## Do not
 - Do not rewrite sentences into fragments, exclamations or catchphrases, and do not add skits, characters,
-  rituals, running gags, "Gate one" counting or "Pera mo 'to" stakes lines (the bible's "Never" list).
+  rituals, running gags or recurring lines (the bible's "Never" list).
 - Do not add em-dashes or en-dashes.
 
 ## For Shorts
 The first line becomes the on-screen hook (`on_screen_hook_text`): an English version of the question in at most
-8 words, written as a native English headline, not a translation. The last line should send the viewer back to the
-first or into the long-form.
+8 words, written as a native English headline, not a translation. The last line returns to the opening question with the new consequence the viewer now knows, never a
+word-for-word repeat of it.
 
 Return the rewritten script plus scores (0 to 10) for hook and retention, judged on clarity and curiosity, and a
 list of the changes you made.

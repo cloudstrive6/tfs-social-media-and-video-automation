@@ -17,6 +17,8 @@ what it was meant to show.
    right-hand button strip of a vertical (about the right 12 percent below the top 15 percent).
 4. **Missing credit:** a photograph without its on-screen credit.
 5. **Empty frame:** nothing but blank paper and a caption where the brief expected a card, map or photo.
+6. **Wrong language or dashes on screen:** any card, label, stamp or heading that is not English (captions of the
+   Taglish narration are the only exception), or an em-dash or en-dash anywhere on screen.
 
 ## Not blocking (put in `improve`)
 - Weak photo choices (the photo is right but dull, or loosely matches the line), cards that cover the map,
