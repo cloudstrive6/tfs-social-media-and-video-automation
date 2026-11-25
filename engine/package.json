@@ -1,7 +1,7 @@
 {
   "name": "tfs-engine",
   "private": true,
-  "description": "The Filipino Standard vector cartoon engine: SVG puppets + Fluent Emoji props + GSAP, rendered with HyperFrames",
+  "description": "The Filipino Standard atlas engine: paper map, documents, cards and real footage animated with GSAP, rendered with HyperFrames",
   "license": "UNLICENSED",
   "type": "module",
   "engines": { "node": ">=22" },

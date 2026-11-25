@@ -34,25 +34,6 @@ def _meta() -> str:
     return f"Page '{page['name']}', Instagram @{ig['username']}"
 
 
-def _elevenlabs() -> str:
-    r = requests.get(f"https://api.elevenlabs.io/v1/voices/{env('ELEVENLABS_VOICE_ID')}", timeout=20,
-                     headers={"xi-api-key": env("ELEVENLABS_API_KEY")})
-    r.raise_for_status()
-    from .config import channel
-    model = channel()["tts"]["elevenlabs"]["model_id"]
-    resp = requests.get("https://api.elevenlabs.io/v1/models", timeout=20,
-                        headers={"xi-api-key": env("ELEVENLABS_API_KEY")})
-    models = resp.json()
-    if not isinstance(models, list):
-        return (f"voice '{r.json().get('name')}' reachable; model list unavailable "
-                f"(HTTP {resp.status_code}: {str(models)[:200]})")
-    langs = next((m.get("languages", []) for m in models if m.get("model_id") == model), [])
-    fil = [f"{x.get('language_id')}={x.get('name')}" for x in langs
-           if any(k in (x.get("name") or "").lower() for k in ("filip", "tagal"))]
-    return (f"voice '{r.json().get('name')}' reachable; model {model} Filipino language ids: {fil or 'none listed'} "
-            f"({len(langs)} languages)")
-
-
 def _postforme() -> str:
     from .publish import postforme
     accounts = postforme._call("GET", "/social-accounts", "tiktok", params={"platform": "tiktok"})["data"]
@@ -105,7 +86,6 @@ def _threads() -> str:
 CHECKS = [
     ("YouTube", ("YOUTUBE_REFRESH_TOKEN",), _youtube),
     ("Facebook + Instagram", ("META_PAGE_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID"), _meta),
-    ("ElevenLabs", ("ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID"), _elevenlabs),
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY_TIKTOK",), _postforme),
     ("Threads", ("THREADS_ACCESS_TOKEN",), _threads),
     ("Cloudflare R2 state", ("S3_ENDPOINT_URL", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_BACKUP_BUCKET"), _r2),

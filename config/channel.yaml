@@ -2,7 +2,6 @@
 channel:
   name: The Filipino Standard
   handle: "@TheFilipinoStandard"
-  narrator_persona: Kuya Standard
   series_tag: "Standard Issue"          # said after every cold open: "Standard Issue #42."
   language: taglish                     # narration (spoken) language: taglish | tagalog | english
   text_language: english                # everything WRITTEN: descriptions, captions, carousels, cards, thumbnails
@@ -35,17 +34,11 @@ llm:
     title_writer:     {model: claude-opus-5, effort: medium}
     thumbnail_artist: {model: claude-opus-5, effort: medium}
     seo_writer:       {model: claude-opus-5, effort: medium}
-    visual_director:  {model: claude-opus-5, effort: medium}
-    carousel_designer: {model: claude-opus-5, effort: medium}
     analyst:          {model: claude-opus-5, effort: high}
     audio_qa:         {model: claude-opus-5, effort: medium}
     narration_editor: {model: claude-opus-5, effort: medium}
-    preflight_art:    {model: claude-opus-5, effort: high}
-    sound_designer:   {model: claude-opus-5, effort: medium}
     visual_qa:        {model: claude-opus-5, effort: high}
-    motion_designer:  {model: claude-opus-5, effort: high}
     atlas_designer:   {model: claude-opus-5, effort: high}
-    visual_critic:    {model: claude-opus-5, effort: high}
     creative_director: {model: claude-opus-5, effort: high}
 
 # Quality gates: a slot is SKIPPED rather than filled with a weak piece.
@@ -61,7 +54,6 @@ quality:
   review:
     enabled: true
     max_fix_rounds: 2
-    critic_rounds: 2          # vector engine: Visual Critic passes over the scene stills before the full render
     min_appeal: 7             # a piece that passes but scores below this gets one polish pass (kept only if better)
     polish_max_frames: 5      # at most this many slides/scenes are reworked in a polish pass
     whisper_model: small      # faster-whisper model (tiny/base/small/medium); small handles Taglish well on CPU
@@ -81,93 +73,18 @@ publishing:
     tiktok_carousel: postforme
 
 tts:
-  provider: voxcpm            # voxcpm (style v2 narrator on Modal, 2026-11-24) | elevenlabs (fallback) | fishaudio
+  provider: voxcpm            # the VoxCPM2 narrator (the only voice since 2026-11-25)
   # hybrid (Bryce, 2026-11-24): the local RTX 3080 worker (tools/voice_worker.py) narrates first; Modal only after the
   # deadline (slot minus local_until_hours_before_slot) or for lines the worker did not get right. Samples skip the wait.
   voxcpm: {mode: hybrid, takes: 1, seed: 19, threshold: 0.85, local_until_hours_before_slot: 5}
-  elevenlabs:
-    model_id: eleven_multilingual_v2      # steady long reads + scene-to-scene continuity; eleven_v3 dropped first words and broke down on long-form (27 Sep)
-    voice_id: ""                          # ELEVENLABS_VOICE_ID = oqlKKpA3VREaqVHQKHNn ("Josh - Natural Narrator", Filipino)
-    language_code: fil                    # eleven_v3 lists Filipino as "fil" (ISO 639-3); names and Tagalog words read the Filipino way
-    stability: 0.38
-    similarity_boost: 0.8
-    style: 0.35
-    speed: 1.1                            # brisk, Historically-like pace (ElevenLabs max 1.2)
-  fishaudio:
-    reference_id: ""                      # set in .env (FISH_AUDIO_VOICE_ID)
-    model: s1
-
-images:
-  # Paid AI images are OFF (28 Sep 2026): the vector engine draws every frame, thumbnail and slide for free.
-  # The settings below only apply if provider is set back to gemini | openai.
-  provider: none
-  gemini_model: gemini-2.5-flash-image
-  openai_model: gpt-image-1
-  # Shared by every style: palette, recurring cast, hard rules.
-  base: >-
-    The Filipino Standard visual identity: colour accents of royal blue #0038A8, red #CE1126 and sun yellow
-    #FCD116 against deep ink-navy shadows (use them as colours only; draw a Philippine flag only when the scene
-    genuinely needs one, and never in scenes set before 1898). Every person is drawn in the channel's simplified
-    round-headed cartoon design with dot eyes; no realistic human faces. Recurring cast when relevant: Kuya Standard (calm,
-    witty narrator, round head, rolled-up barong sleeves), Juan (confused everyman, round head, plain
-    shirt, tsinelas), Tito Trapo (fictional corrupt politician archetype: round head, slicked hair, tight
-    barong, sash, gold watch, too-wide grin). No text, letters, captions, logos or watermarks in the image.
-  never: >-
-    photorealistic images of real, identifiable people; the face or likeness of any real politician or public
-    official (represent them only as a labelled silhouette or the fictional Tito Trapo archetype); gore;
-    disrespect to the flag, religion, regions or ethnic groups; AI-drawn text or lettering
-  # One visual language per job. The Visual Director picks a style for every scene.
-  styles:
-    story: >-
-      Painterly 2D cartoon in the style of premium animated history explainers: thick dark ink outlines,
-      soft painted shading, subtle halftone texture, slight chromatic aberration, cinematic lighting with one
-      warm key light against a dark cool background. Simple round-headed characters with dot eyes and one
-      strong, readable expression. Rich Philippine setting details.
-    satire: >-
-      Filipino broadsheet editorial cartoon: bold pen-and-ink linework with crosshatching, limited palette of
-      ink black plus red and sun-yellow accents on off-white newsprint; every character is a round-headed
-      channel-style cartoon archetype (never a realistic or caricatured real face), symbolic props carrying the joke (money bags, hard hats, empty dikes, red tape), dry
-      visual irony, generous negative space where our own caption will be added.
-    comic: >-
-      Comic-strip panel: clean inked outlines, flat bright colours with halftone shading, dynamic camera
-      angle, exaggerated comedic acting by the channel's round-headed cast, clear empty space at the top for a speech bubble we add later
-      (never draw the bubble or any text).
-    archival: >-
-      Vintage 19th/early-20th-century illustration: strongly sepia-toned hand-coloured lithograph with visible
-      engraving/crosshatch linework, muted brown-and-cream palette only, heavily aged paper texture, foxing spots
-      and a dark vignette, period-accurate Philippine clothing and architecture
-      (Spanish colonial, American era) or grainy 1970s poster tones for Martial Law scenes. Characters keep
-      the round-headed channel design, rendered in the period technique.
-  style_prompt: >-
-    Mix of styles chosen per scene: story (painterly cartoon, default), satire (editorial pen-and-ink
-    cartoon for political commentary), comic (skit panels), archival (period illustration for history).
-    Maps are never AI-drawn: use a `map` card. No text in images.
 
 video:
-  # "vector" (28 Sep 2026): our own free cartoon engine. The Motion Designer plans every shot for SVG puppets,
-  # illustrated sets, Fluent Emoji props (MIT), speech bubbles and animated cards; the Visual Critic checks a
-  # still of each scene; GSAP animates it and HyperFrames (headless Chrome) renders it. No paid images.
-  # "atlas" (style v2, approved 2026-11-24): paper map, real b-roll, documents, cards, Blender hero, synthesized SFX.
-  # Stays "vector" until the atlas dry run is approved.
+  # The atlas engine (style v2, approved 2026-11-24): paper map, real b-roll, documents, cards, Blender hero,
+  # synthesized SFX, animated with GSAP and rendered by HyperFrames.
   engine: atlas
   fps_vector: 60              # every format renders at 60 fps
   render_workers: 4           # parallel Chrome capture workers (GitHub runners have 4 vCPUs)
   long_form: {width: 1920, height: 1080, fps: 60, target_minutes: [8, 15]}
   vertical:  {width: 1080, height: 1920, fps: 60, target_seconds: [35, 58]}
-  seconds_per_image: 6        # shot length; lower = more images = more cost
-  # How illustrations move: "2.5d" = subject cut out (rembg isnet-anime) and animated on its own layer over
-  # an inpainted background (parallax + breathing/bob, free); "kenburns" = plain zoom/pan on the flat image.
-  illustration_motion: 2.5d
-  cutout_model: isnet-anime
-  # AI image-to-video (Veo 3.1 Lite, ~$0.08/s at 1080p) is OFF by choice (26 Sep 2026: free 2.5D only for now).
-  ai_video: off
   font: assets/fonts/Anton-Regular.ttf
   caption_font: assets/fonts/Montserrat-ExtraBold.ttf
-
-# Music + sound effects: a library generated ONCE with ElevenLabs (`sound-library` workflow), stored in the
-# private R2 state under library/ (not in this public repo), reused by every video. Music is ducked under the
-# narration automatically.
-sound:
-  enabled: true
-  music_model: music_v1
-  music_seconds: 120

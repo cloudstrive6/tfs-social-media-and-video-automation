@@ -7,7 +7,6 @@ import logging
 import shutil
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, TypeVar
@@ -19,9 +18,9 @@ from .agents import editor, packaging, trend_scout, writers
 from .config import channel, data_dir, env, item_dir, media, now, paused_kinds, schedule
 from .llm import UsageLimitError
 from .media.tts_voxcpm import VoiceDeferred
-from .media import cards, compose, images, render, tts, vector
-from .models import (Carousel, FactCheck, HookReview, MotionPlan, ReviewReport, Scene, Script, SeoPack, ShotList,
-                     ThumbnailPlan, TitlePlan, VisualCritique)
+from .media import compose, render, tts
+from .models import (FactCheck, HookReview, ReviewReport, Scene, Script, SeoPack, ShotList, ThumbnailPlan,
+                     TitlePlan)
 
 log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
@@ -111,96 +110,6 @@ def _fixes(d: Path) -> dict:
     return {"images": {}, "audio": {}, "attempts": {}, "drop": [], **fixes}
 
 
-def _checked_shots(item: dict, script: Script, draft: ShotList, dossier: str) -> ShotList:
-    try:
-        checked = packaging.preflight_shots(item, script, draft, dossier)
-    except UsageLimitError:
-        raise
-    except Exception:
-        log.exception("pre-flight art check failed; using the Visual Director's list as is")
-        return draft
-    if sorted(s.scene_id for s in checked.shots) != sorted(s.scene_id for s in draft.shots):
-        log.warning("pre-flight returned different scene ids; using the draft")
-        return draft
-    return checked
-
-
-def _visuals(item: dict, d: Path, script: Script, aspect: str, size: tuple[int, int]) -> list[render.Shot]:
-    shots_file = d / "shots.json"
-    if shots_file.exists():
-        shot_list = ShotList.model_validate_json(shots_file.read_text(encoding="utf-8"))
-    else:
-        draft = cached(d / "shots_draft.json", ShotList, lambda: packaging.shot_list(item, script))
-        dossier_file = d / "dossier.md"
-        dossier = dossier_file.read_text(encoding="utf-8") if dossier_file.exists() else ""
-        shot_list = cached(shots_file, ShotList,                   # pre-flight: fix before anything is drawn
-                           lambda: _checked_shots(item, script, draft, dossier))
-    fixed = _fixes(d)["images"]
-    by_scene = {s.scene_id: s for s in shot_list.shots}
-    img_dir = d / "img"
-    img_dir.mkdir(exist_ok=True)
-
-    anchors: dict[str, Path] = {}                  # first illustration of each style anchors the rest
-
-    def make(scene: Scene) -> render.Shot:
-        shot = by_scene.get(scene.id)
-        out = img_dir / f"{scene.id:03d}.png"
-        if shot and shot.kind == "card":
-            if not out.exists():
-                cards.render_card(shot.card_type, shot.card_title, shot.card_lines, size, out)
-            return render.Shot(out, "card", card={"card_type": shot.card_type, "title": shot.card_title,
-                                                  "lines": shot.card_lines})
-        if shot and shot.kind == "reuse" and (img_dir / f"{shot.reuse_of_scene:03d}.png").exists():
-            return render.Shot(img_dir / f"{shot.reuse_of_scene:03d}.png", shot.motion)
-        prompt = fixed.get(str(scene.id)) or (shot.image_prompt if shot and shot.image_prompt else scene.visual)
-        style = shot.style if shot else "story"
-        if not out.exists():
-            anchor = anchors.get(style)
-            images.generate(prompt, out, aspect, style=style, anchor=anchor if anchor != out else None)
-        anchors.setdefault(style, out)
-        return render.Shot(out, shot.motion if shot else "push_in")
-
-    # the first illustration of each style is made first (it becomes the style anchor), then the rest in
-    # parallel; reuse shots point at earlier illustrations, so they come last
-    first = [s for s in script.scenes if by_scene.get(s.id) is None or by_scene[s.id].kind != "reuse"]
-    made: dict[int, render.Shot] = {}
-    for sc in first:
-        shot = by_scene.get(sc.id)
-        style = shot.style if shot else "story"
-        if (shot is None or shot.kind == "illustration") and style not in anchors:
-            made[sc.id] = make(sc)
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        rest = [sc for sc in first if sc.id not in made]
-        made.update(dict(zip([sc.id for sc in rest], pool.map(make, rest))))
-    shots = [made.get(sc.id) or make(sc) for sc in script.scenes]
-
-    # shots the review team rejected twice borrow the nearest other illustration (with a different camera move)
-    dropped = set(_fixes(d)["drop"])
-    if dropped:
-        ids = [sc.id for sc in script.scenes]
-        bad = {i for i, sc in enumerate(script.scenes)
-               if str(sc.id) in dropped or (by_scene.get(sc.id) and by_scene[sc.id].kind == "reuse"
-                                            and str(by_scene[sc.id].reuse_of_scene) in dropped)}
-        good = [i for i, sh in enumerate(shots) if not sh.card and i not in bad]
-        uses: dict = {}
-        for sh in shots:
-            uses[sh.image] = uses.get(sh.image, 0) + 1
-        for i in sorted(bad):
-            if good:                                   # least-used image first, then the nearest
-                j = min(good, key=lambda g: (uses.get(shots[g].image, 0), abs(g - i), g > i))
-                uses[shots[j].image] = uses.get(shots[j].image, 0) + 1
-                shots[i] = render.Shot(shots[j].image, "pull_out" if shots[j].motion != "pull_out" else "pan_left")
-        log.info("replaced shots %s with neighbouring illustrations", [ids[i] for i in sorted(bad)])
-
-    # cards get the nearest illustration (before, else after) as their blurred backdrop
-    art = [sh.image if not sh.card else None for sh in shots]
-    for i, sh in enumerate(shots):
-        if sh.card:
-            near = next((a for a in art[i::-1] if a), None) or next((a for a in art[i:] if a), None)
-            sh.card["backdrop"] = str(near) if near else None
-    return shots
-
-
 def _voiced(script: Script, d: Path) -> list[Scene]:
     """Scenes as the narrator reads them (the Proofreader may respell a line so numbers/names come out right)."""
     respell = _fixes(d)["audio"]
@@ -212,150 +121,15 @@ def _voiced_script(script: Script, d: Path) -> Script:
     return script.model_copy(update={"scenes": _voiced(script, d)})
 
 
-def _engine() -> str:
-    """"vector": our own free cartoon engine (SVG puppets + GSAP, rendered by HyperFrames). "images": the old
-    paid AI-illustration path, kept only for reference."""
-    return channel()["video"].get("engine", "vector")
-
-
 def _dossier(d: Path) -> str:
     f = d / "dossier.md"
     return f.read_text(encoding="utf-8") if f.exists() else ""
 
 
-def _motion(item: dict, d: Path, script: Script, size: tuple[int, int], clips: list, starts: list[float],
-            total: float) -> MotionPlan:
-    """Motion Designer plans every shot; the Visual Critic checks a still of each scene and the designer fixes what
-    it flags, all before the full render. Review-team notes on a finished render re-plan only those scenes."""
-    ids = [sc.id for sc in script.scenes]
-    vertical = size[1] > size[0]
-    dossier = _dossier(d)
-    plan_file = d / "motion.json"
-    if plan_file.exists():
-        plan = MotionPlan.model_validate_json(plan_file.read_text(encoding="utf-8"))
-    else:
-        draft = cached(d / "motion_draft.json", MotionPlan, lambda: packaging.motion_plan(item, script, dossier))
-        plan = vector.sanitize(draft, ids, vertical)
-        rounds = qa.cfg().get("critic_rounds", 2) if qa.enabled() else 0
-        for rnd in range(rounds):
-            spec = vector.spec_from_plan(plan, starts, total, clips, size)
-            stills = vector.snapshot(spec, d / "work", vector.still_times(spec), d / "critic" / f"r{rnd}")
-            try:
-                crit = cached(d / f"critic_r{rnd}.json", VisualCritique,
-                              lambda: packaging.visual_critique(item, script, plan, stills, dossier))
-                notes = {c.scene_id: c.problems for c in crit.scenes if not c.ok and c.problems}
-                log.info("visual critic r%d %s: %d of %d scenes flagged", rnd, item["id"], len(notes), len(ids))
-                if not notes:
-                    break
-                plan = vector.sanitize(packaging.motion_revise(item, script, plan, notes, dossier), ids, vertical)
-            except UsageLimitError:
-                raise
-            except Exception:
-                log.exception("visual critic round failed; rendering the plan as it is")
-                break
-        plan_file.write_text(plan.model_dump_json(indent=1), encoding="utf-8")
-
-    fixes = _fixes(d)
-    done = fixes.setdefault("replanned", {})
-    dropped = {k for k in fixes["drop"] if k.isdigit()}
-    pending = {int(k): [note] for k, note in fixes["images"].items()
-               if k.isdigit() and k not in dropped and fixes["attempts"].get(k, 0) > done.get(k, 0)}
-    if pending:                                       # the review team flagged scenes of a finished render
-        plan = vector.sanitize(packaging.motion_revise(item, script, plan, pending, dossier), ids, vertical)
-        done.update({str(k): fixes["attempts"][str(k)] for k in pending})
-        (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
-    if dropped:                                       # still failing after a re-plan: the host explains instead
-        plan = plan.model_copy(update={"scenes": [vector.fallback_scene(s.scene_id, s.background)
-                                                  if str(s.scene_id) in dropped else s for s in plan.scenes]})
-    plan_file.write_text(plan.model_dump_json(indent=1), encoding="utf-8")
-    return plan
-
-
-def _vector_video(item: dict, d: Path, script: Script, hook: HookReview, size: tuple[int, int]) -> list[float]:
-    """Voice -> Motion Designer + Visual Critic -> HyperFrames picture -> music, effects and captions."""
-    kind = item["kind"]
-    clips = tts.synthesize(_voiced(script, d), d / "audio")
-    work = d / "work"
-    work.mkdir(parents=True, exist_ok=True)
-    wav, starts = render.narration(clips, work)
-    total = tts.duration(wav)
-    plan = _motion(item, d, script, size, clips, starts, total)
-    (d / "shots.json").write_text(vector.as_shots(plan).model_dump_json(indent=1), encoding="utf-8")
-    hook_until = render.HOOK_SECONDS if kind == "vertical" and hook.on_screen_hook_text else 0.0
-    spec = vector.spec_from_plan(plan, starts, total, clips, size, hook_until=hook_until)
-    picture = work / "picture.mp4"
-    vector.render(spec, work, picture)
-    cards_info = [render.Shot(Path(), sp.camera, {"card_type": sp.card_type, "title": sp.card_title,
-                                                  "lines": sp.card_lines} if sp.kind == "card" else None)
-                  for sp in plan.scenes]
-    render.finish(picture, clips, starts, total, kind, work, d / "video.mp4", hook.on_screen_hook_text,
-                  sound_plan=_sound_plan(item, d, script), scene_ids=[sc.id for sc in script.scenes],
-                  shots=cards_info)
-    return starts
-
-
-def _vector_stills(item: dict, briefs: list[str], purpose: str, size: tuple[int, int], work: Path) -> list[Path]:
-    """Single images (thumbnail, carousel art) drawn by the vector engine from short briefs."""
-    plan = vector.sanitize(packaging.motion_stills(item, briefs, purpose), list(range(len(briefs))), size[1] > size[0])
-    return vector.stills(plan, size, work, work / "stills")
-
-
 def _build_video(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
-    """Images, voice, render and (long form) thumbnail; every step cached, so a fix only redoes what it touched."""
-    if _engine() == "atlas":
-        return _build_atlas(item, d, script, hook)
-    if _engine() == "vector":
-        return _build_vector(item, d, script, hook)
-    kind = item["kind"]
-    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
-    size, aspect = (vcfg["width"], vcfg["height"]), "16:9" if kind == "long_form" else "9:16"
-    shots = _visuals(item, d, script, aspect, size)
-    clips = tts.synthesize(_voiced(script, d), d / "audio")
-    video, starts_file = d / "video.mp4", d / "starts.json"
-    if not video.exists():
-        _, starts = render.render(shots, clips, kind, d / "work", video, hook.on_screen_hook_text,
-                                  sound_plan=_sound_plan(item, d, script), scene_ids=[sc.id for sc in script.scenes])
-        starts_file.write_text(json.dumps(starts))
-    starts = json.loads(starts_file.read_text())
-    thumb_path, thumb_moment = None, "(no custom thumbnail)"
-    if kind == "long_form":
-        plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
-        best = plan.concepts[0]
-        thumb_moment = best.moment
-        art = d / "thumb_art.png"
-        if not art.exists():
-            images.generate(_fixes(d)["images"].get("thumbnail") or best.image_prompt, art, "16:9", style="story")
-        thumb_path = d / "thumbnail.jpg"
-        if not thumb_path.exists():
-            compose.thumbnail(art, best.overlay_text, thumb_path)
-    return video, starts, thumb_path, thumb_moment
-
-
-def _build_vector(item: dict, d: Path, script: Script, hook: HookReview) -> tuple[Path, list[float], Path | None, str]:
-    kind = item["kind"]
-    vcfg = channel()["video"]["long_form" if kind == "long_form" else "vertical"]
-    size = (vcfg["width"], vcfg["height"])
-    video, starts_file = d / "video.mp4", d / "starts.json"
-    if not video.exists():
-        starts_file.write_text(json.dumps(_vector_video(item, d, script, hook, size)))
-    starts = json.loads(starts_file.read_text())
-    thumb_path, thumb_moment = None, "(no custom thumbnail)"
-    if kind == "long_form":
-        plan = cached(d / "thumbnails.json", ThumbnailPlan, lambda: packaging.thumbnails(item, script))
-        best = plan.concepts[0]
-        thumb_moment = best.moment
-        art = d / "thumb_art.png"
-        if not art.exists():
-            fix = _fixes(d)["images"].get("thumbnail")
-            brief = best.image_prompt + (f"\nReviewer's correction: {fix}" if fix else "")
-            [png] = _vector_stills(item, [brief], "YouTube thumbnail, one 16:9 still: big expressive faces, bold "
-                                   "and simple, nothing important in the bottom third (the headline goes there)",
-                                   (1920, 1080), d / "work_thumb")
-            shutil.copy(png, art)
-        thumb_path = d / "thumbnail.jpg"
-        if not thumb_path.exists():
-            compose.thumbnail(art, best.overlay_text, thumb_path)
-    return video, starts, thumb_path, thumb_moment
+    """Voice, atlas picture and mix, and (long form) thumbnail; every step cached, so a fix only redoes what it
+    touched."""
+    return _build_atlas(item, d, script, hook)
 
 
 HERO_CLIP = "assets/broll/hero_ph_push.mp4"   # approved 3D push into Metro Manila (same in every episode)
@@ -537,25 +311,6 @@ AUDIO_EXTRA_ROUNDS = 2  # extra re-voice rounds when only the narration still ha
 MAX_IMAGE_ATTEMPTS = 1   # regenerate a failing shot once; if it fails again it is replaced (never sinks the video)
 
 
-def _sound_plan(item: dict, d: Path, script: Script):
-    """Sound Designer: music moods + accent effects from the library (None -> code-only effects/no music)."""
-    from .media import sound
-    from .models import SoundPlan
-
-    music, sfx = sound.available()
-    if not (music or sfx) or not channel().get("sound", {}).get("enabled", True):
-        return None
-    try:
-        shots = ShotList.model_validate_json((d / "shots.json").read_text(encoding="utf-8"))
-        return cached(d / "sound.json", SoundPlan,
-                      lambda: packaging.sound_plan(item, script, shots, sound.describe_library()))
-    except UsageLimitError:
-        raise
-    except Exception:
-        log.exception("sound designer failed; default music, animation effects only")
-        return None
-
-
 def _save_fixes(d: Path, report: ReviewReport) -> list[str]:
     """Record the review's corrections. Returns the image keys to regenerate (the rest were dropped)."""
     fixes = _fixes(d)
@@ -579,10 +334,9 @@ def _apply_video_fixes(d: Path, report: ReviewReport) -> None:
     import shutil
 
     for key in _save_fixes(d, report):
-        targets = ([d / "thumb_art.png", d / "thumbnail.jpg"] if key == "thumbnail"
-                   else [d / "img" / f"{int(key):03d}.png"])
-        for t in targets:
-            t.unlink(missing_ok=True)
+        if key == "thumbnail":
+            for t in (d / "thumb_art.png", d / "thumbnail.jpg"):
+                t.unlink(missing_ok=True)
     for key in report.redo_audio:
         for ext in (".mp3", ".json"):
             (d / "audio" / f"{int(key):03d}{ext}").unlink(missing_ok=True)
@@ -726,112 +480,6 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     _schedule(item, title=titles.primary, video=str(video), thumbnail=str(thumb_path or ""), **_qa_note(report))
 
 
-# ---------------------------------------------------------------- carousel
-def _checked_carousel(item: dict, draft: Carousel, dossier: str) -> Carousel:
-    try:
-        checked = packaging.preflight_carousel(item, draft, dossier)
-    except UsageLimitError:
-        raise
-    except Exception:
-        log.exception("carousel pre-flight failed; using the designer's slides as they are")
-        return draft
-    if len(checked.slides) != len(draft.slides):
-        log.warning("carousel pre-flight changed the slide count; using the draft")
-        return draft
-    return checked
-
-
-def _produce_carousel(item: dict, d: Path, dossier: str) -> None:
-    draft = cached(d / "carousel_draft.json", Carousel, lambda: packaging.carousel(item, dossier))
-    car = cached(d / "carousel.json", Carousel,                        # pre-flight: fix before anything is drawn
-                 lambda: _checked_carousel(item, draft, dossier))
-    as_script = Script(scenes=[Scene(id=i, chapter="slide", speaker="TEXT", text=f"{s.headline}\n{s.body}",
-                                     visual=s.image_prompt) for i, s in enumerate(car.slides)],
-                       sources=[s.source for s in car.slides if s.source])
-    fc = cached(d / "factcheck.json", FactCheck, lambda: writers.fact_check(as_script, dossier, "carousel"))
-    if not _gate(item, fc):
-        return
-    edited = {sc.id: sc.text for sc in fc.script.scenes}
-    slide_dir = d / "slides"
-    slide_dir.mkdir(exist_ok=True)
-    handle = channel()["channel"]["handle"].lower()
-
-    def vector_art() -> None:
-        """Slide art drawn by the vector engine, all missing slides in one go."""
-        fixed, drop = _fixes(d)["images"], _fixes(d)["drop"]
-        need = [i for i, s in enumerate(car.slides)
-                if s.image_prompt and str(i) not in drop and not (slide_dir / f"art{i:02d}.png").exists()]
-        if not need:
-            return
-        purposes = {
-            "cover": "carousel cover art, one wide still: the hook as a single bold image, big characters, "
-                     "full colour, no speech bubble (the headline goes under it)",
-            "text": "carousel slide art, one wide still: the slide's idea as one clear image, big characters, "
-                    "no speech bubble (the text goes under it)",
-            "panel": "comic panel, one still: the beat of the story; if a speech bubble line is given, put it in "
-                     "a bubble on the character who says it, word for word",
-        }
-        for layout, purpose in purposes.items():
-            group = [i for i in need if (car.slides[i].layout if i else "cover") == layout
-                     or (layout == "text" and i and car.slides[i].layout not in purposes)]
-            if not group:
-                continue
-            briefs = []
-            for i in group:
-                s = car.slides[i]
-                brief = s.image_prompt
-                if layout == "panel" and s.body.strip():
-                    brief += f'\nSpeech bubble (exact words): "{s.body.strip()}"'
-                if str(i) in fixed:
-                    brief += f"\nReviewer's correction: {fixed[str(i)]}"
-                briefs.append(brief)
-            pngs = _vector_stills(item, briefs, purpose, compose.band_size(layout), d / f"work_slides_{layout}")
-            for i, png in zip(group, pngs):
-                shutil.copy(png, slide_dir / f"art{i:02d}.png")
-                (slide_dir / f"slide{i:02d}.jpg").unlink(missing_ok=True)
-
-    def build() -> list[str]:
-        if _engine() == "vector":
-            vector_art()
-        fixed = _fixes(d)["images"]
-        paths = []
-        for i, s in enumerate(car.slides):
-            headline, _, body = edited.get(i, f"{s.headline}\n{s.body}").partition("\n")
-            art_path, out = slide_dir / f"art{i:02d}.png", slide_dir / f"slide{i:02d}.jpg"
-            art = None
-            if s.image_prompt and str(i) not in _fixes(d)["drop"] and (_engine() != "vector" or art_path.exists()):
-                if not art_path.exists():
-                    images.generate(fixed.get(str(i)) or s.image_prompt, art_path, "4:5", style=s.style)
-                    out.unlink(missing_ok=True)
-                art = art_path
-            if not out.exists():
-                if s.layout == "panel":
-                    compose.panel_slide(i, len(car.slides), headline, "" if art and _engine() == "vector" else body,
-                                        s.source, art, out, handle)          # the engine drew the bubble
-                else:
-                    compose.slide(i, len(car.slides), headline, body, s.source, s.theme, art, out, handle)
-            paths.append(str(out))
-        return paths
-
-    def fix(report: ReviewReport) -> None:
-        for key in _save_fixes(d, report):
-            (slide_dir / f"art{int(key):02d}.png").unlink(missing_ok=True)
-        for key in _fixes(d)["drop"]:                        # art failed twice: text-only slide
-            (slide_dir / f"slide{int(key):02d}.jpg").unlink(missing_ok=True)
-
-    prompts = [s.image_prompt for s in car.slides]
-    done = _reviewed(item, d, build, lambda paths: qa.review_slides([Path(p) for p in paths], prompts), fix)
-    if not done:
-        return
-    paths, report = done
-    def plain(t: str) -> str:                     # *highlight* marks are for the slide design only
-        return t.replace("*", "")
-    text = "\n".join(f"{i + 1}. {plain(s.headline)} — {plain(s.body)}" for i, s in enumerate(car.slides))
-    cached(d / "seo.json", SeoPack,
-           lambda: packaging.seo(item, None, plain(car.slides[0].headline), [], f"\n\n# Slides\n{text}"))
-    _schedule(item, title=plain(car.slides[0].headline), slides=paths, **_qa_note(report))
-
-
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
                   "instagram_carousel": "IG Carousel", "facebook_reel": "FB Reel", "facebook_post": "FB Post", "facebook_video": "FB Video",
                   "tiktok": "TikTok", "tiktok_carousel": "TikTok Photos", "threads_carousel": "Threads"}
@@ -928,10 +576,10 @@ def produce(item_id: str) -> bool:
     d = item_dir(item_id)
     try:
         dossier = cached_text(d / "dossier.md", lambda: writers.research(item))
-        if item["kind"] == "carousel":
-            _produce_carousel(item, d, dossier)
-        else:
-            _produce_video(item, d, dossier)
+        if item["kind"] == "carousel":                # no style v2 carousel design yet (paused_kinds covers this)
+            log.info("%s: carousels have no style v2 design yet; left as it is", item_id)
+            return False
+        _produce_video(item, d, dossier)
     except VoiceDeferred as e:                       # the local GPU worker has the narration; try again next run
         log.info("waiting for local narration: %s", e)
         return False

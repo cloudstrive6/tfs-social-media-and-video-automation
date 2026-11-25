@@ -80,9 +80,8 @@ def pull() -> None:
     if f"{PREFIX}{DB}" in keys:
         _download(f"{PREFIX}{DB}")
     for key in keys:                                # notes, schedule override, tokens
-        if ("/" not in key[len(PREFIX):] or key.startswith((f"{PREFIX}analyst_notes/", f"{PREFIX}analyst_notes_v2/"))
-                or key.startswith((f"{PREFIX}creative_notes/", f"{PREFIX}creative_notes_v2/"))          # the Creative Director's standing notes
-                or key.startswith(f"{PREFIX}library/")):                 # music + sound effects library
+        if ("/" not in key[len(PREFIX):] or key.startswith(f"{PREFIX}analyst_notes_v2/")
+                or key.startswith(f"{PREFIX}creative_notes_v2/")):       # standing notes (style v2 only)
             if key != f"{PREFIX}{DB}":
                 _download(key)
     active = _active_items()
@@ -111,28 +110,6 @@ def _snapshot() -> Path:
         src.close()
         dst.close()
     return snap
-
-
-def pull_library() -> int:
-    """Only the sound library (samples run without the production state)."""
-    if not enabled():
-        return 0
-    keys = _keys(f"{PREFIX}library/")
-    for key in keys:
-        _download(key)
-    return len(keys)
-
-
-def push_library() -> int:
-    """Upload the sound library (used by the one-time build job, which has no database)."""
-    if not enabled():
-        raise SystemExit("no R2 state bucket configured")
-    s3, bucket, sent = _s3(), _bucket(), 0
-    for path in (data_dir() / "library").rglob("*"):
-        if path.is_file():
-            s3.upload_file(str(path), bucket, PREFIX + _rel(path))
-            sent += 1
-    return sent
 
 
 def push() -> int:

@@ -11,13 +11,6 @@ from ..config import ROOT, channel
 BLUE, RED, YELLOW = (0, 56, 168), (206, 17, 38), (252, 209, 22)
 INK, PAPER, WHITE = (14, 16, 24), (242, 234, 214), (255, 255, 255)
 
-THEMES = {  # background, headline, body, accent
-    "dark": ((14, 16, 24), WHITE, (205, 210, 222), YELLOW),
-    "flag_blue": (BLUE, WHITE, (220, 228, 255), YELLOW),
-    "flag_red": (RED, WHITE, (255, 222, 222), YELLOW),
-    "paper": (PAPER, INK, (60, 56, 50), RED),
-}
-
 FALLBACK_FONTS = {
     "display": ["C:/Windows/Fonts/impact.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"],
     "body": ["C:/Windows/Fonts/arialbd.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"],

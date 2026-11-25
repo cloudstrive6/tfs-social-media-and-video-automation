@@ -51,10 +51,10 @@ def schedule() -> dict:
 
 
 def paused_kinds() -> set[str]:
-    """Production kinds on pause (schedule.yaml `paused`): not planned, produced or posted. With the atlas engine,
-    carousels also pause until a style v2 carousel brief exists (their slide art and copy are cartoon-era)."""
+    """Production kinds on pause (schedule.yaml `paused`): not planned, produced or posted. Carousels also pause until
+    a style v2 carousel design exists (prompts/v2/carousel_designer.md)."""
     paused = set(schedule().get("paused") or [])
-    if _v2() and not (ROOT / "prompts" / "v2" / "carousel_designer.md").exists():
+    if not (ROOT / "prompts" / "v2" / "carousel_designer.md").exists():
         paused.add("carousel")
     return paused
 
@@ -83,20 +83,13 @@ def item_dir(item_id: str) -> Path:
     return path
 
 
-def _v2() -> bool:
-    """Style v2 (atlas engine, approved 2026-11-24): the cartoon-era bible and briefs are not used (Bryce: "don't use
-    that old one")."""
-    return channel().get("video", {}).get("engine") == "atlas"
-
-
 def notes_dir(kind: str) -> Path:
-    """Standing notes folder ("analyst_notes" or "creative_notes"). Style v2 keeps its own, so notes written while
-    reviewing cartoon-era videos never steer atlas videos."""
-    return data_dir() / (f"{kind}_v2" if _v2() else kind)
+    """Standing notes folder ("analyst_notes" or "creative_notes"); style v2 notes live in their own `_v2` folder."""
+    return data_dir() / f"{kind}_v2"
 
 
 def style_bible() -> str:
-    """Style Bible v2 is the only bible; the cartoon-era one was deleted on 2026-11-25."""
+    """Style Bible v2, the channel's only style bible."""
     return (ROOT / "docs" / "STYLE_BIBLE_V2.md").read_text(encoding="utf-8")
 
 
@@ -104,17 +97,16 @@ V2_NATIVE = {"atlas_designer"}      # written for the atlas engine from the star
 
 
 class RetiredBriefError(RuntimeError):
-    """An agent with no style v2 brief was asked for: the cartoon-era briefs are deleted, never a fallback."""
+    """An agent with no style v2 brief was asked for; there is no other brief to fall back on."""
 
 
 def load_prompt(agent: str) -> str:
-    """Agent prompt plus any standing notes for it. Only style v2 briefs exist (prompts/v2/, plus the atlas designer,
-    written for atlas from the start); the cartoon-era briefs were deleted (Bryce, 2026-11-25: "any of the old-style
-    elements ... Remove and Do Not Use since that is flawed", then "remove/delete the old-style")."""
+    """Agent prompt plus any standing notes for it. Only style v2 briefs exist (prompts/v2/, plus the atlas designer
+    in prompts/); any other agent name raises."""
     path = ROOT / "prompts" / "v2" / f"{agent}.md"
     if not path.exists():
         if agent not in V2_NATIVE:
-            raise RetiredBriefError(f"no style v2 brief for '{agent}'; the cartoon-era briefs are deleted")
+            raise RetiredBriefError(f"no style v2 brief for '{agent}'")
         path = ROOT / "prompts" / f"{agent}.md"
     prompt = path.read_text(encoding="utf-8")
     notes = notes_dir("analyst_notes") / f"{agent}.md"

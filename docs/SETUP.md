@@ -32,22 +32,16 @@ The agents run through the Claude Code CLI on the Actions runner (`llm.backend: 
 2. Usage limits: Max has rolling 5-hour and weekly limits. When one is hit, the item stays queued and
    retries on the next tick. If `ANTHROPIC_API_KEY` is also set, that call falls back to pay-per-use
    instead, so no slot is missed.
-3. To stretch the subscription, switch high-volume agents (trend_scout, seo_writer, visual_director,
-   carousel_designer) to `claude-sonnet-5` in `config/channel.yaml`.
+3. To stretch the subscription, switch high-volume agents (trend_scout, seo_writer) to `claude-sonnet-5` in
+   `config/channel.yaml`.
 4. Check that using a personal subscription for a commercial channel's automation fits Anthropic's current
    consumer terms (anthropic.com/legal). For clean, uncapped billing, set `llm.backend: api` and use a
    Console API key (~$275/month at this volume).
 
-## 3. Narrator — ElevenLabs
-1. Creator plan to test, Scale for full volume.
-2. Best result: **Professional Voice Clone** of a real Filipino narrator (yourself or a hired voice actor
-   with a written licence). 30+ min of clean Taglish reading → a voice nobody can call robotic.
-   Or pick a Filipino voice from the Voice Library.
-3. `ELEVENLABS_VOICE_ID`, optional `ELEVENLABS_VOICE_JUAN`, `ELEVENLABS_VOICE_TITO_TRAPO` for skit characters.
-4. Try `model_id: eleven_v3` in `config/channel.yaml` for more expressive delivery (supports `[laugh]`, `[whisper]`).
-
-## 4. Images — Google AI Studio
-API key → `GEMINI_API_KEY` (billing enabled; free tier is too small).
+## 3. Narrator: VoxCPM2
+The narrator is a VoxCPM2 clone of the approved voice (`assets/voice/`). The PC's RTX 3080 narrates first through
+`tools/voice_worker.py` (installed by `tools/install_voice_worker.ps1`); the Modal app `tfs-voice` (L4) takes over
+only after the deadline or when the PC is off. GitHub secrets: `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`.
 
 ## 5. State — Cloudflare R2 (required)
 Each Actions run starts on a blank machine, so the state lives in a private R2 bucket (free up to 10 GB).
@@ -66,17 +60,9 @@ Media of finished items is pruned from R2 after 10 days; their text files stay.
 
 ## 5b. Archive — Backblaze B2
 Every finished piece is copied for good to the private bucket `tfs-content-archive` (encrypted, keeps only the
-latest version of each file), under `YYYY/MM/<item>/`. That covers the video or slides, the thumbnail, every AI
-illustration, the narration, the script, captions and sources, and an `item.json` with the title and slots.
+latest version of each file), under `YYYY/MM/<item>/`. That covers the video, the thumbnail, the narration, the script, captions and sources, and an `item.json` with the title and slots.
 It uses the application key `tfs-archive-github-actions` (read and write on that bucket only), stored in
 `B2_KEY_ID` / `B2_APP_KEY`. Archiving never blocks posting: a failed upload is retried the next time.
-
-## 5c. Sound library — ElevenLabs (one time)
-Run GitHub → Actions → **sound-library** once. It generates 12 instrumental music beds (curious, wonder,
-investigative, satire, somber, hopeful, historical, kulintang, suspense, archival, news, lo-fi) and about 25
-sound effects with ElevenLabs. They're stored in the private R2 state under `library/`, not in this public
-repo, and every video reuses them. Re-running only generates what's missing. It needs a paid ElevenLabs plan
-(commercial use is allowed on paid plans) and an API key with Sound Effects and Music permissions.
 
 ## 6. Publishing
 | Platform | How | Setup |

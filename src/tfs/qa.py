@@ -3,8 +3,8 @@
 - Proofreader: Whisper (faster-whisper, on the runner's CPU) transcribes the finished video; each scene's words
   are compared with the script, and the `audio_qa` agent judges the scenes that differ (Taglish spelling noise
   vs. real problems: skipped words, wrong numbers or names, garbled audio).
-- Visual QA: the `visual_qa` agent looks at a frame from every shot (plus the hook frame, thumbnail or carousel
-  slides) next to the cast model sheets and what each frame was meant to show.
+- Visual QA: the `visual_qa` agent looks at a frame from every shot (plus the hook frame and thumbnail) next to
+  what each frame was meant to show.
 
 Returns a ReviewReport; pipeline.py applies the fixes (new image prompt, re-voice, re-render) and re-reviews.
 """
@@ -19,26 +19,13 @@ from functools import lru_cache
 from pathlib import Path
 
 from . import llm
-from .config import ROOT, channel
+from .config import channel
 from .llm import UsageLimitError
 from .media.render import ff
 from .media.tts import clean, duration
 from .models import AudioQA, ReviewReport, Script, ShotList, VisualQA
 
 log = logging.getLogger(__name__)
-CAST_AI = sorted((ROOT / "assets" / "characters").glob("*.png"))
-CAST_VECTOR = sorted((ROOT / "assets" / "characters_vector").glob("*.png"))
-
-
-def _vector() -> bool:
-    return channel()["video"].get("engine", "vector") == "vector"
-
-
-def _cast() -> list[Path]:
-    """Model sheets for the engine that drew the frames."""
-    return CAST_VECTOR if _vector() and CAST_VECTOR else CAST_AI
-
-
 def cfg() -> dict:
     return channel()["quality"].get("review", {})
 
@@ -143,11 +130,10 @@ def _look(frames: list[tuple[str, Path, dict]], context: str) -> tuple[list, int
     for i in range(0, len(frames), per_call):
         batch = frames[i:i + per_call]
         brief = [{"frame": label, "file": path.name, **info} for label, path, info in batch]
-        cast = _cast()
-        user = (f"{context}\n\nCast model sheets: {', '.join(p.name for p in cast)}.\n"
+        user = (f"{context}\n\n"
                 f"Frames to review (answer once per frame, echoing its `frame` label):\n"
                 + json.dumps(brief, ensure_ascii=False, indent=1))
-        qa = llm.structured_with_images("visual_qa", user, [*cast, *[p for _, p, _ in batch]], VisualQA)
+        qa = llm.structured_with_images("visual_qa", user, [p for _, p, _ in batch], VisualQA)
         verdicts += qa.frames
         appeals.append(qa.appeal_score)
         if any(label == "hook" for label, _, _ in batch):
@@ -206,15 +192,15 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
             elif v.problems and v.frame == "thumbnail":
                 improve["thumbnail"] = "; ".join(v.problems)
             continue
-        if v.frame == "thumbnail" and (v.fix_prompt or (_vector() and v.problems)):
+        if v.frame == "thumbnail" and v.fix_prompt:
             redo_images["thumbnail"] = v.fix_prompt or "; ".join(v.problems)
             continue
         m = re.search(r"\d+", v.frame)
         scene_id = int(m.group()) if m and v.frame.startswith("scene") else (script.scenes[0].id if v.frame == "hook"
                                                                              else None)
         shot = by_scene.get(scene_id) if scene_id is not None else None
-        note = v.fix_prompt or ("; ".join(v.problems) if _vector() else "")
-        if shot and (shot.kind != "card" or _vector()) and note:   # vector: cards are re-planned too
+        note = v.fix_prompt
+        if shot and shot.kind != "card" and note:
             redo_images[str(source.get(scene_id, scene_id))] = note
         else:
             warnings.append(f"{v.frame}: blocking but not auto-fixable (card/caption) — {'; '.join(v.problems)}")
@@ -227,26 +213,6 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
                         redo_audio=redo_audio,
                         warnings=warnings, appeal=appeal, hook_frame=hook_score,
                         summary=f"visual appeal {appeal}/10, hook frame {hook_score}/10; {voice_summary}")
-
-
-def review_slides(slides: list[Path], prompts: list[str]) -> ReviewReport:
-    frames = [(f"slide {i}", p, {"meant_to_show": (prompts[i] if i < len(prompts) else "")[:350]})
-              for i, p in enumerate(slides)]
-    verdicts, appeal, hook_score, notes = _look(
-        frames, "Format: Instagram/Facebook carousel, 4:5 slides; slide 0 is the cover (it is the hook frame).")
-    redo, warnings, improve = {}, list(notes), {}
-    for v in verdicts:
-        warnings += [f"{v.frame}: {p}" for p in v.problems]
-        m = re.search(r"\d+", v.frame)
-        if not v.blocking and v.problems and m and int(m.group()) < len(prompts) and prompts[int(m.group())]:
-            improve[m.group()] = "; ".join(v.problems)
-        if v.blocking and m:
-            if v.fix_prompt and int(m.group()) < len(prompts) and prompts[int(m.group())]:
-                redo[m.group()] = v.fix_prompt
-            else:
-                warnings.append(f"{v.frame}: blocking but not auto-fixable (text layout) — {'; '.join(v.problems)}")
-    return ReviewReport(passed=not redo, redo_images=redo, redo_audio={}, warnings=warnings, appeal=appeal, improve=improve,
-                        hook_frame=hook_score, summary=f"visual appeal {appeal}/10, cover {hook_score}/10")
 
 
 def safe(fn, *args) -> ReviewReport:

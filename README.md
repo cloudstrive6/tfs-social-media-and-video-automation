@@ -1,7 +1,7 @@
 # The Filipino Standard — content automation
 
 An agent team that finds Philippine topics before they peak, researches them, writes
-Historically-style Taglish scripts engineered for retention, fact-checks them against cyber-libel
+calm, sourced Taglish explainer scripts in the style v2 voice, fact-checks them against cyber-libel
 risk, narrates, illustrates, edits and publishes to YouTube, Shorts, Instagram, Facebook and TikTok
 on a fixed daily schedule — then studies the analytics and retunes itself weekly.
 

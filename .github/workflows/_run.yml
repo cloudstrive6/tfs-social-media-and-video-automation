@@ -46,10 +46,6 @@ jobs:
       TFS_DATA_DIR: ${{ github.workspace }}/data
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-      ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-      ELEVENLABS_VOICE_JUAN: ${{ secrets.ELEVENLABS_VOICE_JUAN }}
-      ELEVENLABS_VOICE_TITO_TRAPO: ${{ secrets.ELEVENLABS_VOICE_TITO_TRAPO }}
       YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
       YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
       YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
@@ -95,10 +91,8 @@ jobs:
         with:
           path: |
             ~/.cache/huggingface
-            ~/.u2net
-            ~/.rembg
-          key: models-whisper-rembg-v1
-      # vector engine: GSAP + HyperFrames (headless Chrome) render every frame
+          key: models-whisper-v2
+      # atlas engine: GSAP + HyperFrames (headless Chrome) render every frame
       - if: inputs.needs_media
         uses: actions/setup-node@v4
         with:

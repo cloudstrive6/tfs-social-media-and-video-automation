@@ -1,6 +1,6 @@
 """Creative Director: turns the review team's recurring notes into standing instructions for the designers.
 
-Runs twice a day inside the cloud run. Reads the Visual QA / Visual Critic reports of the pieces made since the
+Runs twice a day inside the cloud run. Reads the Visual QA reports of the pieces made since the
 last pass and rewrites data/creative_notes/<agent>.md, which load_prompt() appends to that agent's prompt.
 """
 from __future__ import annotations
@@ -16,13 +16,11 @@ from ..config import data_dir, item_dir, now
 from ..models import CreativeNotes, ReviewReport
 
 log = logging.getLogger(__name__)
-OLD_AGENTS = ("motion_designer", "carousel_designer", "thumbnail_artist")
-V2_AGENTS = ("atlas_designer", "thumbnail_artist")      # style v2: the cartoon designers are retired
+AGENTS = ("atlas_designer", "thumbnail_artist")
 
 
 def agents() -> tuple[str, ...]:
-    from ..config import _v2
-    return V2_AGENTS if _v2() else OLD_AGENTS
+    return AGENTS
 EVERY = timedelta(hours=12)
 MIN_PIECES = 2
 
