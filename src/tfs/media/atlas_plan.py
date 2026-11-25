@@ -449,3 +449,48 @@ def variety_problems(shots: list[dict], max_run: float = MAX_FAMILY_RUN) -> list
     """QC for the variety rule: one family may not hold the screen for more than `max_run` seconds in a row."""
     return [f"{fam} runs {b - a:.1f} s in a row ({a:.1f} to {b:.1f} s); max {max_run:.0f} s, then change family "
             f"or return to the map" for fam, a, b in family_runs(shots) if b - a > max_run + 0.05]
+
+
+# ---------------------------------------------------------------- chart consistency
+_SCALE = {"k": 1e3, "thousand": 1e3, "m": 1e6, "million": 1e6, "b": 1e9, "billion": 1e9, "bn": 1e9,
+          "t": 1e12, "trillion": 1e12}
+
+
+def figure(text: str) -> float | None:
+    """The number a printed figure means, units applied: "₱1.37T" -> 1.37e12, "₱876.2B" -> 8.762e11, "28%" -> 28,
+    "170,598" -> 170598. None when there is no number."""
+    m = re.search(r"(\d[\d,]*(?:\.\d+)?)\s*([a-zA-Z]+)?", str(text or ""))
+    if not m:
+        return None
+    v = float(m.group(1).replace(",", ""))
+    unit = (m.group(2) or "").lower()
+    return v * _SCALE.get(unit, 1.0)
+
+
+def _close(a: float, b: float, tol: float = 0.03) -> bool:
+    return abs(a - b) <= tol * max(abs(a), abs(b), 1e-12)
+
+
+def chart_problems(shots: list[dict]) -> list[str]:
+    """Charts whose plotted numbers disagree with their own printed figures: a line chart whose last point is not its
+    headline (in any unit scale), a waffle whose fill is not its printed percentage, a bar chart whose bar heights are
+    not in the ratio of their printed values."""
+    out = []
+    for s in shots:
+        k, at = s.get("k"), f"{s.get('t0', 0):.1f} s"
+        if k == "linechart" and s.get("big") and s.get("items"):
+            big, last = figure(s["big"]), s["items"][-1].get("num")
+            if big and last and not any(_close(last * f, big) for f in (1, 1e3, 1e6, 1e9, 1e12, 1e-3)):
+                out.append(f"linechart at {at}: headline {s['big']!r} does not match its last point {last}")
+        if k == "waffle" and s.get("big") and "%" in s["big"]:
+            pct = figure(s["big"])
+            if pct is not None and abs(pct - 100 * float(s.get("frac") or 0)) > 1.5:
+                out.append(f"waffle at {at}: label {s['big']!r} but {100 * float(s.get('frac') or 0):.1f}% of squares fill")
+        if k == "barchart":
+            pairs = [(figure(i.get("value")), i.get("num")) for i in s.get("items", [])]
+            pairs = [(v, n) for v, n in pairs if v and n]
+            for (v0, n0), (v1, n1) in zip(pairs, pairs[1:]):
+                if not _close(v1 / v0, n1 / n0, 0.05):
+                    out.append(f"barchart at {at}: bar heights {n0}:{n1} do not match printed values {v0:g}:{v1:g}")
+                    break
+    return out

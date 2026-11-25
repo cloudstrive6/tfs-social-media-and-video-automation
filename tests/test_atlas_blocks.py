@@ -281,3 +281,15 @@ def test_source_badges_drop_dossier_codes():
     assert ap.clean_src("Own arithmetic from [S1] and [S18]") == "Own arithmetic"
     assert ap.clean_src("Manila Bulletin [S6]; Bilyonaryo News Channel [S10]") == "Manila Bulletin; Bilyonaryo News Channel"
     assert ap.clean_src("Bureau of the Treasury, 7 Sept 2026") == "Bureau of the Treasury, 7 Sept 2026"
+
+
+def test_chart_numbers_must_agree_with_their_labels():
+    assert ap.figure("₱1.37T") == pytest.approx(1.37e12) and ap.figure("≈ 28%") == 28 and ap.figure("₱170,598") == 170598
+    good = [{"k": "linechart", "t0": 1, "big": "₱19.66 TRILLION", "items": [{"num": 17.4}, {"num": 19.66}]},
+            {"k": "waffle", "t0": 2, "big": "≈ 28%", "frac": 0.284},
+            {"k": "barchart", "t0": 3, "items": [{"value": "₱876.2B", "num": 876}, {"value": "₱1.37T", "num": 1366}]}]
+    assert ap.chart_problems(good) == []
+    bad = [{"k": "linechart", "t0": 1, "big": "₱3.91 TRILLION", "items": [{"num": 17.4}, {"num": 19.66}]},
+           {"k": "waffle", "t0": 2, "big": "6%", "frac": 0.28},
+           {"k": "barchart", "t0": 3, "items": [{"value": "₱876.2B", "num": 876}, {"value": "₱1.37T", "num": 3000}]}]
+    assert [p.split(" at ")[0] for p in ap.chart_problems(bad)] == ["linechart", "waffle", "barchart"]

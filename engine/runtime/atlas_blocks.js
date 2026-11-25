@@ -325,7 +325,10 @@ window.TFS_BLOCKS = function (ctx) {
     const q = (c) => n.querySelector(c);
     tl.to(q(".bo"), { scaleX: 1, duration: 0.5, ease: "power2.out" }, s.t0 + 0.3);
     const fillAt = typeof s.bigAt === "number" && s.bigAt >= s.t0 + 0.6 ? s.bigAt : s.t0 + 0.9;
-    tl.to(q(".bs"), { width: `${(frac * 100).toFixed(2)}%`, duration: 0.6, ease: "power2.out" }, fillAt);
+    // the sliver fills as soon as the bar is drawn; the number still counts on its spoken word (dry run 4 review: an
+    // empty bar sat 2.5 s waiting for the word)
+    const sliverAt = Math.min(fillAt, s.t0 + 0.9);
+    tl.to(q(".bs"), { width: `${(frac * 100).toFixed(2)}%`, duration: 0.6, ease: "power2.out" }, sliverAt);
     if (q(".bt")) tl.fromTo(q(".bt"), { opacity: 0, x: -20 * U }, { opacity: 1, x: 0, duration: 0.25 }, fillAt + 1.25);
     const cAt = times(s.chips || [], s, fillAt - s.t0 + 1.6, 0.6);
     n.querySelectorAll(".bc").forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: 1.2 }, { opacity: 1, scale: 1, duration: 0.2 }, cAt[i]));
@@ -335,7 +338,7 @@ window.TFS_BLOCKS = function (ctx) {
     TICK.push((t) => {
       if (t < s.t0 - 0.05 || t > s.t1 + 0.05) return;
       bn.textContent = L.figAt(s.big, o2(L.prog(t, fillAt, 1.2)));
-      if (t > fillAt + 0.6) sl.style.filter = `brightness(${(1 + 0.18 * Math.sin((t - fillAt - 0.6) * Math.PI)).toFixed(3)})`;  // breathes
+      if (t > sliverAt + 0.6) sl.style.filter = `brightness(${(1 + 0.18 * Math.sin((t - sliverAt - 0.6) * Math.PI)).toFixed(3)})`;  // breathes
     });
   };
 

@@ -369,7 +369,7 @@ def _v3_cues(s: dict) -> list[tuple]:
     elif k == "balance":
         out.append((t0, paper_swish, "paper swish", "the balance bar draws", True))
         fill = s["bigAt"] if isinstance(s.get("bigAt"), (int, float)) and s["bigAt"] >= t0 + 0.6 else t0 + 0.9
-        out.append((fill, lambda: bar_fill(0.6, 6), "bar ticks", "the sliver fills and counts up", False))
+        out.append((min(fill, t0 + 0.9), lambda: bar_fill(0.6, 6), "bar ticks", "the sliver fills", False))
         if s.get("small"):
             out.append((fill + 1.25, pop, "tab pop", "the tag lands", False))
         for c in s.get("chips", []):

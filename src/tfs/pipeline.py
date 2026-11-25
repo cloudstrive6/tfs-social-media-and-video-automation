@@ -220,11 +220,12 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
         (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
     plan = cached(d / "atlas.json", AtlasPlan,
                   lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=notes))
-    # variety QC (Atlas blocks v3): one scene family may not hold the screen longer than MAX_FAMILY_RUN seconds. Checked
+    # plan QC (Atlas blocks v3): no scene family on screen longer than MAX_FAMILY_RUN seconds, and every chart's plotted
+    # numbers agree with its printed figures (a debt Short once showed a chart that disagreed with its headline). Checked
     # on a dry pass (every photo assumed found) before any photo is fetched; a failing plan is re-planned once.
     dry = atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind,
                               lambda q, w, a, b: {"kind": "photo", "src": "dry.jpg", "credit": ""}, None)
-    problems = atlas_plan.variety_problems(dry)
+    problems = atlas_plan.variety_problems(dry) + atlas_plan.chart_problems(dry)
     if problems and not fixes.get("variety_replanned"):
         log.warning("atlas %s: variety QC failed, re-planning once: %s", item["id"], problems)
         fixes["variety_replanned"] = problems
