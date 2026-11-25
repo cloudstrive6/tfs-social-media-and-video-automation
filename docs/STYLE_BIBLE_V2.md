@@ -31,6 +31,11 @@ Audience: Filipinos in the Philippines and abroad, 18 to 45, curious, tired of n
 - **Numbers are said in English** and written as digits in the script ("₱170,598", "2026", "30 days"); the
   engine reads them the way Manila explainers do ("one hundred seventy thousand five hundred ninety-eight
   pesos", "twenty twenty-six"). Never Tagalog number words. Fractions in words ("one-third").
+- **A number and its unit are in the same language**, the way Filipinos speak ("seven months", never "seven
+  buwan"): "sa loob ng 7 months", "sa first 7 months ng 2026", "sa 7th month", "July 15, 2026", "₱1.37 trillion",
+  "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). Full forms
+  (iyon, ito), no vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
+  pairs: Bryce-Brain `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.
 - **Questions, not slogans.** Open with the question the viewer has, and return to it at the end with what they
   now know.
 - Compare fairly: the other country is an example of a different design, not a fantasy. Say its weak points too

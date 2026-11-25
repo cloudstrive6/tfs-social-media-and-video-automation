@@ -65,11 +65,43 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
   "nineteen point six six trillion pesos", "twenty twenty-six", "two thousand one"). Fractions in words:
   "one-third ng lahat ng miyembro". Round long amounts when the exact digits do not matter ("₱19.66 trillion",
   not "₱19,660,000,000,000").
+- A number and its unit are in the same language. The narrator reads digits in English, so a digit takes an
+  English time unit and English scale words: "7 months", "3 years", "30 days", "₱1.37 trillion", "55.9%". Never a
+  digit before buwan, taon, araw, linggo or oras, never "trilyon" or "porsyento" after a digit.
 - Every factual line from the dossier ends with its `[S#]` tag (removed before narration).
 - Allegations stay allegations ("ayon sa COA", "inaakusahan", "itinanggi ng opisyal"); naming policy as in the bible.
 - Emphasis only with *asterisks* (removed before narration); never capitals or hyphens for stress.
 - Delivery cues the narrator understands: `...` for a beat, `[pause]` for a longer one. No `[laugh]`, no character
   tags; every scene's speaker is NARRATOR.
+
+## Natural Taglish (how Filipinos actually say it)
+Write the way a calm Manila explainer reads a script aloud, not translated English and not textbook Tagalog.
+The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
+- **Durations say which span.** "sa loob ng 7 months", "sa first 7 months ng 2026", "mula January hanggang
+  July 2026". Never "sa 7 months ng 2026" or "sa 7 buwan", which sound like a broken date.
+- **Ordinals and dates in English with the digits.** "sa 7th month ng 2026", "ang 4th SONA niya", "July 15, 2026",
+  "noong July 2026". Never "ika-7" or a Tagalog month next to a digit. Relative words stay Tagalog ("nitong
+  Lunes", "noong isang taon"); "unang" as the plain word for first is fine ("ang unang hakbang").
+- **Verb aspect follows meaning.** A question about what will happen uses the contemplated aspect ("Babayaran
+  mo ba iyon?", "Ikaw ba ang magbabayad?"); after kailangan, dapat, puwede or gusto the root form is right
+  ("Kailangan mo bang bayaran?"). Never the command form as a question. Done: "binayaran"; ongoing: "binabayaran".
+- **Spoken order.** Put the point first, the way people talk ("Average iyon, hindi bill."), not the written
+  "ang X ay Y" order. Switch languages at phrase boundaries; English for legal terms, institutions and terms of art,
+  with Tagalog affixes on English verbs ("na-veto", "i-file", "nag-rule").
+- **Register.** Full forms (iyon, ito, iyong, hindi). Connectors: pero, kasi, kaya, dahil, habang, ayon sa, at
+  "daw" for a claim the dossier attributes to someone. Not vlog talk (eh, "di ba", "yung", "sige lang") and not
+  textbook words (subalit, samakatuwid, upang, sapagkat, nararapat).
+
+| Write | Not | Why |
+|---|---|---|
+| Sa first 7 months ng 2026, ₱1.37 trillion na ang nabayaran. | Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. | the span is named; English number, English unit |
+| ₱1.37 trillion ang nabayaran sa loob lang ng 7 months. | ₱1.37 trillion ang nabayaran sa 7 months. | "sa loob ng" says it is a span |
+| Babayaran mo ba iyon? | Bayaran mo ba iyon? | contemplated aspect for a future question |
+| Gagawin ba iyon ng Senado? | Gawin ba iyon ng Senado? | same |
+| 3 years ang termino ng isang congressman. | 3 taon ang termino ng isang congressman. | English number, English unit |
+| Bumaba ito sa 55.9% noong July 2026. | Bumaba ito sa 55.9 porsyento noong Hulyo 2026. | percent sign; English month with digits |
+| ₱19.66 trillion ang kabuuang utang. | ₱19.66 trilyon ang kabuuang utang. | read "nineteen point six six trillion pesos" |
+| Sa 7th month ng 2026, bumaba ang inflation. | Sa ika-7 buwan ng 2026, bumaba ang inflation. | "ika-7" is read "ika-seven" |
 
 ## A reference you may imitate (approved pilot Short, the voice and rhythm to match)
 Paano mo tatanggalin ang presidente ng Pilipinas? / Step 1: sa House, kailangan ng at least one-third ng lahat ng
