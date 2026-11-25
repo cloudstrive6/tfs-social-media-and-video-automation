@@ -1,9 +1,10 @@
 """Atlas engine (style v2, approved 2026-11-24): paper-and-map explainers with real b-roll, documents, cards,
 charts and a Blender hero shot, rendered by HyperFrames from one JSON shot list.
 
-The browser runtime is engine/runtime/atlas.js (GSAP). Each shot is a dict with `k` (map, bigtext, title, doc,
-cards, bars, timeline, compare, seats, split, broll), `t0`/`t1` in seconds and its own fields; `words` drives the
-word-highlight captions. Verticals (9:16) get the @thefilipinostandard watermark. Audio is mixed separately
+The browser runtime is engine/runtime/atlas.js (GSAP) with its pure helpers in atlas_lib.js. Each shot is a dict
+with `k` (map, bigtext, title, doc, cards, bars, timeline, compare, seats, split, broll, and the v3 blocks of
+2026-11-25: globe, checklist, linechart, barchart, waffle, balance, dates, media), `t0`/`t1` in seconds and its own
+fields; any shot may carry a `stamp`. `words` drives the word-highlight captions (a word with `key` gets a box). Verticals (9:16) get the @thefilipinostandard watermark. Audio is mixed separately
 (media/sfx_v2.py) and muxed by the pipeline.
 
 Ported from the approved pilot: Z:/Video Production Files/The Filipino Standard/revamp-2026-11/pilot/engine/
@@ -97,6 +98,80 @@ def geo(aspect: float) -> dict:
             "views": {k: _view(*v, aspect) for k, v in VIEWS.items()}}
 
 
+# ---------------------------------------------------------------- globe (orthographic, drawn by atlas_lib.js)
+def _simplify(ring, tol):
+    """Drop points closer than `tol` degrees to the last kept one (the globe is small on screen)."""
+    out = [ring[0]]
+    for pt in ring[1:]:
+        if abs(pt[0] - out[-1][0]) + abs(pt[1] - out[-1][1]) >= tol:
+            out.append(pt)
+    return out if len(out) >= 4 else []
+
+
+@lru_cache(maxsize=1)
+def _countries() -> list[dict]:
+    return json.loads((GEO / "countries.json").read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=1)
+def _places() -> list[dict]:
+    return json.loads((GEO / "places.json").read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=1)
+def globe_geo() -> list[dict]:
+    """Every country as rounded lon/lat rings for the globe: [{"iso", "rings"}]. Natural Earth, public domain."""
+    out = []
+    for c in _countries():
+        rings = []
+        for ring in _rings(c["polys"]):
+            r = _simplify(ring, 0.35)
+            if r:
+                rings.append([[round(x, 2), round(y, 2)] for x, y in r])
+        if rings:
+            out.append({"iso": c["iso"], "rings": rings})
+    return out
+
+
+def _key(name: str) -> str:
+    return " ".join(str(name).lower().replace(".", " ").replace(",", " ").split())
+
+
+def country(name: str) -> dict | None:
+    """A country by ISO3 code, short or long name: {"iso", "name", "lon", "lat"} (centre of its largest ring)."""
+    k = _key(name)
+    if not k:
+        return None
+    for c in _countries():
+        if k in (_key(c["iso"]), _key(c["name"]), _key(c.get("long_name", ""))):
+            big = max(_rings(c["polys"]), key=len)
+            xs, ys = [p[0] for p in big], [p[1] for p in big]
+            return {"iso": c["iso"], "name": c["name"], "lon": round((min(xs) + max(xs)) / 2, 2),
+                    "lat": round((min(ys) + max(ys)) / 2, 2)}
+    return None
+
+
+def city(name: str) -> dict | None:
+    """A city from the Natural Earth populated places (Philippine places first): {"name", "lon", "lat"}."""
+    k = _key(name)
+    if not k:
+        return None
+    hits = [p for p in _places() if _key(p["name"]) == k]
+    if not hits:
+        return None
+    hits.sort(key=lambda p: not p.get("ph"))
+    return {"name": hits[0]["name"], "lon": hits[0]["lon"], "lat": hits[0]["lat"]}
+
+
+def locate(name: str) -> dict | None:
+    """A place or a country, whichever matches (cities first: "Singapore" is both)."""
+    p = city(name)
+    if p:
+        return p
+    c = country(name)
+    return {"name": c["name"], "lon": c["lon"], "lat": c["lat"]} if c else None
+
+
 # ---------------------------------------------------------------- timing
 def place(lines: list[dict], durations: list[float], start: float = 0.4) -> tuple[list[dict], list[list[float]], float]:
     """Lines carry shots at fractions of their own audio: [{"shots": [(f0, f1, shot), ...], "pad": s, "pad_shots": [...]}].
@@ -123,7 +198,10 @@ def frac_at(word_time: float, line_start: float, line_dur: float) -> float:
 # ---------------------------------------------------------------- spec, project, render
 def spec(comp_id: str, size: tuple[int, int], shots: list[dict], words: list[dict], duration: float) -> dict:
     w, h = size
-    return {"id": comp_id, "width": w, "height": h, "duration": round(duration, 3), "geo": geo(round(w / h, 4)),
+    g = geo(round(w / h, 4))
+    if any(s.get("k") == "globe" for s in shots):       # the world rings only travel with a globe shot
+        g = dict(g, globe=globe_geo())
+    return {"id": comp_id, "width": w, "height": h, "duration": round(duration, 3), "geo": g,
             "shots": sorted(shots, key=lambda s: s["t0"]), "words": words}
 
 
@@ -148,12 +226,13 @@ def build_project(sp: dict, out_dir: Path, assets: dict[str, Path] | None = None
     # video b-roll must be static in the HTML (HyperFrames pre-scans media; JS-created videos render black);
     # atlas.js moves each into its shot layer by id
     videos = []
-    for n, s in enumerate(x for x in sp["shots"] if x.get("k") == "broll" and x.get("kind") == "video"):
+    for n, s in enumerate(x for x in sp["shots"] if x.get("k") in ("broll", "media") and x.get("kind") == "video"):
         s["vid"] = f"bv{n}"
         videos.append(f'<video id="bv{n}" class="clip" src="{s["src"]}" muted playsinline data-start="{s["t0"]}" '
                       f'data-duration="{round(s["t1"] - s["t0"], 3)}" data-media-start="{s.get("mediaStart", 0)}" '
                       f'data-volume="0" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>')
-    runtime = (ENGINE / "runtime" / "atlas.js").read_text(encoding="utf-8")
+    runtime = "\n".join((ENGINE / "runtime" / f).read_text(encoding="utf-8")
+                        for f in ("atlas_lib.js", "atlas_blocks.js", "atlas.js"))
     spec_json = json.dumps(sp, ensure_ascii=False).replace("</", "<\\/")
     html = (f'<!doctype html><html><head><meta charset="utf-8"><style>{_css()}</style></head><body>'
             f'<div id="stage" data-composition-id="{sp["id"]}" data-start="0" data-duration="{sp["duration"]}" '

@@ -1,0 +1,160 @@
+[
+ {
+  "k": "map",
+  "view": "ph",
+  "fill": "ph",
+  "draw": 0.001,
+  "instant": true,
+  "t0": 0.0,
+  "t1": 0.0
+ },
+ {
+  "k": "bigtext",
+  "text": "WHO WRITES THE FINAL TEXT OF A LAW?",
+  "sub": "When the two chambers pass different versions, neither text is the law yet.",
+  "src": "1987 Constitution, Art. VI, Secs. 26 and 27 (lawphil.net)",
+  "t0": 0.0,
+  "t1": 2.22,
+  "instant": true
+ },
+ {
+  "k": "broll",
+  "word": "TWO CHAMBERS",
+  "kind": "photo",
+  "src": "assets/b01.jpg",
+  "credit": "Photo: Philippine News Agency photo by Avito Dalan, Wikimedia Commons, Public domain",
+  "t0": 2.22,
+  "t1": 5.515
+ },
+ {
+  "k": "doc",
+  "head": "THE 1987 CONSTITUTION",
+  "sec": "ARTICLE VI, SECTION 26(2)",
+  "body": "No bill passed by either House shall become a law unless it has passed three readings on separate days, and printed copies thereof in its final form have been distributed to its Members three days before its passage, except when the President certifies to the necessity of its immediate enactment to meet a public calamity or emergency.",
+  "hl": [
+   "three readings on separate days"
+  ],
+  "src": "1987 Constitution, Art. VI, Sec. 26(2), lawphil.net (primary)",
+  "t0": 5.515,
+  "t1": 9.995
+ },
+ {
+  "k": "cards",
+  "items": [
+   {
+    "big": "3 READINGS",
+    "small": "In each chamber, on separate days.",
+    "color": "red"
+   }
+  ],
+  "src": "1987 Constitution, Art. VI, Sec. 26(2), lawphil.net",
+  "t0": 9.995,
+  "t1": 12.71
+ },
+ {
+  "k": "cards",
+  "items": [
+   {
+    "big": "HOUSE VERSION",
+    "small": "Passed on third reading by the House.",
+    "color": "red"
+   },
+   {
+    "big": "SENATE VERSION",
+    "small": "Passed on third reading by the Senate.",
+    "color": "red"
+   },
+   {
+    "big": "ONE REPORT",
+    "small": "The differences are settled by a panel.",
+    "color": "ink"
+   }
+  ],
+  "src": "Abakada Guro Party List v. Ermita, G.R. No. 168056 (2005), quoting Senate Rule XII, Sec. 35",
+  "t0": 12.71,
+  "t1": 17.37
+ },
+ {
+  "k": "broll",
+  "word": "A SMALL JOINT PANEL",
+  "kind": "photo",
+  "src": "assets/b02.jpg",
+  "credit": "Photo: P1898, Wikimedia Commons, CC BY 4.0",
+  "t0": 17.37,
+  "t1": 20.26
+ },
+ {
+  "k": "doc",
+  "head": "TOLENTINO V. SECRETARY OF FINANCE",
+  "sec": "G.R. NO. 115455, AUGUST 25, 1994",
+  "body": "it is within the power of a conference committee to include in its report an entirely new provision ... germane to the subject of the bills before the committee ... The result is a third version, which is considered an 'amendment in the nature of a substitute.'",
+  "hl": [
+   "an entirely new provision",
+   "germane to the subject of the bills"
+  ],
+  "src": "Tolentino v. Secretary of Finance, G.R. No. 115455, 25 Aug 1994, lawphil.net (primary)",
+  "t0": 20.26,
+  "t1": 28.13
+ },
+ {
+  "k": "cards",
+  "items": [
+   {
+    "big": "ONE PACKAGE VOTE",
+    "small": "No line by line amendments on the floor.",
+    "color": "ink"
+   },
+   {
+    "big": "TAKE IT OR LEAVE IT",
+    "small": "The Court's own words for this vote.",
+    "color": "red"
+   }
+  ],
+  "src": "Abakada Guro v. Ermita (2005), quoting House Rule XIV, Sec. 89; Tolentino (1994)",
+  "t0": 28.13,
+  "t1": 31.805
+ },
+ {
+  "k": "broll",
+  "word": "30 DAYS TO ACT",
+  "kind": "photo",
+  "src": "assets/b03.jpg",
+  "credit": "Photo: National Historical Commission of the Philippines, Wikimedia Commons, Public domain",
+  "t0": 31.805,
+  "t1": 34.065
+ },
+ {
+  "k": "cards",
+  "items": [
+   {
+    "big": "30 DAYS",
+    "small": "Then it becomes law without a signature.",
+    "color": "red"
+   }
+  ],
+  "src": "1987 Constitution, Art. VI, Sec. 27(1), lawphil.net",
+  "t0": 34.065,
+  "t1": 36.45
+ },
+ {
+  "k": "bigtext",
+  "text": "THE LAST EDIT HAPPENS IN COMMITTEE",
+  "sub": "For major bills, the final wording is settled by the conference committee.",
+  "src": "Tolentino v. Secretary of Finance, G.R. No. 115455 (1994)",
+  "t0": 36.45,
+  "t1": 39.53
+ },
+ {
+  "k": "cards",
+  "items": [
+   {
+    "big": "0",
+    "small": "Mentions in the 1987 Constitution.",
+    "color": "ink"
+   }
+  ],
+  "src": "1987 Constitution, full text, lawphil.net; Abakada Guro v. Ermita (2005)",
+  "t0": 39.53,
+  "t1": 41.255
+ }
+]

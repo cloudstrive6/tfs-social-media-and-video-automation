@@ -306,17 +306,21 @@ class VisualCritique(BaseModel):
 
 # ---------------------------------------------------------------- atlas engine (style v2, 2026-11-24)
 class AtlasItem(BaseModel):
-    """One entry of a cards, bars, timeline or seats shot (fill only the fields that kind uses)."""
-    big: str = ""                 # cards: the number or short phrase ("6 YEARS", "0")
-    small: str = ""               # cards: one plain line under it
-    color: Literal["red", "ink", "teal", ""] = ""
-    label: str = ""               # bars / seats: what the row is
-    value: str = ""               # bars: the value text ("1/3 OF ALL MEMBERS")
+    """One entry of a cards, bars, timeline, seats, checklist, chart, date-card, side-list or chip list (fill only
+    the fields that kind uses)."""
+    big: str = ""                 # cards: the number or short phrase ("6 YEARS", "0"); dates: the day ("17")
+    small: str = ""               # cards: one plain line under it; dates: what happens that day
+    color: Literal["red", "ink", "teal", "gold", ""] = ""
+    label: str = ""               # bars / seats / barchart / linechart: what the row or point is; dates: month
+    value: str = ""               # bars / barchart: the value text ("1/3 OF ALL MEMBERS", "₱1.37T")
     frac: float = 0.0             # bars: 0..1 fill
+    num: float = 0.0              # barchart / linechart: the plotted number
     count: int = 0                # seats: filled dots
     of: int = 0                   # seats: total dots
     date: str = ""                # timeline: "7 DEC 2000"
-    text: str = ""                # timeline: what happened
+    text: str = ""                # timeline: what happened; checklist row; side-list row; chip
+    mark: Literal["tick", "x", "warn", ""] = ""   # checklist: covered / true (tick), not (x), partly (warn)
+    at_word: str = ""             # builds on this word of the scene (checklist rows, bars, dates, list rows, chips)
 
 
 class AtlasSide(BaseModel):
@@ -326,7 +330,8 @@ class AtlasSide(BaseModel):
 
 
 class AtlasShot(BaseModel):
-    k: Literal["map", "bigtext", "title", "doc", "cards", "bars", "timeline", "compare", "seats", "split", "broll"]
+    k: Literal["map", "bigtext", "title", "doc", "cards", "bars", "timeline", "compare", "seats", "split", "broll",
+               "globe", "checklist", "linechart", "barchart", "waffle", "balance", "dates", "media"]
     at_word: str = ""             # starts when this word of the scene is spoken; "" = scene start
     text: str = ""                # bigtext / title / split middle
     sub: str = ""
@@ -349,11 +354,32 @@ class AtlasShot(BaseModel):
     broll_query: str = ""         # broll: Wikimedia Commons search (place or object, never a living person)
     word: str = ""                # broll: brick-red word pill
     hero: bool = False            # broll: the 3D Metro Manila push (long-form, at most one)
+    # ---- Atlas blocks v3 (2026-11-25): every field below is optional and word-anchored
+    stamp: str = ""               # any shot: a slammed label ("VOLUNTARY", "HINDI TOTOO", "ALLEGED"), at most 3 words
+    stamp_word: str = ""          # the word the stamp lands on ("" = 0.5 s into the shot)
+    stamp_color: Literal["red", "teal", "ink", "gold", ""] = ""
+    focus: str = ""               # globe: country or city the globe turns and zooms to ("Philippines", "Manila")
+    zoom: float = 0.0             # globe: 1 = whole globe, about 2.5 = a region (0 = default 2.6)
+    highlight: list[str] = []     # globe: countries that glow red, in order ("Philippines", "Japan")
+    places: list[str] = []        # globe: city dots with labels ("Manila", "Tokyo")
+    arcs: list[str] = []          # globe: routes "FROM > TO" between places ("Manila > Dubai")
+    big: str = ""                 # linechart headline number counted up with the line; balance / waffle number
+    small: str = ""               # balance / waffle: the tag under the number ("AN AVERAGE, NOT A BILL")
+    frac: float = 0.0             # waffle / balance: the share 0..1 that fills
+    callout: str = ""             # linechart: end-dot callout ("+12.6%"); barchart: the arrow tag ("ALMOST 3X")
+    callout_word: str = ""        # the word the callout lands on
+    big_word: str = ""            # the spoken word of the key number (linechart draw, waffle and balance label)
+    name: str = ""                # media: lower third name or role ("SENATE FINANCE COMMITTEE")
+    role: str = ""                # media: lower third second line
+    icon: Literal["", "person", "building", "house", "coins", "document", "ballot"] = ""  # media: drawn stand-in
+    rows: list[AtlasItem] = []    # media: 2 to 4 side-list rows (`text`, `color`, `at_word`)
+    chips: list[AtlasItem] = []   # media: honesty chips ("ILLUSTRATIVE", "ALLEGED · NOT PROVEN") on their word
 
 
 class AtlasScene(BaseModel):
     scene_id: int
     shots: list[AtlasShot]
+    key_words: list[str] = []     # caption words boxed in TFS red or gold, one per sentence, copied from the text
 
 
 class AtlasPlan(BaseModel):

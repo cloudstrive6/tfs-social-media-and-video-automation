@@ -13,6 +13,11 @@ and the pilot's mix chain:
 `master` then compresses and limits the raw mix with ffmpeg, looping the make-up gain until integrated loudness
 is within 0.3 LU of the target (-14 LUFS), 48 kHz out.
 
+Atlas blocks v3 (2026-11-25) add three sounds measured off the Worldwire reel: a mid stamp hit (body about
+800 to 1,100 Hz, 0.3 s) for stamps, a bright UI tick (above 4 kHz, under 0.12 s) for checklist marks and city dots,
+and a soft sub thump (mostly under 150 Hz) for panel landings and the globe arrival. Every cue still sits on a
+visual event of the shot; shots of the v2 kinds get exactly the cues they had before.
+
 Ported from revamp-2026-11/pilot/engine/sfx_tfs.py and remix.py (2026-11-24). Same sounds, same levels, same
 cue rules; the RNG is reseeded on every `build_cues` call so output is deterministic per call.
 
@@ -151,6 +156,32 @@ def soft_air(dur=0.9):
     return norm(out, -26)
 
 
+def stamp_hit():
+    """A stamp slammed onto paper: a mid body around 950 Hz with a fast knock, about 0.3 s."""
+    L = n(0.3); t = np.arange(L) / SR
+    body = band(noise(0.3), 800, 1100, order=4) * np.exp(-t / 0.07)
+    tone = np.sin(2 * np.pi * 940 * t) * np.exp(-t / 0.05) * 0.6
+    knock = band(noise(0.3), 500, 1300, order=3) * np.exp(-t / 0.01) * 0.5
+    return norm(low((body + tone + knock) * ad(L, 0.01, 1.5), 1800, order=4), -25)
+
+
+def ui_tick():
+    """Bright interface tick for a check mark, an X or a city dot: above 4 kHz, about 0.06 s."""
+    L = n(0.06); t = np.arange(L) / SR
+    click = band(noise(0.06), 4500, 9000, order=4) * np.exp(-t / 0.005)
+    ping = np.sin(2 * np.pi * 6400 * t) * np.exp(-t / 0.012) * 0.6
+    return norm(click + ping, -27)
+
+
+def sub_thump():
+    """Soft low landing for a panel or the globe arriving on its country: mostly under 150 Hz, 0.4 s."""
+    L = n(0.4); t = np.arange(L) / SR
+    f = 72 - 24 * (1 - np.exp(-t / 0.08))
+    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t / 0.11)
+    air = low(noise(0.4), 180) * np.exp(-t / 0.05) * 0.5
+    return norm((body + air) * ad(L, 0.02, 1.2), -27)
+
+
 def camera_push(dur=3.6):
     """Long airy push with a low rumble for the 3D hero shot."""
     L = n(dur); t = np.arange(L) / SR; u = t / dur
@@ -265,11 +296,95 @@ def build_cues(shots: list[dict], total: float, seed: int = SEED):
                 "new idea on screen")
         elif k == "map" and s.get("view") and prev_kind == "map":
             put(t0, soft_air(1.2), "soft air", "map move")
+        elif k in V3_KINDS:
+            for at, snd, name, job, ordinary in _v3_cues(s):
+                put(at, snd(), name, job, ordinary=ordinary)
+        if s.get("stamp"):
+            st = s["stamp"]
+            put(st.get("at", t0 + 0.5), stamp_hit(), "stamp hit", f"stamp '{st.get('text', '')}' lands", ordinary=False)
         if is_reveal(s):
             reveals.append(t0)
             put(t0 + 0.05, low_hit(), "low hit", "the reveal: zero", ordinary=False)
         prev_kind = k
     return cues, track[: n(total + 0.5)], reveals
+
+
+V3_KINDS = ("globe", "checklist", "linechart", "barchart", "waffle", "balance", "dates", "media")
+
+
+def _v3_cues(s: dict) -> list[tuple]:
+    """(time, sound factory, name, job, ordinary) for a v3 block, on the times atlas_blocks.js animates (the planner
+    writes them on the shot; hand-written shots fall back to the same even spread)."""
+    from .atlas_plan import STEPS, globe_timing, step_times
+
+    k, t0, t1 = s["k"], s["t0"], s["t1"]
+
+    def ats(field, kind):
+        xs = s.get(field, [])
+        lead, gap = STEPS[kind]
+        return step_times([x.get("at") for x in xs], t0, t1, lead, gap)
+
+    out = []
+    if k == "globe":
+        rot_at, rot_dur = globe_timing(t0, t1)
+        out.append((t0 - 0.1, lambda: soft_air(1.2), "soft air", "the globe turns", True))
+        hl = s.get("highlight", [])
+        if hl:
+            out.append((hl[0].get("at", rot_at + rot_dur + 0.2), sub_thump, "sub thump", "the globe arrives on the country",
+                        False))
+        places = s.get("places", [])
+        for at in step_times([p.get("at") for p in places], t0, t1, rot_dur + 0.6, 0.6):
+            out.append((at, ui_tick, "ui tick", "a city dot lands", False))
+        for i, a in enumerate(s.get("arcs", [])):
+            out.append((a.get("at", rot_at + rot_dur + 0.6 + i * 1.4), paper_swish, "swish", "a route launches", False))
+    elif k == "checklist":
+        out.append((t0, sub_thump, "sub thump", "the checklist panel lands", True))
+        for at in ats("items", "checklist"):
+            out.append((at + 0.25, ui_tick, "ui tick", "a tick or an X draws", False))
+    elif k == "linechart":
+        draw = s["bigAt"] if isinstance(s.get("bigAt"), (int, float)) and s["bigAt"] < t1 - 1 else t0 + 0.55
+        out.append((t0, paper_swish, "paper swish", "chart panel slides in", True))
+        out.append((draw, lambda: bar_fill(2.25, 10), "count ticks", "the line draws and the number counts up", False))
+        co = s.get("calloutAt") if isinstance(s.get("calloutAt"), (int, float)) and s["calloutAt"] >= draw else draw + 2.3
+        if s.get("callout"):
+            out.append((co, pop, "tab pop", "the end-dot callout pops", False))
+    elif k == "barchart":
+        out.append((t0, paper_swish, "paper swish", "chart panel slides in", True))
+        bars = ats("items", "barchart")
+        for at in bars:
+            out.append((at, lambda: bar_fill(0.5, 5), "bar ticks", "a bar grows and counts up", False))
+        if s.get("callout") and len(bars) > 1:
+            co = s.get("calloutAt") if isinstance(s.get("calloutAt"), (int, float)) and s["calloutAt"] > bars[-1]                 else bars[-1] + 0.7
+            out.append((co + 0.2, pop, "tab pop", "the annotation arrow lands", False))
+    elif k == "waffle":
+        out.append((t0, paper_swish, "paper swish", "the grid wipes in", True))
+        frac = float(s.get("frac") or 0)
+        kk = max(1, min(400, round(frac * 400))) if frac > 0 else 0
+        fill_at = t0 + 1.35
+        if kk:
+            out.append((fill_at, lambda: bar_fill(1.0, 8), "fill ticks", "the squares fill", False))
+        fill_end = fill_at + (min(0.05, 1.0 / kk) * kk if kk else 0)
+        lab = s["bigAt"] if isinstance(s.get("bigAt"), (int, float)) and s["bigAt"] >= t0 + 0.5 else fill_end + 0.1
+        out.append((lab, pop, "tab pop", "the share label lands on its word", False))
+    elif k == "balance":
+        out.append((t0, paper_swish, "paper swish", "the balance bar draws", True))
+        fill = s["bigAt"] if isinstance(s.get("bigAt"), (int, float)) and s["bigAt"] >= t0 + 0.6 else t0 + 0.9
+        out.append((fill, lambda: bar_fill(0.6, 6), "bar ticks", "the sliver fills and counts up", False))
+        if s.get("small"):
+            out.append((fill + 1.25, pop, "tab pop", "the tag lands", False))
+        for c in s.get("chips", []):
+            if c.get("at"):
+                out.append((c["at"], ui_tick, "ui tick", "an honesty chip lands", False))
+    elif k == "dates":
+        for at in ats("items", "dates"):
+            out.append((at, card_slap, "card slap", "a date card pops", False))
+    elif k == "media":
+        out.append((t0 - 0.1, lambda: soft_air(0.9), "soft air", "a photo card slides in", True))
+        for at in ats("rows", "rows"):
+            out.append((at, pop, "tab pop", "a side-list row lands", False))
+        for at in ats("chips", "chips"):
+            out.append((at, ui_tick, "ui tick", "an honesty chip lands", False))
+    return out
 
 
 # ---- music pad and mix -----------------------------------------------------------------------------------------

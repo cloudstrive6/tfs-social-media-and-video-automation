@@ -361,7 +361,9 @@ def _build_vector(item: dict, d: Path, script: Script, hook: HookReview) -> tupl
 HERO_CLIP = "assets/broll/hero_ph_push.mp4"   # approved 3D push into Metro Manila (same in every episode)
 
 
-ATLAS_CARD = {"map": "map", "doc": "document", "cards": "stat", "bars": "bars", "timeline": "timeline"}
+ATLAS_CARD = {"map": "map", "doc": "document", "cards": "stat", "bars": "bars", "timeline": "timeline",
+              "globe": "map", "checklist": "list", "linechart": "chart", "barchart": "bars", "waffle": "chart",
+              "balance": "bars", "dates": "timeline", "media": "photo"}
 
 
 def _atlas_describe(s: dict) -> str:
@@ -377,7 +379,22 @@ def _atlas_describe(s: dict) -> str:
         return f"{k}: " + "; ".join(" ".join(str(v) for v in it.values() if v) for it in s.get("items", []))
     if k == "compare":
         return f"compare card: {s.get('ph', {})} vs {s.get('nz', {})}"
-    return f"{k}: {s.get('text') or s.get('left', '')} {s.get('right', '')}".strip()
+    stamp = f", stamp '{s['stamp']['text']}'" if s.get("stamp") else ""
+    if k == "globe":
+        return (f"line globe turning to {', '.join(h['name'] for h in s.get('highlight', [])) or 'the region'}"
+                f"; dots {[p['name'] for p in s.get('places', [])]}; routes {[a['names'] for a in s.get('arcs', [])]}"
+                + stamp)
+    if k == "checklist":
+        return "checklist: " + "; ".join(f"{i['text']} ({i.get('mark', 'tick')})" for i in s.get("items", [])) + stamp
+    if k in ("linechart", "barchart", "waffle", "balance", "dates"):
+        vals = "; ".join(" ".join(str(v) for kk, v in it.items() if kk in ("label", "value", "big", "small") and v)
+                         for it in s.get("items", []))
+        return f"{k}: {s.get('head', '')} {s.get('big', '')} {vals} {s.get('callout', '')}".strip() + stamp
+    if k == "media":
+        what = f"photo card ({s.get('credit', '')})" if s.get("src") else f"drawn {s.get('icon', 'icon')} card"
+        return (f"{what} '{s.get('name', '')}'; side list {[r['text'] for r in s.get('rows', [])]}; "
+                f"chips {[c['text'] for c in s.get('chips', [])]}") + stamp
+    return f"{k}: {s.get('text') or s.get('left', '')} {s.get('right', '')}".strip() + stamp
 
 
 def _atlas_shotlist(script: Script, starts: list[float], total: float, shots: list[dict]) -> ShotList:
@@ -429,6 +446,19 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
         (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
     plan = cached(d / "atlas.json", AtlasPlan,
                   lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=notes))
+    # variety QC (Atlas blocks v3): one scene family may not hold the screen longer than MAX_FAMILY_RUN seconds. Checked
+    # on a dry pass (every photo assumed found) before any photo is fetched; a failing plan is re-planned once.
+    dry = atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind,
+                              lambda q, w, a, b: {"kind": "photo", "src": "dry.jpg", "credit": ""}, None)
+    problems = atlas_plan.variety_problems(dry)
+    if problems and not fixes.get("variety_replanned"):
+        log.warning("atlas %s: variety QC failed, re-planning once: %s", item["id"], problems)
+        fixes["variety_replanned"] = problems
+        (d / "qa_fixes.json").write_text(json.dumps(fixes, ensure_ascii=False, indent=1), encoding="utf-8")
+        (d / "atlas.json").unlink(missing_ok=True)
+        vnotes = notes + "".join(f"\n- whole video, variety: {p}" for p in problems)
+        plan = cached(d / "atlas.json", AtlasPlan,
+                      lambda: packaging.atlas_plan(item, script, _dossier(d), vertical, notes=vnotes))
     picker = broll_pick.Picker(d, item["id"])
     hero = {"k": "broll", "kind": "video", "src": "assets/hero.mp4", "credit": ""} if kind == "long_form" else None
     shots = sorted(atlas_plan.to_shots(plan, script.scenes, clips, starts, total, kind, picker, hero) + chapter_cards,
@@ -439,7 +469,12 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int]) -> 
     (d / "atlas_shots.json").write_text(json.dumps(shots, ensure_ascii=False, indent=1), encoding="utf-8")
     (d / "shots.json").write_text(_atlas_shotlist(script, starts, total, shots).model_dump_json(indent=1),
                                   encoding="utf-8")       # what the review team expects each scene to show
-    sp = atlas.spec(item["id"].replace(".", "-"), size, shots, atlas_plan.caption_words(clips, starts), total)
+    words = atlas_plan.mark_keys(atlas_plan.caption_words(clips, starts), plan, script.scenes, starts, total, shots)
+    (d / "atlas_qc.json").write_text(json.dumps({
+        "families": atlas_plan.family_runs(shots), "variety_problems": atlas_plan.variety_problems(shots),
+        "builds": [[s["k"], s["t0"], atlas_plan.builds(s)] for s in shots],
+        "key_words": [w["w"] for w in words if w.get("key")]}, ensure_ascii=False, indent=1), encoding="utf-8")
+    sp = atlas.spec(item["id"].replace(".", "-"), size, shots, words, total)
     picture = work / "picture.mp4"
     atlas.render(sp, work, picture, assets)
     if kind == "long_form":                          # thumbnail art: the hero push (else the first photo) without captions

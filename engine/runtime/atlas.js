@@ -4,7 +4,9 @@
  *
  * SPEC = {id, width, height, duration, geo: {world:"<path d>", ph:"<d>", phProv:"<d>", nz:"<d>", views:{name:[x,y,w,h]}},
  *         shots: [{t0, t1, k, ...}], words: [{w, t0, t1, brk}]}
- * Shot kinds: map, bigtext, title, doc, cards, bars, timeline, compare, seats, split.
+ * Shot kinds: map, bigtext, title, doc, cards, bars, timeline, compare, seats, split, broll; the v3 blocks (globe,
+ * checklist, linechart, barchart, waffle, balance, dates, media, and a `stamp` on any shot) live in atlas_blocks.js
+ * and per-frame helpers in atlas_lib.js, both loaded before this file. Caption words with `key` get a filled box.
  */
 (function () {
   const S = window.SPEC, W = S.width, H = S.height, V = H > W * 1.3;
@@ -225,7 +227,11 @@
       inOut(n, s, { scale: 1.04 });
     },
   };
-  for (const s of S.shots) (build[s.k] || (() => { throw new Error("unknown shot " + s.k); }))(s);
+  const X = window.TFS_BLOCKS ? window.TFS_BLOCKS({ W, H, V, U, C, tl, el, esc, px, layer, inOut, badge, build, globe: G.globe }) : null;
+  for (const s of S.shots) {
+    (build[s.k] || (() => { throw new Error("unknown shot " + s.k); }))(s);
+    if (X && s.stamp) X.stamp(s);
+  }
   document.querySelectorAll("[data-bd]").forEach((n) => n.insertAdjacentHTML("afterbegin", `<div style="position:absolute;inset:0;background:rgba(239,230,210,.9)"></div>`));
 
   // ------------------------------------------------------------------ karaoke captions (word-timed)
@@ -248,12 +254,18 @@
         .map(([dx, dy]) => `${(dx * o).toFixed(1)}px ${(dy * o).toFixed(1)}px 0 rgba(15,20,32,.92)`).join(",");
       const line = el("div", `position:absolute;left:0;right:0;margin:0 auto;width:fit-content;max-width:100%;white-space:nowrap;opacity:0;font:800 ${px(V ? 34 : 38)}/1.2 Montserrat;color:#fff;` +
         `text-shadow:${ring},0 ${px(3)} ${px(10)} rgba(0,0,0,.45);padding:${px(4)} ${px(8)}`, "", capBox);
-      line.innerHTML = g.map((w, j) => `<span class="w${j}">${esc(w.w)}</span>`).join(" ");
+      line.innerHTML = g.map((w, j) => `<span class="w${j}"${w.key ? ` style="display:inline-block;padding:0 ${px(9)};border-radius:${px(8)}"` : ""}>${esc(w.w)}</span>`).join(" ");
       const end = gi + 1 < groups.length ? Math.min(groups[gi + 1][0].t0, g[g.length - 1].t1 + 0.6) : g[g.length - 1].t1 + 0.6;
       tl.set(line, { opacity: 1 }, g[0].t0);
       tl.set(line, { opacity: 0 }, end);
       g.forEach((w, j) => {
         const sp = line.querySelectorAll("span")[j];
+        if (w.key) {                               // key word: a filled box in TFS red (gold for numbers) that stays up
+          const num = /[0-9₱%]/.test(w.w);
+          tl.set(sp, { backgroundColor: num ? C.yel : C.red, color: num ? C.ink : "#fff", textShadow: "none" }, w.t0);
+          tl.fromTo(sp, { scale: 1.18 }, { scale: 1, duration: 0.18, ease: "back.out(2)", immediateRender: false }, w.t0);
+          return;
+        }
         tl.set(sp, { color: C.yel }, w.t0);
         tl.set(sp, { color: "#fff" }, w.t1 + 0.02);
       });
@@ -276,6 +288,10 @@
   }
   for (let t = 0, k = 0; t < S.duration; t += 6, k++) {
     tl.to(cam, { scale: k % 2 ? 1.0 : 1.035, x: (k % 2 ? 1 : -1) * 6 * U, duration: Math.min(6, S.duration - t), ease: "sine.inOut" }, t);
+  }
+  if (X && X.ticks()) {                            // per-frame drawing (globe, count-ups) as a pure function of time, driven
+    const clock = { v: 0, t(x) { if (x === undefined) return this.v; this.v = x; X.tick(x); } };   // by a setter tween:
+    tl.fromTo(clock, { t: 0 }, { t: S.duration, duration: S.duration, ease: "none", lazy: false }, 0);  // seek-safe
   }
   tl.set({}, {}, S.duration);
   window.__timelines = window.__timelines || {};
