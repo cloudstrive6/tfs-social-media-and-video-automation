@@ -221,6 +221,19 @@ def _runtime(s: AtlasShot) -> dict:
     return {k: v for k, v in d.items() if v not in ("", None, [])} | {"k": d["k"]}
 
 
+def clean_src(src: str) -> str:
+    """Source badge text without the dossier's internal [S12] codes (blind review: viewers saw "[S6]")."""
+    s = re.sub(r"\s*\[S\d+\]", "", src)
+    s = re.sub(r"\(\s*\)", "", s)
+    s = " ".join(s.split()).strip(" ;,")
+    while True:                                    # "Own arithmetic from [S1] and [S18]" -> "Own arithmetic"
+        t = re.sub(r"\s+(and|from|of|;|,)$", "", s).strip(" ;,")
+        if t == s:
+            break
+        s = t
+    return s or src
+
+
 def _globe(s: AtlasShot, d: dict) -> None:
     """Resolve the globe's focus, countries, cities and routes to lon/lat (Natural Earth; unknown names dropped)."""
     from . import atlas
@@ -346,6 +359,8 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
                 if s.k == "globe":
                     _globe(s, d)
             d.update(t0=round(t0, 3), t1=round(t1, 3))
+            if d.get("src"):
+                d["src"] = clean_src(d["src"])
             _anchor(d, s, clip.words or [], st, t0, t1)
             if i == 0 and j == 0:                        # the first frame is the thumbnail in the feed: the opening
                 d.update(t0=0.0, instant=True)           # shot is fully on screen from 0.0 s, no fade

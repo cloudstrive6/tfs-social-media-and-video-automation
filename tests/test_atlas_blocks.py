@@ -275,3 +275,9 @@ def test_review_view_accepts_every_atlas_kind():
     scenes = type("S", (), {"scenes": [type("C", (), {"id": i + 1})() for i in range(len(shots))]})()
     view = pipeline._atlas_shotlist(scenes, [s["t0"] for s in shots], 33.5, shots)
     assert len(view.shots) == len(shots) and all(pipeline._atlas_describe(s) for s in shots)
+
+
+def test_source_badges_drop_dossier_codes():
+    assert ap.clean_src("Own arithmetic from [S1] and [S18]") == "Own arithmetic"
+    assert ap.clean_src("Manila Bulletin [S6]; Bilyonaryo News Channel [S10]") == "Manila Bulletin; Bilyonaryo News Channel"
+    assert ap.clean_src("Bureau of the Treasury, 7 Sept 2026") == "Bureau of the Treasury, 7 Sept 2026"

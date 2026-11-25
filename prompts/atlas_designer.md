@@ -110,9 +110,15 @@ step lands on a spoken word. Give a step its word with `at_word` (items, rows, c
   compared are a `barchart`, a share of a whole is a `waffle` or a `balance`, dates to watch are `dates`. Keep
   `cards` for a single fact with nothing to compare. Every Short has at least one of linechart, barchart, waffle
   or balance, and a long-form has each at least once.
-- When the story touches money, people or decisions abroad (foreign creditors, OFWs, trade, another country's
-  law), show it on a `globe` that turns and lands on the Philippines; a Short about national money or debt opens
-  or returns there at least once.
+- When the story itself goes abroad (foreign creditors, OFWs, trade, another country's law), show it on a
+  `globe` that turns and lands on the Philippines, with the places and routes the narration names. Never use a
+  globe for a purely domestic point.
+- Source badges (`src`) name the real source and date ("Bureau of the Treasury, 7 Sept 2026"); never the
+  dossier's codes such as [S6].
+- A computed average or estimate carries "≈" or "ABOUT" on screen ("≈ ₱170,598 PER FILIPINO"). A statement is
+  never turned into a count: "0 MECHANISMS" becomes a quote with who said it.
+- A file photo's lower third names the place or body; its date line says what happened and when, never as if the
+  photo was taken that day ("SENATE SESSION HALL (FILE)").
 - Build, don't cut: a shot that stays up gains a new element every 1.5 to 3 seconds on spoken words (rows,
   bars, chips, a stamp, a callout) instead of changing layout. No chart stays static for more than about 3 s.
 - Variety: never the same kind three times in a row; at least one real photo every 20 seconds in a

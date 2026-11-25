@@ -34,7 +34,7 @@ window.TFS_BLOCKS = function (ctx) {
     const fs = Math.min((V ? 78 : 70) * U, (0.82 * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
     const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
     // verticals: in the band between the panels (top 20 to 55%) and the captions (72%), so it never hides the number
-    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 61 : 15);
+    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 65 : 15);
     n.innerHTML = `<div style="position:absolute;left:50%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
       `<div class="stp" style="font:400 ${fs.toFixed(0)}px/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
       `border:${px(7)} solid ${c};border-radius:${px(10)};padding:${px(8)} ${px(26)};background:rgba(248,242,228,.94);` +
@@ -96,9 +96,10 @@ window.TFS_BLOCKS = function (ctx) {
     TICK.push((t) => {
       if (t < s.t0 - 0.05 || t > s.t1 + 0.05) return;
       const pr = io2(L.prog(t, rotAt, rotDur));
-      const drift = 4 * L.prog(t, rotAt + rotDur, s.t1 - rotAt - rotDur);       // keeps turning slowly: never static
+      const settle = L.prog(t, rotAt + rotDur, s.t1 - rotAt - rotDur);
+      const drift = 10 * settle;                       // keeps turning and creeping in after it lands: never static
       const lam = lam0 + (lam1 - lam0) * pr + drift, phi = phi0 + (phi1 - phi0) * pr;
-      const R = R0 * (1 + (zoomTo - 1) * io2(L.prog(t, zoomAt, zoomDur)));
+      const R = R0 * (1 + (zoomTo - 1) * io2(L.prog(t, zoomAt, zoomDur))) * (1 + 0.08 * settle);
       // keep the focus point on screen centre while zooming: the view is centred on (lam, phi) already
       sea.setAttribute("cx", cx); sea.setAttribute("cy", cy); sea.setAttribute("r", R);
       rim.setAttribute("cx", cx); rim.setAttribute("cy", cy); rim.setAttribute("r", R);
@@ -330,7 +331,12 @@ window.TFS_BLOCKS = function (ctx) {
     n.querySelectorAll(".bc").forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: 1.2 }, { opacity: 1, scale: 1, duration: 0.2 }, cAt[i]));
     const bn = q(".bn");
     tl.to(bn, { opacity: 1, duration: 0.15 }, fillAt);                 // no "₱0.00" on screen before the count starts
-    TICK.push((t) => { if (t >= s.t0 - 0.05 && t <= s.t1 + 0.05) bn.textContent = L.figAt(s.big, o2(L.prog(t, fillAt, 1.2))); });
+    const sl = q(".bs");
+    TICK.push((t) => {
+      if (t < s.t0 - 0.05 || t > s.t1 + 0.05) return;
+      bn.textContent = L.figAt(s.big, o2(L.prog(t, fillAt, 1.2)));
+      if (t > fillAt + 0.6) sl.style.filter = `brightness(${(1 + 0.18 * Math.sin((t - fillAt - 0.6) * Math.PI)).toFixed(3)})`;  // breathes
+    });
   };
 
   // ------------------------------------------------------------------ date cards: pop about 2 s apart
@@ -385,9 +391,10 @@ window.TFS_BLOCKS = function (ctx) {
       rows.map((r) => `<div class="sl" style="margin-bottom:${px(16)};background:${C.sheet};border:${px(3)} solid ${r.color === "red" ? C.red : C.ink};` +
         `border-left:${px(12)} solid ${col(r.color, C.ink)};border-radius:${px(10)};padding:${px(12)} ${px(14)};font:800 ${px(V ? 27 : 27)}/1.22 Montserrat;` +
         `color:${r.color === "red" ? C.red : C.ink};box-shadow:${px(5)} ${px(5)} 0 ${C.ink};opacity:0">${esc(r.text)}</div>`).join("") + `</div>` : "";
+    // the lower third sits on the photo frame and the credit line under it (dry run 3: they overlapped)
     n.innerHTML = `<div class="mcard" style="position:absolute;left:${left.toFixed(0)}px;top:${top.toFixed(0)}px;width:${cardW}px">` +
-      `<div class="mf" style="position:relative;width:${cardW}px;height:${cardH}px;overflow:hidden;border:${px(5)} solid ${C.ink};border-radius:${px(12)};` +
-      `box-shadow:${px(9)} ${px(9)} 0 ${C.ink};background:#111">${inner}${chips}</div>${lower}${credit}</div>${list}`;
+      `<div style="position:relative"><div class="mf" style="position:relative;width:${cardW}px;height:${cardH}px;overflow:hidden;border:${px(5)} solid ${C.ink};border-radius:${px(12)};` +
+      `box-shadow:${px(9)} ${px(9)} 0 ${C.ink};background:#111">${inner}${chips}</div>${lower}</div>${credit}</div>${list}`;
     if (s.vid) { const v = document.getElementById(s.vid); if (v) n.querySelector(".vslot").replaceWith(v); }
     const card = n.querySelector(".mcard");
     tl.set(n, { opacity: 1 }, s.t0);

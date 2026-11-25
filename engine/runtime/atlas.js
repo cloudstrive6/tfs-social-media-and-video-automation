@@ -144,13 +144,14 @@
       let body = esc(s.body);
       (s.hl || []).forEach((h, i) => { body = body.replace(esc(h), `<span class="hl hl${i}" style="background-size:0% 100%">${esc(h)}</span>`); });
       const long = s.body.length > 260;                  // long quotes get smaller type so the card clears the captions
-      n.innerHTML = `<div style="position:absolute;left:50%;top:${V ? 34 : (long ? 44 : 48)}%;width:${V ? 86 : (long ? 62 : 56)}%;transform:translate(-50%,-50%) rotate(-1.5deg);background:${C.sheet};` +
+      const vlong = V && s.body.length > 380;            // very long: smaller again and lower, clear of the handle
+      n.innerHTML = `<div style="position:absolute;left:50%;top:${V ? (vlong ? 38 : 34) : (long ? 44 : 48)}%;width:${V ? 86 : (long ? 62 : 56)}%;transform:translate(-50%,-50%) rotate(-1.5deg);background:${C.sheet};` +
         `box-shadow:0 ${px(18)} ${px(40)} rgba(60,40,20,.35);padding:${px(54)} ${px(60)}">` +
         `<div style="font:700 ${px(18)} 'Segoe UI';letter-spacing:4px;color:${C.muted};text-align:center">${esc(s.head)}</div>` +
         `<div style="text-align:center;margin:${px(12)} 0 ${px(26)}"><span style="position:relative;display:inline-block;font:800 ${px(30)} Montserrat;color:${C.red};letter-spacing:3px;padding:${px(6)} ${px(18)}">${esc(s.sec)}` +
         `<svg class="ring" viewBox="0 0 100 40" preserveAspectRatio="none" style="position:absolute;left:-6%;top:-30%;width:112%;height:160%;overflow:visible">` +
         `<path d="M 8 22 C 6 6, 70 2, 92 12 C 102 20, 88 36, 50 37 C 18 38, 2 30, 10 14" fill="none" stroke="${C.red}" stroke-width="${px(3.5)}" stroke-linecap="round" vector-effect="non-scaling-stroke" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg></span></div>` +
-        `<div style="font:400 ${px(V ? (long ? 30 : 36) : (long ? 25 : 32))}/1.5 Georgia,serif;color:#262019">${body}</div>${badge(s.src)}</div>`;
+        `<div style="font:400 ${px(V ? (vlong ? 25 : long ? 30 : 36) : (long ? 25 : 32))}/1.5 Georgia,serif;color:#262019">${body}</div>${badge(s.src)}</div>`;
       n.querySelectorAll(".hl").forEach((h) => h.setAttribute("style", `background-image:linear-gradient(${C.yel},${C.yel});background-repeat:no-repeat;background-position:0 70%;background-size:0% 70%;padding:0 ${px(3)}`));
       inOut(n, s, { y: 60 * U, rotation: -4 });
       tl.to(n.querySelector(".ring path"), { attr: { "stroke-dashoffset": 0 }, duration: 0.6, ease: "power1.inOut" }, s.t0 + 0.35);   // hand-drawn circle
