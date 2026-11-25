@@ -31,7 +31,8 @@ window.TFS_BLOCKS = function (ctx) {
     const at = typeof st.at === "number" ? st.at : s.t0 + 0.5;
     const c = col(st.color, C.red);
     const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
-    const top = st.pos === "low" ? (V ? 58 : 66) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 23 : 15);
+    // verticals: in the band between the panels (top 20 to 55%) and the captions (72%), so it never hides the number
+    const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 61 : 15);
     n.innerHTML = `<div style="position:absolute;left:50%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
       `<div class="stp" style="font:400 ${px(V ? 78 : 70)}/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
       `border:${px(7)} solid ${c};border-radius:${px(10)};padding:${px(8)} ${px(26)};background:rgba(248,242,228,.94);` +
@@ -76,7 +77,7 @@ window.TFS_BLOCKS = function (ctx) {
         `<circle class="pd" r="${(8 * U).toFixed(1)}" fill="${C.red}" stroke="#fff" stroke-width="${(2.5 * U).toFixed(1)}"/>` +
         `<text class="pt" font-family="${MONO}" font-weight="700" font-size="${(V ? 26 : 24) * U}" letter-spacing="2" fill="${C.ink}" stroke="${C.sheet}" stroke-width="${(6 * U).toFixed(1)}" paint-order="stroke">${esc(String(p.name).toUpperCase().replace(/\s+/g, " "))}</text></g>`).join("") +
       `</svg>` +
-      (s.label ? `<div class="glab" style="position:absolute;left:6%;top:${V ? 66 : 72}%;font:800 ${px(V ? 40 : 34)} Montserrat;color:${C.ink};background:${C.yel};` +
+      (s.label ? `<div class="glab" style="position:absolute;left:6%;top:${V ? 17 : 72}%;font:800 ${px(V ? 40 : 34)} Montserrat;color:${C.ink};background:${C.yel};` +
         `padding:${px(10)} ${px(18)};border-radius:${px(8)};box-shadow:${px(5)} ${px(5)} 0 ${C.ink}">${esc(s.label)}</div>` : "") +
       (s.src ? `<div style="position:absolute;left:6%;top:${V ? 60 : 88}%">${badge(s.src)}</div>` : "");
     inOut(n, s, { scale: 0.96 });
