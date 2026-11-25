@@ -53,7 +53,7 @@ def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool, notes: 
 
     fmt = ("Format: 9:16 Short (35 to 58 s). Keep text short; at least one real photo every 12 s."
            if vertical else "Format: 16:9 long-form. At least one real photo every 20 s; one hero shot at most.")
-    return llm.structured(
+    plan = llm.structured(
         "atlas_designer",
         f"{fmt}\n\n{_ctx(item)}\n\n"
         f"# Script (final, fact-checked; one AtlasScene per scene id, at_word copied from that scene's text)\n"
@@ -61,3 +61,62 @@ def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool, notes: 
         + (f"\n\n# Review team notes on the last render: fix these scenes{notes}" if notes else ""),
         AtlasPlan,
     )
+    return check_screen_text(plan, script, dossier)
+
+
+# Text fields an on-screen check may rewrite; everything else (kinds, timing words, layout, numbers to plot) is kept
+SHOT_TEXT = ("text", "sub", "kicker", "head", "sec", "body", "hl", "src", "label", "left", "right", "foot", "word",
+             "stamp", "big", "small", "callout", "name", "role")
+ITEM_TEXT = ("big", "small", "label", "value", "date", "text")
+SIDE_TEXT = ("name", "big", "small")
+
+
+def merge_screen_text(plan, checked):
+    """The checked plan's text on the designer's structure. None if the structure changed (then the check is
+    ignored and the designer's plan is used)."""
+    if [s.scene_id for s in plan.scenes] != [s.scene_id for s in checked.scenes]:
+        return None
+    scenes = []
+    for sc, ck in zip(plan.scenes, checked.scenes):
+        if [s.k for s in sc.shots] != [s.k for s in ck.shots]:
+            return None
+        shots = []
+        for s, c in zip(sc.shots, ck.shots):
+            upd = {f: getattr(c, f) for f in SHOT_TEXT}
+            for lst in ("items", "rows", "chips"):
+                mine, theirs = getattr(s, lst), getattr(c, lst)
+                if len(mine) == len(theirs):
+                    upd[lst] = [m.model_copy(update={f: getattr(t, f) for f in ITEM_TEXT}) for m, t in zip(mine, theirs)]
+            for side in ("ph", "nz"):
+                upd[side] = getattr(s, side).model_copy(update={f: getattr(getattr(c, side), f) for f in SIDE_TEXT})
+            shots.append(s.model_copy(update=upd))
+        scenes.append(sc.model_copy(update={"shots": shots}))
+    return plan.model_copy(update={"scenes": scenes})
+
+
+def check_screen_text(plan, script: Script, dossier: str):
+    """On-Screen Fact Check: every card, stamp, label and badge must be as true as the fact-checked narration
+    (2026-11-25: a closing card said "no legal channel" after the fact-checker had removed that claim from the
+    script). A failed or structure-changing check keeps the designer's plan."""
+    import logging
+
+    from ..llm import UsageLimitError
+    from ..models import AtlasPlan
+
+    try:
+        checked = llm.structured(
+            "screen_checker",
+            f"# Script (final, fact-checked)\n{script.model_dump_json()}\n\n# Shot plan to check\n{plan.model_dump_json()}"
+            f"\n\n# Dossier (the only evidence)\n{dossier[:30000]}",
+            AtlasPlan,
+        )
+    except UsageLimitError:
+        raise
+    except Exception:
+        logging.getLogger(__name__).exception("on-screen fact check failed; using the designer's plan")
+        return plan
+    merged = merge_screen_text(plan, checked)
+    if merged is None:
+        logging.getLogger(__name__).warning("on-screen fact check changed the plan's structure; ignored")
+        return plan
+    return merged

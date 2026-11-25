@@ -36,7 +36,7 @@ def test_v2_numbers_stay_digits_and_are_read_in_english(monkeypatch, tmp_path):
 
 ATLAS_PATH = ("trend_scout", "editor_in_chief", "researcher", "scriptwriter", "hook_master", "fact_checker",
               "narration_editor", "atlas_designer", "title_writer", "seo_writer", "thumbnail_artist", "audio_qa",
-              "visual_qa", "analyst", "creative_director")
+              "visual_qa", "analyst", "creative_director", "screen_checker")
 
 
 def test_atlas_path_loads_only_v2_briefs_and_old_ones_are_retired(monkeypatch, tmp_path):
