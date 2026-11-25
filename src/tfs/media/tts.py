@@ -16,12 +16,13 @@ class Clip:
 
 
 def clean(text: str, keep_audio_tags: bool = False) -> str:
-    """Strip writer markup the narrator must not read out loud (source tags, [pause], *emphasis*, any [tag]).
+    """Strip writer markup the narrator must not read out loud (source tags, [pause], *emphasis*, card cues, delivery tags).
     `keep_audio_tags` is accepted for old callers and ignored: the narrator reads no audio tags."""
     text = re.sub(r"\[S\d+(?:,\s*S\d+)*\]", "", text)                 # source tags
     text = re.sub(r"\[pause\]", " ... ", text, flags=re.I)
     text = re.sub(r"\*([^*]+)\*", r"\1", text)                        # *emphasis*
-    text = re.sub(r"\[[^\]]*\]", "", text)                             # any other bracketed cue
+    text = re.sub(r"\[CARD:[^\]]*\]", "", text, flags=re.I)            # on-screen card cues
+    text = re.sub(r"\[[a-zA-Z ]+\]", "", text)                         # delivery tags; "[1998]" is still read
     return re.sub(r"\s+", " ", text).strip()
 
 
