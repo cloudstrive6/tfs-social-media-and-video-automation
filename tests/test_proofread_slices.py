@@ -29,3 +29,20 @@ def test_each_scene_is_transcribed_from_its_own_slice(monkeypatch):
 
 def test_letter_suffixed_source_tags_are_stripped():
     assert clean("Ayon sa batas. [S14a] Totoo [S1, S2b] ito. [S17c]") == "Ayon sa batas. Totoo ito."
+
+
+def test_blocking_frames_go_back_to_the_designer_with_the_reviewers_notes(monkeypatch, tmp_path):
+    """Atlas (2026-11-25): a wrong number on a card is blocking and must be re-planned, not posted with a warning."""
+    from tfs.models import Scene, Script, Shot, ShotList, ShotVerdict
+    script = Script(scenes=[Scene(id=i, chapter="c", speaker="NARRATOR", text=f"line {i}", visual="v") for i in (0, 1)],
+                    sources=[])
+    shots = ShotList(shots=[Shot(scene_id=i, kind="card", style="story", image_prompt="", card_type="stat",
+                                 card_title="t", card_lines=[], reuse_of_scene=0, motion="static") for i in (0, 1)])
+    monkeypatch.setattr(qa, "duration", lambda v: 10.0)
+    monkeypatch.setattr(qa, "grab", lambda v, t, out: out)
+    monkeypatch.setattr(qa, "proofread", lambda *a: ({}, [], "ok", []))
+    verdict = ShotVerdict(frame="scene 1", ok=False, blocking=True, problems=["P3.91 trillion should be P19.66 trillion"],
+                          fix_prompt="")
+    monkeypatch.setattr(qa, "_look", lambda frames, ctx: ([verdict], 7, 8, []))
+    report = qa.review_video("vertical", tmp_path, script, shots, [0.0, 5.0], tmp_path / "v.mp4", None, "hook")
+    assert report.redo_images == {"1": "P3.91 trillion should be P19.66 trillion"} and not report.passed

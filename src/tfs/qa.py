@@ -210,15 +210,15 @@ def review_video(kind: str, d: Path, script: Script, shots: ShotList, starts: li
             elif v.problems and v.frame == "thumbnail":
                 improve["thumbnail"] = "; ".join(v.problems)
             continue
-        if v.frame == "thumbnail" and v.fix_prompt:
+        if v.frame == "thumbnail" and (v.fix_prompt or v.problems):
             redo_images["thumbnail"] = v.fix_prompt or "; ".join(v.problems)
             continue
         m = re.search(r"\d+", v.frame)
         scene_id = int(m.group()) if m and v.frame.startswith("scene") else (script.scenes[0].id if v.frame == "hook"
                                                                              else None)
         shot = by_scene.get(scene_id) if scene_id is not None else None
-        note = v.fix_prompt
-        if shot and shot.kind != "card" and note:
+        note = v.fix_prompt or "; ".join(v.problems)   # atlas: the designer re-plans the scene from these notes
+        if shot and note:
             redo_images[str(source.get(scene_id, scene_id))] = note
         else:
             warnings.append(f"{v.frame}: blocking but not auto-fixable (card/caption) — {'; '.join(v.problems)}")

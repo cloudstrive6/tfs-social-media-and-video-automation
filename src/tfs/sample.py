@@ -32,7 +32,8 @@ def run(kind: str = "vertical") -> Path:
                 platforms={p: now() + timedelta(days=1) for p in schedule()["platforms"][kind]})
     if not editor.plan([unit]):
         raise SystemExit("sample: the editor did not assign a topic")
-    db.set_status(unit.id, "planned", sample=True)
+    # a requested topic is the owner's own angle: it reaches every writer as `owner_request`, over the editor's brief
+    db.set_status(unit.id, "planned", sample=True, **({"owner_request": topic} if topic else {}))
     pipeline.produce(unit.id)
 
     item = db.get_item(unit.id)
@@ -48,7 +49,7 @@ def run(kind: str = "vertical") -> Path:
         files = [Path(data["video"])] if data.get("video") else [Path(p) for p in data.get("slides", [])]
     for f in files:
         shutil.copy2(f, out / f.name)
-    for extra in ("seo.json", "titles.json", "dossier.md", "factcheck.json", "narration.json", "motion.json", "atlas.json", "atlas_shots.json", "atlas_qc.json",
+    for extra in ("seo.json", "titles.json", "dossier.md", "factcheck.json", "script_r0.json", "hook_r0.json", "narration.json", "motion.json", "atlas.json", "atlas_shots.json", "atlas_qc.json",
                   "licences.json", "sound_report.json", "captions.srt", "thumbnail.jpg", "critic_r0.json", "critic_r1.json", "qa_r0.json", "qa_r1.json", "qa_r2.json", "qa_r3.json", "qa_r4.json"):   # factcheck.json holds the final script
         src = pipeline.item_dir(unit.id) / extra
         if src.exists():
