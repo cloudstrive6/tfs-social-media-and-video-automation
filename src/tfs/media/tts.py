@@ -18,7 +18,7 @@ class Clip:
 def clean(text: str, keep_audio_tags: bool = False) -> str:
     """Strip writer markup the narrator must not read out loud (source tags, [pause], *emphasis*, card cues, delivery tags).
     `keep_audio_tags` is accepted for old callers and ignored: the narrator reads no audio tags."""
-    text = re.sub(r"\[S\d+(?:,\s*S\d+)*\]", "", text)                 # source tags
+    text = re.sub(r"\[S\d+[a-z]?(?:\s*[,;]\s*S\d+[a-z]?)*\]", "", text)  # source tags ([S3], [S14a], [S1, S2b])
     text = re.sub(r"\[pause\]", " ... ", text, flags=re.I)
     text = re.sub(r"\*([^*]+)\*", r"\1", text)                        # *emphasis*
     text = re.sub(r"\[CARD:[^\]]*\]", "", text, flags=re.I)            # on-screen card cues

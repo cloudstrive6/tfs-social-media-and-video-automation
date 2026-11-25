@@ -96,9 +96,27 @@ def split_by_scene(heard: list[tuple[str, float, float]], bounds: list[float]) -
     return [" ".join(w) for w in out]
 
 
+def transcribe_scenes(media: Path, bounds: list[float], hints: str = "") -> list[str]:
+    """Each scene's own slice of audio transcribed on its own. One Whisper pass over a 10-minute long-form lost its
+    place from about scene 13 on (2026-11-25: whole scenes reported silent, a different set each round, while every
+    line had scored 0.9 or more when it was recorded); per-scene slices cannot drift."""
+    audio = audio16k(media)
+    out = []
+    for i in range(len(bounds) - 1):
+        a, b = max(0, int((bounds[i] - 0.15) * 16000)), int((bounds[i + 1] - 0.15) * 16000)
+        piece = audio[a:b] if i < len(bounds) - 2 else audio[a:]
+        if len(piece) < 1600:                              # under 0.1 s: nothing to hear
+            out.append("")
+            continue
+        segments, _ = _whisper().transcribe(piece, language=cfg().get("whisper_language") or None, beam_size=5,
+                                            hotwords=hints or None, condition_on_previous_text=False)
+        out.append(" ".join(s.text.strip() for s in segments).strip())
+    return out
+
+
 def proofread(script: Script, starts: list[float], video: Path) -> tuple[dict[str, str], list[str], str, list[str]]:
     total = duration(video)
-    heard = split_by_scene(transcribe(video, proper_nouns(script)), starts + [total])
+    heard = transcribe_scenes(video, starts + [total], proper_nouns(script))
     rows = []
     for scene, text in zip(script.scenes, heard):
         expected = clean(scene.text, keep_audio_tags=False)
