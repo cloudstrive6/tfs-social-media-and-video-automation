@@ -259,3 +259,19 @@ def test_voice_still_clears_the_new_effects():
     from test_sfx_v2 import synthetic_voice
     _, rep = sv.mix(synthetic_voice(30.0), v3_shots(), 30.0)
     assert rep["voice_over_sfx_db_p10"] >= 15, rep["voice_over_sfx_db_p10"]
+
+
+def test_review_view_accepts_every_atlas_kind():
+    """The review team's shot list (pipeline._atlas_shotlist) must validate whichever kind opens a scene (dry run 2
+    crashed on card_type 'chart')."""
+    import typing
+
+    from tfs import pipeline
+    from tfs.models import Shot
+    allowed = set(typing.get_args(Shot.model_fields["card_type"].annotation))
+    kinds = typing.get_args(AtlasShot.model_fields["k"].annotation)
+    assert {pipeline.ATLAS_CARD.get(k, "none") for k in kinds} <= allowed
+    shots = v3_shots() + [{"k": "waffle", "t0": 29, "t1": 31, "big": "28%"}, {"k": "balance", "t0": 31, "t1": 33}]
+    scenes = type("S", (), {"scenes": [type("C", (), {"id": i + 1})() for i in range(len(shots))]})()
+    view = pipeline._atlas_shotlist(scenes, [s["t0"] for s in shots], 33.5, shots)
+    assert len(view.shots) == len(shots) and all(pipeline._atlas_describe(s) for s in shots)

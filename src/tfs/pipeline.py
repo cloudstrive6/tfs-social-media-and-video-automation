@@ -136,8 +136,8 @@ HERO_CLIP = "assets/broll/hero_ph_push.mp4"   # approved 3D push into Metro Mani
 
 
 ATLAS_CARD = {"map": "map", "doc": "document", "cards": "stat", "bars": "bars", "timeline": "timeline",
-              "globe": "map", "checklist": "list", "linechart": "chart", "barchart": "bars", "waffle": "chart",
-              "balance": "bars", "dates": "timeline", "media": "photo"}
+              "globe": "map", "checklist": "quote", "linechart": "stat", "barchart": "bars", "waffle": "stat",
+              "balance": "bars", "dates": "timeline", "media": "none"}       # values must be Shot.card_type literals
 
 
 def _atlas_describe(s: dict) -> str:
@@ -153,21 +153,21 @@ def _atlas_describe(s: dict) -> str:
         return f"{k}: " + "; ".join(" ".join(str(v) for v in it.values() if v) for it in s.get("items", []))
     if k == "compare":
         return f"compare card: {s.get('ph', {})} vs {s.get('nz', {})}"
-    stamp = f", stamp '{s['stamp']['text']}'" if s.get("stamp") else ""
+    stamp = f", stamp '{s['stamp'].get('text', '')}'" if s.get("stamp") else ""
     if k == "globe":
-        return (f"line globe turning to {', '.join(h['name'] for h in s.get('highlight', [])) or 'the region'}"
-                f"; dots {[p['name'] for p in s.get('places', [])]}; routes {[a['names'] for a in s.get('arcs', [])]}"
+        return (f"line globe turning to {', '.join(h.get('name', h.get('iso', '')) for h in s.get('highlight', [])) or 'the region'}"
+                f"; dots {[p.get('name', '') for p in s.get('places', [])]}; routes {[a.get('names', []) for a in s.get('arcs', [])]}"
                 + stamp)
     if k == "checklist":
-        return "checklist: " + "; ".join(f"{i['text']} ({i.get('mark', 'tick')})" for i in s.get("items", [])) + stamp
+        return "checklist: " + "; ".join(f"{i.get('text', '')} ({i.get('mark', 'tick')})" for i in s.get("items", [])) + stamp
     if k in ("linechart", "barchart", "waffle", "balance", "dates"):
         vals = "; ".join(" ".join(str(v) for kk, v in it.items() if kk in ("label", "value", "big", "small") and v)
                          for it in s.get("items", []))
         return f"{k}: {s.get('head', '')} {s.get('big', '')} {vals} {s.get('callout', '')}".strip() + stamp
     if k == "media":
         what = f"photo card ({s.get('credit', '')})" if s.get("src") else f"drawn {s.get('icon', 'icon')} card"
-        return (f"{what} '{s.get('name', '')}'; side list {[r['text'] for r in s.get('rows', [])]}; "
-                f"chips {[c['text'] for c in s.get('chips', [])]}") + stamp
+        return (f"{what} '{s.get('name', '')}'; side list {[r.get('text', '') for r in s.get('rows', [])]}; "
+                f"chips {[c.get('text', '') for c in s.get('chips', [])]}") + stamp
     return f"{k}: {s.get('text') or s.get('left', '')} {s.get('right', '')}".strip() + stamp
 
 
