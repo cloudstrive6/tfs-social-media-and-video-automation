@@ -56,7 +56,8 @@ def problems(text: str) -> list[str]:
     for m in _BARE_SPAN.finditer(t):
         n, unit = m.group(1), m.group(2).lower()
         unit = _TL_UNITS.get(unit, unit)
-        out.append(f'"{m.group(0)}": say which span, "sa loob ng {n} {unit}" or "sa first {n} {unit} ng <year>"')
+        out.append(f'"{m.group(0)}": say which span, "sa loob ng {n} {unit}" (add "ng <year>" if needed) or '
+                   f'"mula <month> hanggang <month> <year>"')
     for m in _IKA_DIGIT.finditer(t):
         out.append(f'"{m.group(0)}": the narrator would say "ika-" plus an English number; write "7th" style '
                    f'("sa 7th month") or a date')

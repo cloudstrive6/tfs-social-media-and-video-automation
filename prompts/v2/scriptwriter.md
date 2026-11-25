@@ -77,11 +77,17 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
 ## Natural Taglish (how Filipinos actually say it)
 Write the way a calm Manila explainer reads a script aloud, not translated English and not textbook Tagalog.
 The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
-- **Durations say which span.** "sa loob ng 7 months", "sa first 7 months ng 2026", "mula January hanggang
-  July 2026". Never "sa 7 months ng 2026" or "sa 7 buwan", which sound like a broken date.
+- **Durations say which span.** "sa loob ng 7 months ng 2026", "sa loob ng 7 months", "mula January hanggang
+  July 2026" (the way news says a span). Never "sa 7 months ng 2026" or "sa 7 buwan", which sound like a broken
+  date. In 313,000 words of Filipino speech, "first 7 months" almost never occurs; use the forms above.
 - **Ordinals and dates in English with the digits.** "sa 7th month ng 2026", "ang 4th SONA niya", "July 15, 2026",
-  "noong July 2026". Never "ika-7" or a Tagalog month next to a digit. Relative words stay Tagalog ("nitong
+  "noong July 2026". Never "ika-7" or a Tagalog month next to a digit. A month on its own may stay Tagalog with
+  its marker, as news says it ("nitong Agosto", "ngayong Nobyembre"). Relative words stay Tagalog ("nitong
   Lunes", "noong isang taon"); "unang" as the plain word for first is fine ("ang unang hakbang").
+- **Figures the way news says them.** Hedge an estimate with mahigit, nasa, halos or aabot sa ("nasa 115 million
+  na Pilipino", "aabot sa ₱1.37 trillion"); attribute every claim ("ayon sa Bureau of the Treasury", "daw",
+  "umano"). An English term of art gets a plain gloss with "o yung" ("debt service o yung bayad sa interes at
+  prinsipal"). "kasi" goes second in its clause ("Automatic kasi ang appropriation, kaya..."), not first.
 - **Verb aspect follows meaning.** A question about what will happen uses the contemplated aspect ("Babayaran
   mo ba iyon?", "Ikaw ba ang magbabayad?"); after kailangan, dapat, puwede or gusto the root form is right
   ("Kailangan mo bang bayaran?"). Never the command form as a question. Done: "binayaran"; ongoing: "binabayaran".
@@ -97,7 +103,8 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 
 | Write | Not | Why |
 |---|---|---|
-| Sa first 7 months ng 2026, ₱1.37 trillion na ang nabayaran. | Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. | the span is named; English number, English unit |
+| Sa loob ng 7 months ng 2026, ₱1.37 trillion na ang nabayaran. | Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. | the span is named; English number, English unit |
+| Mula January hanggang July 2026, ₱1.37 trillion na ang nabayaran. | Mula Enero hanggang Hulyo 2026, ₱1.37 trillion na ang nabayaran. | English months next to the year's digits |
 | ₱1.37 trillion ang nabayaran sa loob lang ng 7 months. | ₱1.37 trillion ang nabayaran sa 7 months. | "sa loob ng" says it is a span |
 | Babayaran mo ba iyon? | Bayaran mo ba iyon? | contemplated aspect for a future question |
 | Gagawin ba iyon ng Senado? | Gawin ba iyon ng Senado? | same |

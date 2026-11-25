@@ -21,8 +21,9 @@ stay as digits. Return the same script with ONLY these changes, scene by scene:
 7. A digit never sits next to a Tagalog unit, scale or month, because the narrator says the digit in English:
    "7 buwan" becomes "7 months", "3 taon" becomes "3 years", "₱1.37 trilyon" becomes "₱1.37 trillion",
    "55.9 porsyento" becomes "55.9%", "Hulyo 15" becomes "July 15", "ika-7" becomes "7th".
-8. A bare span gets its missing words: "sa 7 months ng 2026" becomes "sa first 7 months ng 2026", and
-   "sa 7 months" becomes "sa loob ng 7 months". Keep the meaning the script already states.
+8. A bare span gets its missing words: "sa 7 months ng 2026" becomes "sa loob ng 7 months ng 2026" (or "mula
+   January hanggang July 2026" when the months are known), and "sa 7 months" becomes "sa loob ng 7 months".
+   Keep the meaning the script already states.
 9. A question about what will happen takes the contemplated aspect: "Bayaran mo ba iyon?" becomes "Babayaran
    mo ba iyon?", "Gawin ba iyon?" becomes "Gagawin ba iyon?". After kailangan, dapat, puwede or gusto the root
    form stays ("Kailangan mo bang bayaran?").

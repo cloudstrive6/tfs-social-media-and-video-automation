@@ -32,7 +32,7 @@ Audience: Filipinos in the Philippines and abroad, 18 to 45, curious, tired of n
   engine reads them the way Manila explainers do ("one hundred seventy thousand five hundred ninety-eight
   pesos", "twenty twenty-six"). Never Tagalog number words. Fractions in words ("one-third").
 - **A number and its unit are in the same language**, the way Filipinos speak ("seven months", never "seven
-  buwan"): "sa loob ng 7 months", "sa first 7 months ng 2026", "sa 7th month", "July 15, 2026", "₱1.37 trillion",
+  buwan"): "sa loob ng 7 months ng 2026", "mula January hanggang July 2026", "sa 7th month", "July 15, 2026", "₱1.37 trillion",
   "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). Full forms
   (iyon, ito), no vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
   pairs: Bryce-Brain `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.
