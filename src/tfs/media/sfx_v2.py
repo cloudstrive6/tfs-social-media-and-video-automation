@@ -299,6 +299,8 @@ def build_cues(shots: list[dict], total: float, seed: int = SEED):
         elif k in V3_KINDS:
             for at, snd, name, job, ordinary in _v3_cues(s):
                 put(at, snd(), name, job, ordinary=ordinary)
+        for tg in s.get("tags", []) or []:
+            put(tg.get("at", t0), pop(), "tab pop", f"number tag '{tg.get('text', '')}' lands", ordinary=False)
         if s.get("stamp"):
             st = s["stamp"]
             put(st.get("at", t0 + 0.5), stamp_hit(), "stamp hit", f"stamp '{st.get('text', '')}' lands", ordinary=False)

@@ -134,6 +134,9 @@ introduces it.
   never turned into a count: "0 MECHANISMS" becomes a quote with who said it.
 - A file photo's lower third names the place or body; its date line says what happened and when, never as if the
   photo was taken that day ("SENATE SESSION HALL (FILE)").
+- Bar charts in time order, oldest first. The arrow runs from the first bar to the last, so use `callout` only
+  when that direction is the story ("+55.9%", "SLOWER" only if the last bar is lower).
+- One date for one event: a side list, a stamp and a lower third about the same moment carry the same date.
 - Never two scenes in a row with the same layout (for example map with a label, then a card, twice), and never a
   card straight after a card across a scene change; the engine checks and re-plans those scenes.
 - Build, don't cut: a shot that stays up gains a new element every 1.5 to 3 seconds on spoken words (rows,

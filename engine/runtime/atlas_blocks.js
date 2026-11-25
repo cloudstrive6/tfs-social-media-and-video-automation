@@ -12,7 +12,8 @@
 window.TFS_BLOCKS = function (ctx) {
   const { W, H, V, U, C, tl, el, esc, px, layer, inOut, badge, build } = ctx;
   const SAFE = !!ctx.SAFE;                                  // vertical safe area: content between 6% and 86% of the width
-  const PANEL_X = (top) => (SAFE ? `left:6%;top:${top}%` : `left:50%;top:${top}%;transform:translateX(-50%)`);
+  // a long label must wrap, never stretch the panel past 86% of the width (OFW dry run: a waffle panel ran to 96%)
+  const PANEL_X = (top) => (SAFE ? SAFE_POS : `left:50%;top:${top}%;transform:translateX(-50%)`);
   const L = window.TFSLIB;
   const MONO = `'DejaVu Sans Mono',Consolas,'Courier New',monospace`;
   const GOLD = "#B98100";                                   // gold that reads on paper; C.yel stays the fill
@@ -21,7 +22,14 @@ window.TFS_BLOCKS = function (ctx) {
   const ease = (name) => gsap.parseEase(name);
   const io2 = ease("power2.inOut"), o2 = ease("power2.out"), back = ease("back.out(2)");
   let uid = 0;
-  const panel = (inner, style) => `<div class="pnl" style="position:absolute;background:${C.sheet};border:${px(4)} solid ${C.ink};` +
+  const SAFE_POS = "@safe";
+  // on a safe vertical the panel is centred in the band between the handle (17%) and the captions (69%) and spans
+  // the safe width, so the phone screen is filled and nothing crowds the handle (round 2 reviews: bottom 45% empty)
+  const panel = (inner, style) => style === SAFE_POS
+    ? `<div style="position:absolute;left:6%;right:14%;top:17%;bottom:31%;display:flex;flex-direction:column;justify-content:safe center">` +
+      `<div class="pnl" style="position:relative;background:${C.sheet};border:${px(4)} solid ${C.ink};border-radius:${px(18)};` +
+      `box-shadow:${px(8)} ${px(8)} 0 ${C.ink};padding:${px(24)} ${px(28)}">${inner}</div></div>`
+    : `<div class="pnl" style="position:absolute;background:${C.sheet};border:${px(4)} solid ${C.ink};` +
     `border-radius:${px(18)};box-shadow:${px(8)} ${px(8)} 0 ${C.ink};padding:${px(24)} ${px(28)};${style}">${inner}</div>`;
   const kicker = (t) => t ? `<div style="font:700 ${px(V ? 22 : 20)} ${MONO};letter-spacing:3px;color:${C.muted};margin-bottom:${px(12)}">${esc(t)}</div>` : "";
   const times = (items, s, lead, gap) => L.stepTimes(items, s.t0, s.t1, lead, gap);
@@ -49,13 +57,26 @@ window.TFS_BLOCKS = function (ctx) {
     tl.to(n, { opacity: 0, duration: 0.2 }, Math.max(at + 0.4, s.t1 - 0.2));
   }
 
+  // ------------------------------------------------------------------ number tags (a spoken number the plan missed)
+  function tags(s) {
+    (s.tags || []).forEach((tg, i) => {
+      const at = typeof tg.at === "number" ? tg.at : s.t0 + 0.3;
+      const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
+      n.innerHTML = `<div style="position:absolute;left:6%;top:${V ? 60 - i * 5 : 70 - i * 7}%;font:400 ${px(V ? 54 : 50)}/1 Anton;` +
+        `color:${C.ink};background:${C.yel};border:${px(4)} solid ${C.ink};border-radius:${px(10)};padding:${px(8)} ${px(18)};` +
+        `box-shadow:${px(6)} ${px(6)} 0 ${C.ink};white-space:nowrap">${esc(tg.text)}</div>`;
+      tl.fromTo(n, { opacity: 0, x: -30 * U }, { opacity: 1, x: 0, duration: 0.25, ease: "power2.out" }, at);
+      tl.to(n, { opacity: 0, duration: 0.2 }, Math.max(at + 1.6, s.t1 - 0.2));
+    });
+  }
+
   // ------------------------------------------------------------------ globe
   build.globe = function (s) {
     const G = ctx.globe;
     if (!G) throw new Error("globe shot without SPEC.geo.globe");
     const id = `g${uid++}`;
     const n = layer(true);
-    const cx = W / 2, cy = H * (V ? 0.40 : 0.5), R0 = V ? W * 0.40 : H * 0.36;
+    const cx = W / 2, cy = H * (V ? (SAFE ? 0.44 : 0.40) : 0.5), R0 = V ? W * 0.40 : H * 0.36;
     const f = s.focus || { lon: 121.8, lat: 12.5 };
     const zoomTo = s.zoom || 2.6;
     const lam0 = f.lon - 75, phi0 = Math.max(-25, Math.min(25, f.lat * 0.4));
@@ -154,7 +175,7 @@ window.TFS_BLOCKS = function (ctx) {
           `border-radius:${px(6)};padding:${px(4)} ${px(8)};opacity:0">${esc(it.label)}</div>` : "") + `</div>`;
     }).join("");
     n.innerHTML = panel(kicker(s.head) + rows + (s.src ? `<div>${badge(s.src)}</div>` : ""),
-      `left:${V ? 6 : 22}%;right:${SAFE ? 14 : V ? 6 : 22}%;top:${V ? 24 : 20}%`);
+      SAFE ? SAFE_POS : `left:${V ? 6 : 22}%;right:${V ? 6 : 22}%;top:${V ? 24 : 20}%`);
     inOut(n, s, { scale: 0.97, y: 20 * U });
     const at = times(items, s, 0.45, 0.8);
     n.querySelectorAll(".cr").forEach((row, i) => {
@@ -421,5 +442,5 @@ window.TFS_BLOCKS = function (ctx) {
 
   // a per-frame drawer that throws must not stop the others (or the seek)
   const tick = (t) => { for (const f of TICK) { try { f(t); } catch (e) { console.error("atlas tick", e); } } };
-  return { stamp, tick, ticks: () => TICK.length };
+  return { stamp, tags, tick, ticks: () => TICK.length };
 };

@@ -74,7 +74,7 @@
   }
   const badge = (txt) => txt ? `<div style="display:inline-block;margin-top:${px(18)};font:700 ${px(V ? 24 : 27)} 'Segoe UI',sans-serif;letter-spacing:.5px;color:${C.muted};max-width:${Math.round(W * (SAFE ? 0.74 : V ? 0.84 : 0.62))}px;white-space:normal;line-height:1.3;` +
     `background:${C.sheet};border:${px(2)} solid ${C.muted};border-radius:${px(8)};padding:${px(6)} ${px(12)}">SOURCE: ${esc(txt)}</div>` : "";
-  const centerBox = `position:absolute;left:${SAFE ? 46 : 50}%;top:${V ? "34%" : "47%"};transform:translate(-50%,-50%);width:${SAFE ? 78 : V ? 88 : 72}%;text-align:center`;
+  const centerBox = `position:absolute;left:${SAFE ? 46 : 50}%;top:${SAFE ? "40%" : V ? "34%" : "47%"};transform:translate(-50%,-50%);width:${SAFE ? 78 : V ? 88 : 72}%;text-align:center`;
 
   // ------------------------------------------------------------------ shot builders
   const build = {
@@ -240,6 +240,7 @@
     try {
       (build[s.k] || (() => { throw new Error("unknown shot " + s.k); }))(s);
       if (X && s.stamp) X.stamp(s);
+      if (X && s.tags) X.tags(s);
     } catch (e) {
       window.__atlasErrors.push(`${s.k} at ${s.t0}: ${e && e.message}`);
       console.error("atlas: shot skipped", s.k, s.t0, e);

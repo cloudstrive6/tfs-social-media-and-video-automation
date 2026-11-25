@@ -282,18 +282,21 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int], hoo
                    + chapter_cards, key=lambda s: s["t0"])
     bad = _photo_check(item, d, script, shots, dict(picker.assets))
     if bad:                                          # a photo that does not show its label is never shown with it
-        shots = atlas_plan.drop_photos(shots, bad)
+        shots = atlas_plan.drop_photos(shots, bad, kind)
     assets = {k: v for k, v in picker.assets.items() if k not in bad}
     if any(s.get("src") == "assets/hero.mp4" for s in shots):
         assets["assets/hero.mp4"] = ROOT / HERO_CLIP
     (d / "atlas_shots.json").write_text(json.dumps(shots, ensure_ascii=False, indent=1), encoding="utf-8")
     (d / "shots.json").write_text(_atlas_shotlist(script, starts, total, shots).model_dump_json(indent=1),
                                   encoding="utf-8")       # what the review team expects each scene to show
+    tagged = atlas_plan.add_number_tags(shots, atlas_plan.caption_words(clips, starts))   # every spoken number shows
+    if tagged:
+        (d / "atlas_shots.json").write_text(json.dumps(shots, ensure_ascii=False, indent=1), encoding="utf-8")
     words = atlas_plan.mark_keys(atlas_plan.caption_words(clips, starts), plan, script.scenes, starts, total, shots)
     (d / "atlas_qc.json").write_text(json.dumps({
         "families": atlas_plan.family_runs(shots), "variety_problems": atlas_plan.variety_problems(shots),
         "plan_problems": atlas_plan.plan_problems(shots, words, starts, script.scenes),
-        "photos_rejected": sorted(bad),
+        "photos_rejected": sorted(bad), "number_tags": tagged,
         "builds": [[s["k"], s["t0"], atlas_plan.builds(s)] for s in shots],
         "key_words": [w["w"] for w in words if w.get("key")]}, ensure_ascii=False, indent=1), encoding="utf-8")
     sp = atlas.spec(item["id"].replace(".", "-"), size, shots, words, total)

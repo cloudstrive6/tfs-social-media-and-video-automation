@@ -207,8 +207,9 @@ def _runtime(s: AtlasShot) -> dict:
     elif s.k == "split":
         d.update({"left": s.left, "right": s.right, "text": s.text, "src": s.src})
     elif s.k == "checklist":
-        d.update({"head": s.head, "src": s.src, "items": [{"text": i.text, "mark": i.mark or "tick", "label": i.label}
-                                                         for i in s.items[:5] if i.text]})
+        d.update({"head": s.head, "src": s.src, "items": [
+            {"text": i.text or i.big or i.small or i.label, "mark": i.mark or "tick", "label": i.label if i.text else ""}
+            for i in s.items[:5] if item_text(i)]})
     elif s.k in ("linechart", "barchart") and len([i for i in s.items if i.num or i.value]) < 2:
         # a chart without two data points cannot be drawn (impeachment dry run: one blanked the whole video); its
         # figure goes on a card instead
@@ -382,7 +383,9 @@ def to_shots(plan: AtlasPlan, scenes: list, clips: list, starts: list[float], to
                     hero_used = True
                 else:
                     d = resolve(s.broll_query, s.word, t0, t1) if s.broll_query else None
-                    if d is None:                        # no licensed photo: say it in type instead
+                    if d is None and kind == "vertical" and s.word:   # Shorts: a pictogram card keeps the picture
+                        d = {"k": "media", "icon": icon_for(f"{s.broll_query} {s.word}"), "name": s.word.upper()}
+                    elif d is None:                      # no licensed photo: say it in type instead
                         d = {"k": "bigtext", "text": (s.word or s.broll_query).upper()}
                         if not d["text"]:
                             continue
@@ -676,19 +679,39 @@ def _scene_of(t: float, starts: list[float]) -> int:
     return i
 
 
-def number_problems(shots: list[dict], words: list[dict], starts: list[float], scenes: list) -> list[tuple[int, str]]:
-    """(scene id, problem) for each spoken number that no card or chart on screen shows while it is said (from
-    0.3 s before the word to 2.5 s after it)."""
+def missing_numbers(shots: list[dict], words: list[dict]) -> list[tuple[float, str]]:
+    """(time, as said) for each spoken number that no card, chart or number tag on screen shows while it is said
+    (from 0.3 s before the word to 2.5 s after it)."""
     out = []
     for t, said, v in spoken_numbers(words):
         on = [s for s in shots if s["t1"] > t - 0.3 and s["t0"] < t + 2.5 and s["t1"] - s["t0"] > 0.01]
         want = [v] if v >= 0 else [-v * k for k in (1, 1e3, 1e6, 1e9, 1e12)]
-        if any(abs(x - y) <= 0.015 * max(abs(y), 1e-9) for s in on for x in _shot_values(s) for y in want):
+        vals = [x for s in on for x in _shot_values(s) + [y for tg in s.get("tags", []) for y in _values(tg["text"])]]
+        if any(abs(x - y) <= 0.015 * max(abs(y), 1e-9) for x in vals for y in want):
             continue
-        sid = scenes[_scene_of(t, starts)].id if scenes else 0
-        out.append((sid, f"'{said}' is spoken at {t:.1f} s but no card or chart shows it then; put it on a card or "
-                         f"chart anchored on that word"))
+        out.append((t, said))
     return out
+
+
+def number_problems(shots: list[dict], words: list[dict], starts: list[float], scenes: list) -> list[tuple[int, str]]:
+    """(scene id, problem) for each spoken number that no card or chart on screen shows while it is said."""
+    return [((scenes[_scene_of(t, starts)].id if scenes else 0),
+             f"'{said}' is spoken at {t:.1f} s but no card or chart shows it then; put it on a card or chart anchored "
+             f"on that word") for t, said in missing_numbers(shots, words)]
+
+
+def add_number_tags(shots: list[dict], words: list[dict]) -> list[str]:
+    """Last guarantee that every spoken number is on screen on its word: a number the plan still misses after its
+    re-plan gets a gold number tag on the shot that is up when it is said. Returns what was tagged."""
+    done = []
+    for t, said in missing_numbers(shots, words):
+        host = next((s for s in shots if s["t0"] <= t < s["t1"] and s["t1"] - s["t0"] > 0.01), None)
+        if host is None:
+            continue
+        text = said.upper().replace("PERCENT", "%").strip(" ,.?!")
+        host.setdefault("tags", []).append({"text": text, "at": round(t, 3)})
+        done.append(f"{text} at {t:.1f} s")
+    return done
 
 
 # ---------------------------------------------------------------- composition: no two scenes look the same
@@ -782,18 +805,22 @@ def settled_time(shots: list[dict], a: float, b: float) -> float:
         ready = max(ready, (big_at if big_at is not None and big_at >= s["t0"] + 0.6 else s["t0"] + 0.9) + 1.5)
     elif s["k"] == "waffle":                                   # grid wipe, fill, label
         ready = max(ready, s["t0"] + 2.6, (big_at or 0) + 0.4)
-    elif s["k"] == "globe":                                    # rotation and zoom
-        ready = max(ready, s["t0"] + 3.2)
+    elif s["k"] == "globe":                                    # rotation, zoom, then the routes draw
+        ready = max(ready, s["t0"] + 3.2, *[a.get("at", 0) + 1.4 for a in s.get("arcs", [])])
     return round(min(max(ready, mid if mid < t1 - 0.3 else t0), t1 - 0.3), 2)
 
 
-def drop_photos(shots: list[dict], bad: set[str]) -> list[dict]:
+def drop_photos(shots: list[dict], bad: set[str], kind: str = "long_form") -> list[dict]:
     """Shots whose photo did not pass the photo check: a b-roll cutaway becomes a type card of its word; a media card
     keeps its layout with a pictogram and loses every word that claims a photo."""
     out = []
     for s in shots:
         if s.get("src") not in bad:
             out.append(s)
+            continue
+        if s["k"] == "broll" and kind == "vertical" and s.get("word"):
+            out.append({kk: v for kk, v in s.items() if kk in ("t0", "t1", "instant", "stamp", "keyAt")}
+                       | {"k": "media", "icon": icon_for(s["word"]), "name": s["word"].upper()})
             continue
         if s["k"] == "broll":
             text = (s.get("word") or "").upper()

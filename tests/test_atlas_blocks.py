@@ -421,3 +421,19 @@ def test_new_videos_use_the_vertical_safe_area():
     assert sp["safe"] is True and atlas.spec("v5", (1080, 1920), [], [], 2.0, safe=False)["safe"] is False
     js = (ROOT / "engine" / "runtime" / "atlas.js").read_text(encoding="utf-8")
     assert "const SAFE = V && !!S.safe;" in js and "window.__atlasErrors" in js     # a bad shot is skipped, not fatal
+
+
+def test_round3_checklist_rows_pictograms_and_number_tags():
+    plan = _plan_one(AtlasShot(k="checklist", items=[AtlasItem(big="A way to pay the debt directly", mark="x"),
+                                                     AtlasItem(small="Taxes", mark="tick")]))
+    ck = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)[1]
+    assert [i["text"] for i in ck["items"]] == ["A way to pay the debt directly", "Taxes"]
+    plan = _plan_one(AtlasShot(k="map"), AtlasShot(k="broll", at_word="average", broll_query="Senate hall", word="THE SENATE"))
+    v = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)
+    lf = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "long_form", lambda *a: None)
+    assert v[-1]["k"] == "media" and v[-1]["icon"] and v[-1]["name"] == "THE SENATE" and lf[-1]["k"] == "bigtext"
+    assert ap.drop_photos([{"k": "broll", "t0": 0, "t1": 2, "src": "a", "word": "THE HOUSE"}], {"a"}, "vertical")[0]["k"] == "media"
+    shots = [{"k": "map", "t0": 0.0, "t1": 5.0}]
+    words = [{"w": "₱118.5", "t0": 2.0}, {"w": "billion", "t0": 2.4}]
+    assert ap.add_number_tags(shots, words) == ["₱118.5 BILLION at 2.0 s"]
+    assert shots[0]["tags"] == [{"text": "₱118.5 BILLION", "at": 2.0}] and ap.missing_numbers(shots, words) == []
