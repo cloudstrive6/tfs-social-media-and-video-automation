@@ -11,6 +11,8 @@
  */
 window.TFS_BLOCKS = function (ctx) {
   const { W, H, V, U, C, tl, el, esc, px, layer, inOut, badge, build } = ctx;
+  const SAFE = !!ctx.SAFE;                                  // vertical safe area: content between 6% and 86% of the width
+  const PANEL_X = (top) => (SAFE ? `left:6%;top:${top}%` : `left:50%;top:${top}%;transform:translateX(-50%)`);
   const L = window.TFSLIB;
   const MONO = `'DejaVu Sans Mono',Consolas,'Courier New',monospace`;
   const GOLD = "#B98100";                                   // gold that reads on paper; C.yel stays the fill
@@ -31,11 +33,11 @@ window.TFS_BLOCKS = function (ctx) {
     const at = typeof st.at === "number" ? st.at : s.t0 + 0.5;
     const c = col(st.color, C.red);
     // long stamps shrink to fit about 82% of the width (Anton caps advance about 0.5 em; dry run 3 ran edge to edge)
-    const fs = Math.min((V ? 66 : 70) * U, (0.82 * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
+    const fs = Math.min((V ? 66 : 70) * U, ((SAFE ? 0.72 : 0.82) * W - 80 * U) / (Math.max(1, String(st.text).length) * 0.5));
     const n = el("div", "position:absolute;inset:0;pointer-events:none;opacity:0");
     // verticals: in the band between the panels (top 20 to 55%) and the captions (72%), so it never hides the number
     const top = st.pos === "top" ? (V ? 23 : 15) : st.pos === "mid" ? (V ? 40 : 48) : (V ? 62 : 15);
-    n.innerHTML = `<div style="position:absolute;left:50%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
+    n.innerHTML = `<div style="position:absolute;left:${SAFE ? 46 : 50}%;top:${top}%;transform:translate(-50%,-50%) rotate(-6deg)">` +
       `<div class="stp" style="font:400 ${fs.toFixed(0)}px/1 Anton;letter-spacing:3px;color:${c};white-space:nowrap;` +
       `border:${px(7)} solid ${c};border-radius:${px(10)};padding:${px(8)} ${px(26)};background:rgba(248,242,228,.94);` +
       `box-shadow:0 0 ${px(26)} ${c}88, inset 0 0 0 ${px(3)} rgba(248,242,228,.94), inset 0 0 0 ${px(6)} ${c}55;` +
@@ -79,7 +81,7 @@ window.TFS_BLOCKS = function (ctx) {
         `<circle class="pd" r="${(8 * U).toFixed(1)}" fill="${C.red}" stroke="#fff" stroke-width="${(2.5 * U).toFixed(1)}"/>` +
         `<text class="pt" font-family="${MONO}" font-weight="700" font-size="${(V ? 26 : 24) * U}" letter-spacing="2" fill="${C.ink}" stroke="${C.sheet}" stroke-width="${(6 * U).toFixed(1)}" paint-order="stroke">${esc(String(p.name).toUpperCase().replace(/\s+/g, " "))}</text></g>`).join("") +
       `</svg>` +
-      (s.label ? `<div class="glab" style="position:absolute;left:6%;top:${V ? 17 : 72}%;font:800 ${px(V ? 40 : 34)} Montserrat;color:${C.ink};background:${C.yel};` +
+      (s.label ? `<div class="glab" style="position:absolute;left:6%;top:${V ? 17 : 72}%;${SAFE ? "max-width:74%;" : ""}font:800 ${px(V ? 40 : 34)} Montserrat;color:${C.ink};background:${C.yel};` +
         `padding:${px(10)} ${px(18)};border-radius:${px(8)};box-shadow:${px(5)} ${px(5)} 0 ${C.ink}">${esc(s.label)}</div>` : "") +
       (s.src ? `<div style="position:absolute;left:6%;top:${V ? 60 : 88}%">${badge(s.src)}</div>` : "");
     inOut(n, s, { scale: 0.96 });
@@ -152,7 +154,7 @@ window.TFS_BLOCKS = function (ctx) {
           `border-radius:${px(6)};padding:${px(4)} ${px(8)};opacity:0">${esc(it.label)}</div>` : "") + `</div>`;
     }).join("");
     n.innerHTML = panel(kicker(s.head) + rows + (s.src ? `<div>${badge(s.src)}</div>` : ""),
-      `left:${V ? 6 : 22}%;right:${V ? 6 : 22}%;top:${V ? 24 : 20}%`);
+      `left:${V ? 6 : 22}%;right:${SAFE ? 14 : V ? 6 : 22}%;top:${V ? 24 : 20}%`);
     inOut(n, s, { scale: 0.97, y: 20 * U });
     const at = times(items, s, 0.45, 0.8);
     n.querySelectorAll(".cr").forEach((row, i) => {
@@ -173,6 +175,7 @@ window.TFS_BLOCKS = function (ctx) {
   build.linechart = function (s) {
     const n = layer(true);
     const pts = (s.items || []).filter((it) => typeof it.num === "number").slice(0, 12);
+    if (pts.length < 2) throw new Error("linechart needs 2 or more numeric points");
     const cw = Math.round(W * (V ? 0.7 : 0.66)), ch = Math.round(H * (V ? 0.2 : 0.34)), pad = 18 * U;   // panel within 88% of a vertical
     const nums = pts.map((p) => p.num), lo0 = Math.min(...nums), hi0 = Math.max(...nums), sp = (hi0 - lo0) || Math.abs(hi0) || 1;
     const lo = lo0 - sp * 0.15, hi = hi0 + sp * 0.12;
@@ -195,7 +198,7 @@ window.TFS_BLOCKS = function (ctx) {
     n.innerHTML = panel(kicker(s.head) +
       `<div class="big" style="font:400 ${px(V ? 92 : 84)}/1 Anton;color:${C.red};margin-bottom:${px(16)};white-space:nowrap;opacity:0">${esc(L.figAt(s.big, 0))}</div>` +
       `<div style="position:relative">${svg}${callout}</div>` + (s.src ? `<div>${badge(s.src)}</div>` : ""),
-      `left:50%;top:${V ? 19 : 14}%;transform:translateX(-50%)`);
+      PANEL_X(V ? 19 : 14));
     inOut(n, s, { y: 30 * U });
     const drawAt = typeof s.bigAt === "number" && s.bigAt < s.t1 - 1 ? s.bigAt : s.t0 + 0.55, drawDur = 2.25;
     const coAt = typeof s.calloutAt === "number" && s.calloutAt >= drawAt ? s.calloutAt : drawAt + drawDur + 0.05;
@@ -226,6 +229,7 @@ window.TFS_BLOCKS = function (ctx) {
   build.barchart = function (s) {
     const n = layer(true);
     const items = (s.items || []).slice(0, 4);
+    if (!items.length) throw new Error("barchart needs items");
     const cw = Math.round(W * (V ? 0.7 : 0.6)), ch = Math.round(H * (V ? 0.26 : 0.4));
     const max = Math.max(...items.map((it) => Math.abs(it.num) || 0), 1e-9);
     const slot = cw / items.length, bw = Math.min(slot * 0.56, 190 * U), base = ch;
@@ -249,7 +253,7 @@ window.TFS_BLOCKS = function (ctx) {
       `font:400 ${px(V ? 46 : 42)}/1 Anton;color:#fff;background:${C.red};padding:${px(6)} ${px(16)};border-radius:${px(8)};white-space:nowrap;opacity:0">${esc(s.callout)}</div>` : "";
     n.innerHTML = panel(kicker(s.head) + `<div style="position:relative;width:${cw}px;height:${(ch + 70 * U).toFixed(0)}px;margin-top:${px(a ? 120 : 30)}">` +
       `<div style="position:absolute;left:0;right:0;top:${base}px;border-top:${px(4)} solid ${C.ink}"></div>${bars}${arrow}</div>` +
-      (s.src ? `<div>${badge(s.src)}</div>` : ""), `left:50%;top:${V ? 18 : 12}%;transform:translateX(-50%)`);
+      (s.src ? `<div>${badge(s.src)}</div>` : ""), PANEL_X(V ? 18 : 12));
     inOut(n, s, { y: 30 * U });
     const at = times(items, s, 0.45, 0.7);
     const bb = n.querySelectorAll(".bb"), bv = n.querySelectorAll(".bv");
@@ -290,7 +294,7 @@ window.TFS_BLOCKS = function (ctx) {
     n.innerHTML = panel(kicker(s.head) + `<div style="display:flex;flex-direction:${V ? "column" : "row"}">` +
       `<div><div style="position:relative;width:${g}px;height:${g}px">${rows}</div>` +
       `<div style="font:700 ${px(17)} ${MONO};letter-spacing:2px;color:${C.muted};margin-top:${px(10)}">EACH SQUARE = 0.25%</div></div>${label}</div>` +
-      (s.src ? `<div>${badge(s.src)}</div>` : ""), `left:50%;top:${V ? 16 : 12}%;transform:translateX(-50%)`);
+      (s.src ? `<div>${badge(s.src)}</div>` : ""), PANEL_X(V ? 16 : 12));
     inOut(n, s, { y: 30 * U });
     const wr = n.querySelectorAll(".wr"), wc = Array.from(n.querySelectorAll(".wc"));
     tl.to(wr, { opacity: 1, duration: 0.12, stagger: 0.045 }, s.t0 + 0.3);       // grid wipes in top to bottom, about 1 s
@@ -320,7 +324,7 @@ window.TFS_BLOCKS = function (ctx) {
       `<div class="bs" style="position:absolute;left:0;top:0;bottom:0;width:0;background:${C.red}"></div></div>` +
       `<div class="bn" style="font:400 ${px(V ? 96 : 92)}/1 Anton;color:${C.red};margin-top:${px(18)};white-space:nowrap;opacity:0">${esc(L.figAt(s.big, 0))}</div>` +
       (s.small ? `<div class="bt" style="display:inline-block;font:800 ${px(26)} Montserrat;color:#fff;background:${C.ink};padding:${px(6)} ${px(12)};border-radius:${px(6)};margin-top:${px(8)};opacity:0">${esc(s.small)}</div>` : "") +
-      `<div>${chips}</div>` + (s.src ? `<div>${badge(s.src)}</div>` : ""), `left:50%;top:${V ? 22 : 18}%;transform:translateX(-50%)`);
+      `<div>${chips}</div>` + (s.src ? `<div>${badge(s.src)}</div>` : ""), PANEL_X(V ? 22 : 18));
     inOut(n, s, { y: 30 * U });
     const q = (c) => n.querySelector(c);
     tl.to(q(".bo"), { scaleX: 1, duration: 0.5, ease: "power2.out" }, s.t0 + 0.3);
@@ -353,7 +357,7 @@ window.TFS_BLOCKS = function (ctx) {
         `<div style="font:400 ${px(V ? 120 : 112)}/1.05 Anton;color:${C.ink};text-align:center;margin-top:${px(8)}">${esc(it.big)}</div>` +
         `<div style="font:800 ${px(V ? 24 : 23)}/1.25 Montserrat;color:${C.ink};text-align:center;padding:${px(6)} ${px(14)} ${px(16)}">${esc(it.small)}</div></div>`;
     }).join("");
-    n.innerHTML = `<div style="position:absolute;left:5%;right:5%;top:${V ? 24 : 22}%;text-align:center">${kicker(s.head)}` +
+    n.innerHTML = `<div style="position:absolute;left:5%;right:${SAFE ? 14 : 5}%;top:${V ? 24 : 22}%;text-align:center">${kicker(s.head)}` +
       `<div style="display:flex;gap:${px(26)};justify-content:center;flex-wrap:wrap">${cards}</div>${s.src ? `<div style="text-align:center">${badge(s.src)}</div>` : ""}</div>`;
     tl.set(n, { opacity: 1 }, s.t0);
     tl.to(n, { opacity: 0, duration: 0.25 }, s.t1 - 0.25);
@@ -415,5 +419,7 @@ window.TFS_BLOCKS = function (ctx) {
     n.querySelectorAll(".mc").forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.22, ease: "back.out(2)" }, cAt[i]));
   };
 
-  return { stamp, tick: (t) => { for (const f of TICK) f(t); }, ticks: () => TICK.length };
+  // a per-frame drawer that throws must not stop the others (or the seek)
+  const tick = (t) => { for (const f of TICK) { try { f(t); } catch (e) { console.error("atlas tick", e); } } };
+  return { stamp, tick, ticks: () => TICK.length };
 };

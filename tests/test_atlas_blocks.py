@@ -402,3 +402,22 @@ def test_vertical_panels_stay_inside_the_safe_area():
     assert 'right:${V ? "12%" : "8%"}' in js                          # side list clear of the button strip
     for line in ('W * (V ? 0.7 : 0.66)', 'W * (V ? 0.7 : 0.6)'):    # chart panels within about 88% of the width
         assert line in js
+
+
+def test_charts_without_data_become_cards_and_references_are_not_figures():
+    plan = _plan_one(AtlasShot(k="linechart", head="NATIONAL DEBT", big="₱19.66 TRILLION", items=[]),
+                     AtlasShot(k="barchart", at_word="average", callout="2X", items=[AtlasItem(label="House", value="1/3")]))
+    shots = ap.to_shots(plan, [Sc(1)], [Clip(Path("a"), 7.2, WORDS)], [0.4], 8.0, "vertical", lambda *a: None)
+    assert [s["k"] for s in shots[1:]] == ["cards", "cards"]
+    assert shots[1]["items"][0]["big"] == "₱19.66 TRILLION" and shots[2]["items"][0]["big"] == "1/3"
+    words = [{"w": "Article", "t0": 1.0}, {"w": "11", "t0": 1.3}, {"w": "Section", "t0": 2.0}, {"w": "3", "t0": 2.3}]
+    assert ap.number_problems([], words, [0.0], [Sc(1)]) == []
+    assert ap.chart_problems([{"k": "waffle", "t0": 1, "big": "1/3", "frac": 0.333}]) == []
+    assert ap.chart_problems([{"k": "waffle", "t0": 1, "big": "1/3", "frac": 0.16}])
+
+
+def test_new_videos_use_the_vertical_safe_area():
+    sp = atlas.spec("s", (1080, 1920), [], [], 2.0)
+    assert sp["safe"] is True and atlas.spec("v5", (1080, 1920), [], [], 2.0, safe=False)["safe"] is False
+    js = (ROOT / "engine" / "runtime" / "atlas.js").read_text(encoding="utf-8")
+    assert "const SAFE = V && !!S.safe;" in js and "window.__atlasErrors" in js     # a bad shot is skipped, not fatal

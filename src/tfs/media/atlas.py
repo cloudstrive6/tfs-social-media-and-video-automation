@@ -196,13 +196,16 @@ def frac_at(word_time: float, line_start: float, line_dur: float) -> float:
 
 
 # ---------------------------------------------------------------- spec, project, render
-def spec(comp_id: str, size: tuple[int, int], shots: list[dict], words: list[dict], duration: float) -> dict:
+def spec(comp_id: str, size: tuple[int, int], shots: list[dict], words: list[dict], duration: float,
+         safe: bool = True) -> dict:
+    """`safe` keeps vertical content between 6% and 86% of the width (clear of the platform buttons); the approved
+    v5 Short was rendered before it, so its regression check passes safe=False."""
     w, h = size
     g = geo(round(w / h, 4))
     if any(s.get("k") == "globe" for s in shots):       # the world rings only travel with a globe shot
         g = dict(g, globe=globe_geo())
     return {"id": comp_id, "width": w, "height": h, "duration": round(duration, 3), "geo": g,
-            "shots": sorted(shots, key=lambda s: s["t0"]), "words": words}
+            "shots": sorted(shots, key=lambda s: s["t0"]), "words": words, "safe": safe}
 
 
 def _css() -> str:

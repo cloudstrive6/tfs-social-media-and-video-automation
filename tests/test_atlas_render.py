@@ -62,7 +62,7 @@ def test_v5_frames_unchanged(tmp_path):
         f = tmp_path / f"photo{i}.jpg"
         _photo(f, i + 1)
         assets[src] = f
-    sp = atlas.spec("v5-regress", (1080, 1920), shots, words, 41.655)
+    sp = atlas.spec("v5-regress", (1080, 1920), shots, words, 41.655, safe=False)   # v5 predates the safe area
     assert "globe" not in sp["geo"]
     old = _snap((FIX / "atlas_v5_runtime.js").read_text(encoding="utf-8"), sp, tmp_path / "old", assets, V5_TIMES)
     new = _snap(None, sp, tmp_path / "new", assets, V5_TIMES)

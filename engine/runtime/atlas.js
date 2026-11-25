@@ -10,6 +10,10 @@
  */
 (function () {
   const S = window.SPEC, W = S.width, H = S.height, V = H > W * 1.3;
+  // safe area (2026-11-26 reviews: cards reached 89 to 98% of the width, under the like/comment/share strip): on a
+  // vertical with SPEC.safe, content sits between 6% and 86% of the width. The approved v5 Short predates it.
+  const SAFE = V && !!S.safe;
+  const RIGHT = (n) => (SAFE ? 14 : n);
   const U = Math.min(W, H) / 1080 * (V ? 1.25 : 1.35);  // 1 unit = 1 px at 1080 short side; wide frames read from further away
   const C = { paper: "#EFE6D2", ink: "#1B2430", red: "#C8102E", teal: "#0F766E", yel: "#FCD116", muted: "#6b5a3f", sheet: "#F8F2E4" };
   const stage = document.getElementById("stage");
@@ -68,9 +72,9 @@
     else tl.fromTo(node, Object.assign({ opacity: 0 }, from || { y: 30 * U }), { opacity: 1, y: 0, x: 0, scale: 1, duration: 0.35, ease: "power2.out" }, s.t0);
     tl.to(node, { opacity: 0, duration: 0.25, ease: "power1.in" }, Math.max(s.t0 + 0.4, s.t1 - 0.25));
   }
-  const badge = (txt) => txt ? `<div style="display:inline-block;margin-top:${px(18)};font:700 ${px(V ? 24 : 27)} 'Segoe UI',sans-serif;letter-spacing:.5px;color:${C.muted};max-width:${Math.round(W * (V ? 0.84 : 0.62))}px;white-space:normal;line-height:1.3;` +
+  const badge = (txt) => txt ? `<div style="display:inline-block;margin-top:${px(18)};font:700 ${px(V ? 24 : 27)} 'Segoe UI',sans-serif;letter-spacing:.5px;color:${C.muted};max-width:${Math.round(W * (SAFE ? 0.74 : V ? 0.84 : 0.62))}px;white-space:normal;line-height:1.3;` +
     `background:${C.sheet};border:${px(2)} solid ${C.muted};border-radius:${px(8)};padding:${px(6)} ${px(12)}">SOURCE: ${esc(txt)}</div>` : "";
-  const centerBox = `position:absolute;left:50%;top:${V ? "34%" : "47%"};transform:translate(-50%,-50%);width:${V ? 88 : 72}%;text-align:center`;
+  const centerBox = `position:absolute;left:${SAFE ? 46 : 50}%;top:${V ? "34%" : "47%"};transform:translate(-50%,-50%);width:${SAFE ? 78 : V ? 88 : 72}%;text-align:center`;
 
   // ------------------------------------------------------------------ shot builders
   const build = {
@@ -84,7 +88,7 @@
       if (s.fill === "nz") tl.to("#nzFill", { attr: { "fill-opacity": 0.85, "stroke-opacity": 1 }, duration: 0.6 }, s.t0 + 0.6);
       if (s.label) {
         const n = layer();
-        n.innerHTML = `<div style="position:absolute;${s.labelPos || `left:6%;top:${V ? 60 : 70}%`};font:800 ${px(V ? 40 : 34)} Montserrat;color:${C.ink};background:${C.yel};` +
+        n.innerHTML = `<div style="position:absolute;${s.labelPos || `left:6%;top:${V ? 60 : 70}%`};${SAFE ? "max-width:74%;" : ""}font:800 ${px(V ? 40 : 34)} Montserrat;color:${C.ink};background:${C.yel};` +
           `padding:${px(10)} ${px(18)};border-radius:${px(8)};box-shadow:${px(5)} ${px(5)} 0 ${C.ink}">${esc(s.label)}</div>`;
         inOut(n, Object.assign({}, s, { t0: s.t0 + (s.labelDelay || 0) }), { x: -40 * U });
       }
@@ -123,7 +127,7 @@
         : `<img class="bi" src="${s.src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:${s.focus || "50% 50%"}">`;
       const gate = s.gate ? `<div style="position:absolute;inset:0;box-shadow:inset 0 0 0 ${px(26)} #0b0b0b, inset 0 0 ${px(90)} ${px(40)} rgba(0,0,0,.75);border-radius:${px(18)}"></div>` +
         `<div style="position:absolute;inset:0;filter:url(#grain);opacity:.55"></div>` : "";
-      const word = s.word ? `<div class="bw" style="position:absolute;left:${V ? 7 : 5}%;top:${V ? 52 : 62}%;font:400 ${px(V ? 64 : 76)}/1 Anton;color:${C.paper};letter-spacing:1px;` +
+      const word = s.word ? `<div class="bw" style="position:absolute;left:${V ? 7 : 5}%;${SAFE ? "max-width:72%;" : ""}top:${V ? 52 : 62}%;font:400 ${px(V ? 64 : 76)}/1 Anton;color:${C.paper};letter-spacing:1px;` +
         `background:rgba(140,20,25,.82);padding:${px(10)} ${px(22)};border-radius:${px(10)};box-shadow:${px(6)} ${px(6)} 0 rgba(15,20,32,.8)">${esc(s.word)}</div>` : "";
       const credit = s.credit ? `<div style="position:absolute;right:${px(22)};top:${px(20)};font:700 ${px(V ? 20 : 19)} 'Segoe UI',sans-serif;color:#fff;` +
         `background:rgba(15,20,32,.7);padding:${px(5)} ${px(12)};border-radius:${px(6)}">${esc(s.credit)}</div>` : "";
@@ -145,7 +149,7 @@
       (s.hl || []).forEach((h, i) => { body = body.replace(esc(h), `<span class="hl hl${i}" style="background-size:0% 100%">${esc(h)}</span>`); });
       const long = s.body.length > 260;                  // long quotes get smaller type so the card clears the captions
       const vlong = V && s.body.length > 380;            // very long: smaller again and lower, clear of the handle
-      n.innerHTML = `<div style="position:absolute;left:50%;top:${V ? (vlong ? 38 : 34) : (long ? 44 : 48)}%;width:${V ? 86 : (long ? 62 : 56)}%;transform:translate(-50%,-50%) rotate(-1.5deg);background:${C.sheet};` +
+      n.innerHTML = `<div style="position:absolute;left:${SAFE ? 46 : 50}%;top:${V ? (vlong ? 38 : 34) : (long ? 44 : 48)}%;width:${SAFE ? 72 : V ? 86 : (long ? 62 : 56)}%;transform:translate(-50%,-50%) rotate(-1.5deg);background:${C.sheet};` +
         `box-shadow:0 ${px(18)} ${px(40)} rgba(60,40,20,.35);padding:${px(54)} ${px(60)}">` +
         `<div style="font:700 ${px(18)} 'Segoe UI';letter-spacing:4px;color:${C.muted};text-align:center">${esc(s.head)}</div>` +
         `<div style="text-align:center;margin:${px(12)} 0 ${px(26)}"><span style="position:relative;display:inline-block;font:800 ${px(30)} Montserrat;color:${C.red};letter-spacing:3px;padding:${px(6)} ${px(18)}">${esc(s.sec)}` +
@@ -163,7 +167,7 @@
       const items = s.items.map((it, i) => `<div class="cd cd${i}" style="background:${C.sheet};border:${px(4)} solid ${C.ink};border-radius:${px(18)};box-shadow:${px(8)} ${px(8)} 0 ${C.ink};` +
         `padding:${px(22)} ${px(30)};${V ? "" : "flex:1"}"><div style="font:400 ${px(V ? 78 : 70)}/1 Anton;color:${it.color === "teal" ? C.teal : it.color === "ink" ? C.ink : C.red}">${esc(it.big)}</div>` +
         `<div style="font:800 ${px(V ? 30 : 26)}/1.25 Montserrat;color:${C.ink};margin-top:${px(10)}">${esc(it.small)}</div></div>`).join("");
-      n.innerHTML = `<div style="position:absolute;left:6%;right:6%;top:${V ? 22 : 30}%;display:flex;flex-direction:${V ? "column" : "row"};gap:${px(28)}">${items}</div>` +
+      n.innerHTML = `<div style="position:absolute;left:6%;right:${RIGHT(6)}%;top:${V ? 22 : 30}%;display:flex;flex-direction:${V ? "column" : "row"};gap:${px(28)}">${items}</div>` +
         `<div style="position:absolute;left:6%;top:${V ? 60 : 70}%">${badge(s.src)}</div>`;
       tl.set(n, { opacity: 1 }, s.t0);
       s.items.forEach((_, i) => tl.fromTo(n.querySelectorAll(".cd")[i], { opacity: 0, y: 50 * U }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.6)" },
@@ -178,7 +182,7 @@
         `<div style="font:400 ${px(V ? 44 : 40)} Anton;color:${it.color === "teal" ? C.teal : C.red};white-space:nowrap">${esc(it.value)}</div></div>` +
         `<div style="position:relative;height:${px(46)};background:#fff;border:${px(3)} solid ${C.ink};border-radius:${px(10)};overflow:hidden">` +
         `<div class="bf bf${i}" style="position:absolute;left:0;top:0;bottom:0;width:0;background:${it.color === "teal" ? C.teal : C.red}"></div></div></div>`).join("");
-      n.innerHTML = `<div style="position:absolute;left:8%;right:8%;top:${V ? 24 : 26}%">${rows}${badge(s.src)}</div>`;
+      n.innerHTML = `<div style="position:absolute;left:${SAFE ? 6 : 8}%;right:${RIGHT(8)}%;top:${V ? 24 : 26}%">${rows}${badge(s.src)}</div>`;
       inOut(n, s);
       s.items.forEach((it, i) => tl.to(n.querySelectorAll(".bf")[i], { width: `${it.frac * 100}%`, duration: 0.9, ease: "power2.out" },
         s.t0 + 0.4 + i * Math.max(0.6, (s.t1 - s.t0 - 1.2) / s.items.length)));
@@ -188,7 +192,7 @@
       const it = s.items.map((x, i) => `<div class="ti ti${i}" style="display:flex;gap:${px(24)};align-items:flex-start;margin-bottom:${px(26)}">` +
         `<div style="flex:none;font:400 ${px(34)} Anton;color:#fff;background:${C.ink};padding:${px(6)} ${px(14)};border-radius:${px(6)}">${esc(x.date)}</div>` +
         `<div style="font:800 ${px(30)}/1.25 Montserrat;color:${C.ink};padding-top:${px(4)}">${esc(x.text)}</div></div>`).join("");
-      n.innerHTML = `<div style="position:absolute;left:8%;right:8%;top:${V ? 20 : 20}%"><div style="border-left:${px(6)} solid ${C.red};padding-left:${px(30)}">${it}</div>` +
+      n.innerHTML = `<div style="position:absolute;left:${SAFE ? 6 : 8}%;right:${RIGHT(8)}%;top:${V ? 20 : 20}%"><div style="border-left:${px(6)} solid ${C.red};padding-left:${px(30)}">${it}</div>` +
         (s.foot ? `<div style="font:400 ${px(54)}/1.1 Anton;color:${C.red};margin-top:${px(20)}">${esc(s.foot).split("\n").join("<br>")}</div>` : "") + `${badge(s.src)}</div>`;
       tl.set(n, { opacity: 1 }, s.t0);
       s.items.forEach((_, i) => tl.fromTo(n.querySelectorAll(".ti")[i], { opacity: 0, x: -40 * U }, { opacity: 1, x: 0, duration: 0.35 },
@@ -200,7 +204,7 @@
       const card = (c, col) => `<div style="flex:1;background:${C.sheet};border:${px(4)} solid ${C.ink};border-radius:${px(20)};box-shadow:${px(8)} ${px(8)} 0 ${C.ink};padding:${px(26)} ${px(30)}">` +
         `<div style="font:800 ${px(24)} Montserrat;letter-spacing:4px;color:${col}">${esc(c.name)}</div><div style="font:400 ${px(V ? 92 : 86)}/1 Anton;color:${col};margin:${px(8)} 0">${esc(c.big)}</div>` +
         `<div style="font:800 ${px(26)}/1.3 Montserrat;color:${C.ink}">${esc(c.small)}</div></div>`;
-      n.innerHTML = `<div style="position:absolute;left:6%;right:6%;top:${V ? 20 : 26}%;display:flex;flex-direction:${V ? "column" : "row"};gap:${px(30)};align-items:stretch">` +
+      n.innerHTML = `<div style="position:absolute;left:6%;right:${RIGHT(6)}%;top:${V ? 20 : 26}%;display:flex;flex-direction:${V ? "column" : "row"};gap:${px(30)};align-items:stretch">` +
         `${card(s.ph, C.red)}<div style="align-self:center;font:400 ${px(54)} Anton;color:${C.ink}">VS</div>${card(s.nz, C.teal)}</div>` +
         `<div style="position:absolute;left:6%;top:${V ? 60 : 70}%">${badge(s.src)}</div>`;
       inOut(n, s, { scale: 0.95 });
@@ -210,7 +214,7 @@
       const dots = (k, total, col) => Array.from({ length: total }, (_, i) => `<span style="display:inline-block;width:${px(V ? 26 : 22)};height:${px(V ? 26 : 22)};margin:${px(3)};border-radius:50%;` +
         `background:${i < k ? col : "#D6C9AA"}"></span>`).join("");
       const rows = s.items.map((it, i) => `<div class="sr sr${i}" style="margin-bottom:${px(30)}"><div style="font:800 ${px(30)} Montserrat;color:${C.ink};margin-bottom:${px(8)}">${esc(it.label)}</div>` +
-        `<div style="width:${px(V ? 900 : 1000)};line-height:0">${dots(it.value, it.of, it.color === "ink" ? C.ink : it.color === "teal" ? C.teal : C.red)}</div></div>`).join("");
+        `<div style="width:${SAFE ? Math.round(W * 0.78) + "px" : px(V ? 900 : 1000)};line-height:0">${dots(it.value, it.of, it.color === "ink" ? C.ink : it.color === "teal" ? C.teal : C.red)}</div></div>`).join("");
       n.innerHTML = `<div style="position:absolute;left:7%;top:${V ? 20 : 18}%">${rows}${badge(s.src)}</div>`;
       tl.set(n, { opacity: 1 }, s.t0);
       s.items.forEach((_, i) => tl.fromTo(n.querySelectorAll(".sr")[i], { opacity: 0, y: 30 * U }, { opacity: 1, y: 0, duration: 0.4 },
@@ -223,15 +227,25 @@
         `<div style="position:absolute;left:4%;top:${V ? 21 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.left)}</div>` +
         `<div style="position:absolute;left:54%;top:${V ? 21 : 12}%;width:42%;color:#fff;font:400 ${px(V ? 60 : 64)}/1.05 Anton">${esc(s.right)}</div>` +
         (s.text ? `<div style="position:absolute;left:50%;top:${V ? 46 : 64}%;transform:translateX(-50%);background:${C.paper};padding:${px(16)} ${px(30)};border-radius:${px(12)};` +
-          `font:400 ${px(V ? 70 : 72)}/1.05 Anton;color:${C.ink};${V ? "width:80%;white-space:normal;text-align:center" : "white-space:nowrap"}">${esc(s.text)}</div>` : "") +
+          `font:400 ${px(V ? 70 : 72)}/1.05 Anton;color:${C.ink};${V ? `width:${SAFE ? 72 : 80}%;white-space:normal;text-align:center${SAFE ? ";margin-left:-4%" : ""}` : "white-space:nowrap"}">${esc(s.text)}</div>` : "") +
         (s.src ? `<div style="position:absolute;left:4%;top:${V ? 58 : 72}%">${badge(s.src)}</div>` : "");
       inOut(n, s, { scale: 1.04 });
     },
   };
-  const X = window.TFS_BLOCKS ? window.TFS_BLOCKS({ W, H, V, U, C, tl, el, esc, px, layer, inOut, badge, build, globe: G.globe }) : null;
+  const X = window.TFS_BLOCKS ? window.TFS_BLOCKS({ W, H, V, U, C, tl, el, esc, px, layer, inOut, badge, build, globe: G.globe, SAFE }) : null;
+  window.__atlasErrors = [];
   for (const s of S.shots) {
-    (build[s.k] || (() => { throw new Error("unknown shot " + s.k); }))(s);
-    if (X && s.stamp) X.stamp(s);
+    // one bad shot must never blank the whole video: the timeline is only registered at the end of this script, so
+    // an uncaught error here left every frame as the bare map (impeachment dry run, 2026-11-26)
+    try {
+      (build[s.k] || (() => { throw new Error("unknown shot " + s.k); }))(s);
+      if (X && s.stamp) X.stamp(s);
+    } catch (e) {
+      window.__atlasErrors.push(`${s.k} at ${s.t0}: ${e && e.message}`);
+      console.error("atlas: shot skipped", s.k, s.t0, e);
+      if (S.debug) el("div", `position:absolute;left:2%;top:${30 + 3 * window.__atlasErrors.length}%;z-index:99;font:700 28px monospace;color:red;background:#fff`,
+        esc(window.__atlasErrors[window.__atlasErrors.length - 1]));
+    }
   }
   document.querySelectorAll("[data-bd]").forEach((n) => n.insertAdjacentHTML("afterbegin", `<div style="position:absolute;inset:0;background:rgba(239,230,210,.9)"></div>`));
 

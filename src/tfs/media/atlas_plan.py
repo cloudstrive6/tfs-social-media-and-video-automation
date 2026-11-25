@@ -209,6 +209,11 @@ def _runtime(s: AtlasShot) -> dict:
     elif s.k == "checklist":
         d.update({"head": s.head, "src": s.src, "items": [{"text": i.text, "mark": i.mark or "tick", "label": i.label}
                                                          for i in s.items[:5] if i.text]})
+    elif s.k in ("linechart", "barchart") and len([i for i in s.items if i.num or i.value]) < 2:
+        # a chart without two data points cannot be drawn (impeachment dry run: one blanked the whole video); its
+        # figure goes on a card instead
+        big = s.big or next((i.value or i.big for i in s.items if i.value or i.big), "") or s.callout or s.head
+        d = {"k": "cards", "items": [{"big": big, "small": s.head or s.small or s.callout, "color": "red"}], "src": s.src}
     elif s.k == "linechart":
         d.update({"head": s.head, "big": s.big, "callout": s.callout, "src": s.src,
                   "items": [{"label": i.label, "num": float(i.num)} for i in s.items[:12]]})
@@ -514,7 +519,12 @@ def chart_problems(shots: list[dict]) -> list[str]:
             big, last = figure(s["big"]), s["items"][-1].get("num")
             if big and last and not any(_close(last * f, big) for f in (1, 1e3, 1e6, 1e9, 1e12, 1e-3)):
                 out.append(f"linechart at {at}: headline {s['big']!r} does not match its last point {last}")
-        if k == "waffle" and s.get("big") and "%" in s["big"]:
+        frac_m = re.search(r"(\d+)\s*/\s*(\d+)", str(s.get("big", "")))
+        if k == "waffle" and frac_m and int(frac_m.group(2)):
+            pct = 100 * int(frac_m.group(1)) / int(frac_m.group(2))
+            if abs(pct - 100 * float(s.get("frac") or 0)) > 1.5:
+                out.append(f"waffle at {at}: label {s['big']!r} but {100 * float(s.get('frac') or 0):.1f}% of squares fill")
+        elif k == "waffle" and s.get("big") and "%" in s["big"]:
             pct = figure(s["big"])
             if pct is not None and abs(pct - 100 * float(s.get("frac") or 0)) > 1.5:
                 out.append(f"waffle at {at}: label {s['big']!r} but {100 * float(s.get('frac') or 0):.1f}% of squares fill")
@@ -597,6 +607,8 @@ def tidy_text(d: dict) -> None:
 
 
 # ---------------------------------------------------------------- numbers: every spoken number is on screen
+REFERENCE_WORDS = {"article", "artikulo", "section", "sec.", "sec", "seksyon", "ra", "act", "no.", "no", "blg.",
+                   "number", "chapter", "kabanata", "rule", "g.r.", "gr"}
 SCALES = {"thousand": 1e3, "k": 1e3, "million": 1e6, "m": 1e6, "milyon": 1e6, "billion": 1e9, "bilyon": 1e9,
           "b": 1e9, "bn": 1e9, "trillion": 1e12, "trilyon": 1e12, "t": 1e12}
 NUM = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*(%|percent|[a-zA-Z]+)?")
@@ -622,6 +634,9 @@ def spoken_numbers(words: list[dict]) -> list[tuple[float, str, float]]:
     for i, w in enumerate(words):
         tok = w["w"]
         if not re.search(r"\d", tok) or _is_year(tok):
+            continue
+        prev = re.sub(r"[^a-z.]", "", words[i - 1]["w"].lower()) if i else ""
+        if prev in REFERENCE_WORDS:                   # "Article 11", "Section 3", "RA 9337": a reference, not a figure
             continue
         m = NUM.search(tok)
         if not m:
