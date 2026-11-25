@@ -2,10 +2,15 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 
 from .. import llm
 from ..config import channel
 from ..models import FactCheck, HookReview, Script
+from ..taglish_lint import script_problems
+
+log = logging.getLogger(__name__)
 
 
 def _brief(item: dict) -> str:
@@ -98,10 +103,54 @@ def fact_check(script: Script, dossier: str, kind: str = "", hook_text: str = ""
     )
 
 
+_TAG = re.compile(r"\[S\d+[a-z]?\]")
+_DIGITS = re.compile(r"\d[\d,.]*\d|\d")
+
+
+def _same_content(a: Script, b: Script) -> bool:
+    """A language-only retry: same sources, and per scene the same id, chapter, speaker, visual, [S#] tags and
+    numbers, with no sentence dropped (at least 80% of the words kept). Fact-checked content cannot change."""
+    if a.sources != b.sources or len(a.scenes) != len(b.scenes):
+        return False
+    for x, y in zip(a.scenes, b.scenes):
+        if (x.id, x.chapter, x.speaker, x.visual) != (y.id, y.chapter, y.speaker, y.visual):
+            return False
+        if _TAG.findall(x.text) != _TAG.findall(y.text):
+            return False
+        if sorted(_DIGITS.findall(x.text)) != sorted(_DIGITS.findall(y.text)):
+            return False
+        if len(y.text.split()) < 0.8 * len(x.text.split()):
+            return False
+    return True
+
+
 def narration_edit(script: Script) -> Script:
-    """Narration Editor: numbers/dates/acronyms as spoken, no emphasis hyphens, no word split across scenes."""
-    edited = llm.structured("narration_editor", f"# Script\n{script.model_dump_json()}", Script)
+    """Narration Editor: numbers/dates/acronyms as spoken, no emphasis hyphens, no word split across scenes.
+    Then the Taglish lint (Bryce, 2026-11-25: "Sa 7 buwan ng 2026"): if the edit still has unnatural patterns,
+    one more pass with the problems listed; the retry is kept only if it keeps the scenes and has fewer problems.
+    What remains is logged, never fatal."""
     ids = [s.id for s in script.scenes]
+    edited = llm.structured("narration_editor", f"# Script\n{script.model_dump_json()}", Script)
     if [s.id for s in edited.scenes] != ids:        # must be the same scenes; otherwise keep the original
         return script
+    problems = script_problems([s.text for s in edited.scenes])
+    if not problems:
+        return edited
+    feedback = "\n".join(f"- {p}" for p in problems)
+    try:
+        retry = llm.structured(
+            "narration_editor",
+            f"# Script\n{edited.model_dump_json()}\n\n# Unnatural Taglish still in this script: fix each one "
+            f"(rules 7 to 9), change nothing else\n{feedback}",
+            Script,
+        )
+    except Exception as e:                          # the first edit is good enough to keep; never lose it here
+        log.warning("narration: Taglish retry failed (%s); keeping the first edit", e)
+        retry = None
+    if retry is not None and _same_content(edited, retry):
+        left = script_problems([s.text for s in retry.scenes])
+        if len(left) < len(problems):
+            edited, problems = retry, left
+    if problems:
+        log.warning("narration: Taglish lint left %d problem(s): %s", len(problems), "; ".join(problems))
     return edited

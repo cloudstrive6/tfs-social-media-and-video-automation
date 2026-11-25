@@ -101,3 +101,86 @@ def test_briefs_carry_the_language_rules(monkeypatch, tmp_path):
     assert "Babayaran" in sw and "Babayaran" in ed
     assert '"7 buwan" becomes "7 months"' in ed
     assert "A number and its unit are in the same language" in config.style_bible()
+
+
+# ---------------------------------------------------------------- the narration editor step runs the lint
+def _script(*texts):
+    from tfs.models import Scene, Script
+    return Script(scenes=[Scene(id=i, chapter="Hook", speaker="NARRATOR", text=t, visual="map")
+                          for i, t in enumerate(texts, 1)], sources=["[S1] x"])
+
+
+def _fake_editor(monkeypatch, replies):
+    from tfs.agents import writers
+    calls = []
+
+    def structured(agent, prompt, model):
+        calls.append((agent, prompt))
+        return replies[len(calls) - 1]
+    monkeypatch.setattr(writers.llm, "structured", structured)
+    return writers, calls
+
+
+def test_clean_edit_makes_one_call(monkeypatch):
+    clean = _script("Babayaran mo ba iyon?", "Sa first 7 months ng 2026, ₱1.37 trillion na ang nabayaran.")
+    writers, calls = _fake_editor(monkeypatch, [clean])
+    assert writers.narration_edit(clean) == clean and len(calls) == 1
+
+
+def test_flagged_edit_gets_one_retry_with_the_problems(monkeypatch):
+    bad = _script("Bayaran mo ba iyon?", "Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran.")
+    fixed = _script("Babayaran mo ba iyon?", "Sa first 7 months ng 2026, ₱1.37 trillion na ang nabayaran.")
+    writers, calls = _fake_editor(monkeypatch, [bad, fixed])
+    assert writers.narration_edit(bad) == fixed and len(calls) == 2
+    assert calls[1][0] == "narration_editor"
+    assert "scene 1:" in calls[1][1] and "scene 2:" in calls[1][1] and "Babayaran" in calls[1][1]
+
+
+def test_worse_or_reshaped_retry_is_dropped_and_logged(monkeypatch, caplog):
+    bad = _script("Bayaran mo ba iyon?", "Okay ito.")
+    worse = _script("Bayaran mo ba iyon?", "3 taon na.")
+    writers, calls = _fake_editor(monkeypatch, [bad, worse])
+    with caplog.at_level("WARNING"):
+        assert writers.narration_edit(bad) == bad
+    assert "Taglish lint left 1 problem" in caplog.text
+    reshaped = _script("Babayaran mo ba iyon?")                       # lost a scene: never used
+    writers, calls = _fake_editor(monkeypatch, [bad, reshaped])
+    caplog.clear()
+    with caplog.at_level("WARNING"):
+        assert writers.narration_edit(bad) == bad and len(calls) == 2
+    assert "Taglish lint left 1 problem" in caplog.text
+
+
+def test_retry_that_changes_content_is_dropped(monkeypatch):
+    """The retry runs after the fact check, so it may only change wording: no lost tag, number or sentence."""
+    bad = _script("Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. [S14][S7] Buwis ang pinagkukunan.")
+    for retry in (_script("Sa first 7 months ng 2026, ₱1.37 trillion na ang nabayaran. [S14] Buwis ang pinagkukunan."),
+                  _script("Sa first 7 months ng 2026, ₱1.4 trillion na ang nabayaran. [S14][S7] Buwis ang pinagkukunan."),
+                  _script("Buwis ang pinagkukunan. [S14][S7] 7 2026 ₱1.37")):
+        writers, calls = _fake_editor(monkeypatch, [bad, retry])
+        assert writers.narration_edit(bad) == bad, retry.scenes[0].text
+    good = _script("Sa first 7 months ng 2026, ₱1.37 trillion na ang nabayaran. [S14][S7] Galing iyon sa buwis.")
+    writers, calls = _fake_editor(monkeypatch, [bad, good])
+    assert writers.narration_edit(bad) == good
+
+
+def test_failed_retry_keeps_the_first_edit(monkeypatch, caplog):
+    from tfs.agents import writers
+    bad = _script("Bayaran mo ba iyon?")
+    calls = []
+
+    def structured(agent, prompt, model):
+        calls.append(agent)
+        if len(calls) == 2:
+            raise RuntimeError("usage limit")
+        return bad
+    monkeypatch.setattr(writers.llm, "structured", structured)
+    with caplog.at_level("WARNING"):
+        assert writers.narration_edit(bad) == bad
+    assert "retry failed" in caplog.text and len(calls) == 2
+
+
+def test_first_edit_with_other_scenes_returns_the_original_without_retry(monkeypatch):
+    original = _script("Bayaran mo ba iyon?", "Okay ito.")
+    writers, calls = _fake_editor(monkeypatch, [_script("Babayaran mo ba iyon?")])
+    assert writers.narration_edit(original) == original and len(calls) == 1
