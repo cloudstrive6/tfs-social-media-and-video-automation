@@ -638,8 +638,8 @@ def spoken_numbers(words: list[dict]) -> list[tuple[float, str, float]]:
     out = []
     for i, w in enumerate(words):
         tok = w["w"]
-        if not re.search(r"\d", tok) or _is_year(tok):
-            continue
+        if not re.search(r"\d", tok) or _is_year(tok) or re.search(r"\d-[A-Za-z]", tok):
+            continue                                  # years and "9-month"-style compounds are not figures to show
         prev = re.sub(r"[^a-z.]", "", words[i - 1]["w"].lower()) if i else ""
         if prev in REFERENCE_WORDS:                   # "Article 11", "Section 3", "RA 9337": a reference, not a figure
             continue
@@ -807,6 +807,9 @@ def settled_time(shots: list[dict], a: float, b: float) -> float:
         ready = max(ready, (big_at if big_at is not None and big_at >= s["t0"] + 0.6 else s["t0"] + 0.9) + 1.5)
     elif s["k"] == "waffle":                                   # grid wipe, fill, label
         ready = max(ready, s["t0"] + 2.6, (big_at or 0) + 0.4)
+    elif s["k"] in ("bars", "cards", "seats", "timeline"):     # v2 builds spread over the shot
+        n = max(1, len(s.get("items", [])))
+        ready = max(ready, s["t0"] + 0.4 + (n - 1) * max(0.6, (s["t1"] - s["t0"] - 1.2) / n) + 1.0)
     elif s["k"] == "globe":                                    # rotation, zoom, then the routes draw
         ready = max(ready, s["t0"] + 3.2, *[a.get("at", 0) + 1.4 for a in s.get("arcs", [])])
     return round(min(max(ready, mid if mid < t1 - 0.3 else t0), t1 - 0.3), 2)

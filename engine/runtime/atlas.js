@@ -149,7 +149,9 @@
       (s.hl || []).forEach((h, i) => { body = body.replace(esc(h), `<span class="hl hl${i}" style="background-size:0% 100%">${esc(h)}</span>`); });
       const long = s.body.length > 260;                  // long quotes get smaller type so the card clears the captions
       const vlong = V && s.body.length > 380;            // very long: smaller again and lower, clear of the handle
-      n.innerHTML = `<div style="position:absolute;left:${SAFE ? 46 : 50}%;top:${V ? (vlong ? 38 : 34) : (long ? 44 : 48)}%;width:${SAFE ? 72 : V ? 86 : (long ? 62 : 56)}%;transform:translate(-50%,-50%) rotate(-1.5deg);background:${C.sheet};` +
+      // safe verticals: the page hangs from 18% (below the handle) instead of centring, so a tall quote can never
+      // rise under the handle (impeachment round 4: THE 1987 CONSTITUTION was hidden twice)
+      n.innerHTML = `<div style="position:absolute;left:${SAFE ? 46 : 50}%;top:${SAFE ? 18 : V ? (vlong ? 38 : 34) : (long ? 44 : 48)}%;width:${SAFE ? 72 : V ? 86 : (long ? 62 : 56)}%;transform:translate(-50%,${SAFE ? "0" : "-50%"}) rotate(-1.5deg);background:${C.sheet};` +
         `box-shadow:0 ${px(18)} ${px(40)} rgba(60,40,20,.35);padding:${px(54)} ${px(60)}">` +
         `<div style="font:700 ${px(18)} 'Segoe UI';letter-spacing:4px;color:${C.muted};text-align:center">${esc(s.head)}</div>` +
         `<div style="text-align:center;margin:${px(12)} 0 ${px(26)}"><span style="position:relative;display:inline-block;font:800 ${px(30)} Montserrat;color:${C.red};letter-spacing:3px;padding:${px(6)} ${px(18)}">${esc(s.sec)}` +
