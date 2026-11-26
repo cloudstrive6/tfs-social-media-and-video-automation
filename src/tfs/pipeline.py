@@ -19,7 +19,8 @@ from .config import channel, data_dir, env, item_dir, media, now, paused_kinds, 
 from .llm import UsageLimitError
 from .media.tts_voxcpm import VoiceDeferred
 from .media import compose, render, tts
-from .models import (FactCheck, HookReview, ReviewReport, Scene, Script, SeoPack, ShotList, ThumbnailPlan,
+from .models import (FactCheck, HookReview, PackagingCheck, ReviewReport, Scene, Script, SeoPack, ShotList,
+                     ThumbnailPlan,
                      TitlePlan)
 
 log = logging.getLogger(__name__)
@@ -581,8 +582,34 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     titles = cached(d / "titles.json", TitlePlan, lambda: packaging.titles(item, script, thumb_moment))
     chapters = render.chapters(script.scenes, starts) if kind == "long_form" else []
     cached(d / "seo.json", SeoPack, lambda: packaging.seo(item, script, titles.primary, chapters))
+    titles = _check_packaging(item, d, script, titles, thumb_path)
 
     _schedule(item, title=titles.primary, video=str(video), thumbnail=str(thumb_path or ""), **_qa_note(report))
+
+
+def _check_packaging(item: dict, d: Path, script: Script, titles: TitlePlan, thumb_path: Path | None) -> TitlePlan:
+    """Runs the packaging check once and writes its corrections into titles.json, seo.json and the thumbnail."""
+    f = d / "packaging_check.json"
+    if f.exists():
+        return titles
+    plan_file = d / "thumbnails.json"
+    plan = ThumbnailPlan.model_validate_json(plan_file.read_text(encoding="utf-8")) if plan_file.exists() else None
+    overlay = plan.concepts[0].overlay_text if plan and plan.concepts else ""
+    pack = SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8"))
+    checked = packaging.check_packaging(script, _dossier(d), overlay, titles, pack)
+    titles = titles.model_copy(update={"primary": checked.title, "alternates": checked.alternates})
+    (d / "titles.json").write_text(titles.model_dump_json(indent=2), encoding="utf-8")
+    (d / "seo.json").write_text(checked.seo.model_dump_json(indent=2), encoding="utf-8")
+    if plan and checked.thumbnail_text != overlay:
+        plan.concepts[0].overlay_text = checked.thumbnail_text
+        plan_file.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
+        art = d / "thumb_art.png"
+        if thumb_path and art.exists():
+            compose.thumbnail(art, checked.thumbnail_text, thumb_path)
+    f.write_text(checked.model_dump_json(indent=2), encoding="utf-8")
+    if checked.issues:
+        log.info("packaging check %s: %s", item["id"], "; ".join(checked.issues)[:600])
+    return titles
 
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
