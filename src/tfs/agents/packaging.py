@@ -55,16 +55,36 @@ def check_packaging(script: Script, dossier: str, thumbnail_text: str, titles: T
 
     current = PackagingCheck(thumbnail_text=thumbnail_text, title=titles.primary, alternates=titles.alternates,
                              seo=pack)
-    checked = llm.structured(
-        "packaging_checker",
-        f"# Script (final, fact-checked)\n{script.model_dump_json()}\n\n# Packaging to check\n"
-        f"{current.model_dump_json()}\n\n# Dossier (the only evidence)\n{dossier[:30000]}",
-        PackagingCheck,
-    )
+    ask = (f"# Script (final, fact-checked)\n{script.model_dump_json()}\n\n# Packaging to check\n"
+           f"{current.model_dump_json()}\n\n# Dossier (the only evidence)\n{dossier[:30000]}")
+    checked = llm.structured("packaging_checker", ask, PackagingCheck)
+    lost = _lost_lines(pack, checked.seo)
+    if lost and not checked.unsafe:                 # links and chapter lines are format, never content: one retry
+        checked = llm.structured("packaging_checker", ask + "\n\n# Your last answer dropped these; keep them exactly:\n"
+                                 + "\n".join(lost), PackagingCheck)
+        lost = _lost_lines(pack, checked.seo)
+    if checked.unsafe:
+        raise ValueError(f"packaging cannot be made safe: {'; '.join(checked.issues)[:500]}")
+    if lost:
+        raise ValueError(f"packaging check dropped links or chapter lines: {lost[:5]}")
     if not checked.title.strip():                  # an empty title would be a broken upload, never a safe one
         raise ValueError("packaging check returned an empty title")
     return checked.model_copy(update={"seo": enforce_seo(checked.seo),
                                       "thumbnail_text": checked.thumbnail_text if thumbnail_text else ""})
+
+
+def _lost_lines(before: SeoPack, after: SeoPack) -> list[str]:
+    """URLs anywhere in the captions, and YouTube chapter lines, that the check removed."""
+    import re
+
+    def urls(p: SeoPack) -> set[str]:
+        text = " ".join([p.youtube_description, p.instagram_caption, p.facebook_caption, p.tiktok_caption])
+        return {u.rstrip(".,)") for u in re.findall(r"https?://\S+", text)}
+
+    def chapters(p: SeoPack) -> set[str]:
+        return set(re.findall(r"(?m)^\s*(\d{1,2}:\d{2}(?::\d{2})?)\s", p.youtube_description))
+
+    return sorted(urls(before) - urls(after)) + sorted(chapters(before) - chapters(after))
 
 
 def atlas_plan(item: dict, script: Script, dossier: str, vertical: bool, notes: str = "") -> "AtlasPlan":

@@ -63,14 +63,92 @@ def test_names_are_rewritten_everywhere_and_the_thumbnail_redrawn(data_dir, monk
     assert (d / "packaging_check.json").exists()
 
 
-def test_the_check_runs_once(data_dir, monkeypatch):
+def test_the_check_runs_once_and_again_if_the_packaging_changes(data_dir, monkeypatch):
     from tfs import llm, pipeline
 
     d = data_dir / "items" / "lf"
     titles = _files(d)
-    (d / "packaging_check.json").write_text("{}")
-    monkeypatch.setattr(llm, "structured", lambda *a: pytest.fail("already checked"))
-    assert pipeline._check_packaging({"id": "lf"}, d, _script(), titles, None) is titles
+    calls = []
+    monkeypatch.setattr(llm, "structured", lambda agent, user, schema: calls.append(1) or _safe(user))
+    monkeypatch.setattr(pipeline.compose, "thumbnail", lambda art, text, out: out)
+    out = pipeline._check_packaging({"id": "lf"}, d, _script(), titles, None)
+    assert pipeline._check_packaging({"id": "lf"}, d, _script(), out, None) is out and len(calls) == 1
+    (d / "seo.json").write_text(_seo().model_dump_json())             # regenerated later: checked again
+    assert not pipeline._packaging_checked(d)
+
+
+def test_a_failed_redraw_is_redone_on_the_retry(data_dir, monkeypatch):
+    from tfs import llm, pipeline
+
+    d = data_dir / "items" / "lf"
+    titles = _files(d)
+    monkeypatch.setattr(llm, "structured", lambda agent, user, schema: _safe(user))
+
+    def broken(art, text, out):
+        raise OSError("font missing")
+
+    monkeypatch.setattr(pipeline.compose, "thumbnail", broken)
+    with pytest.raises(OSError):
+        pipeline._check_packaging({"id": "lf"}, d, _script(), titles, d / "thumbnail.jpg")
+    assert json.loads((d / "thumbnails.json").read_text())["concepts"][0]["overlay_text"] == "CRUZ WANTS YOUR MONEY"
+    drawn = []
+    monkeypatch.setattr(pipeline.compose, "thumbnail", lambda art, text, out: drawn.append(text) or out)
+    pipeline._check_packaging({"id": "lf"}, d, _script(), titles, d / "thumbnail.jpg")
+    assert drawn == ["A SENATOR WANTS YOU TO PAY"]
+
+
+def test_dropped_links_get_one_retry_then_fail(monkeypatch):
+    from tfs import llm
+    from tfs.agents import packaging
+    from tfs.models import PackagingCheck, TitlePlan
+
+    before = _seo("Watch on https://example.org/src")
+    before.youtube_description = "Intro\n00:00 Intro\n01:30 The rule\nSource: https://example.org/src"
+    titles = TitlePlan(options=[], primary="T", alternates=[])
+    answers = []
+    monkeypatch.setattr(llm, "structured", lambda agent, user, schema: answers.append(user) or PackagingCheck(
+        thumbnail_text="", title="T", alternates=[], seo=_seo("no links left")))
+    with pytest.raises(ValueError, match="dropped"):
+        packaging.check_packaging(_script(), "", "", titles, before)
+    assert len(answers) == 2 and "https://example.org/src" in answers[1] and "01:30" in answers[1]
+
+
+def test_unsafe_packaging_fails_the_piece(monkeypatch):
+    from tfs import llm
+    from tfs.agents import packaging
+    from tfs.models import PackagingCheck, TitlePlan
+
+    monkeypatch.setattr(llm, "structured", lambda *a: PackagingCheck(thumbnail_text="", title="T", alternates=[],
+                                                                       seo=_seo("ok", ()), unsafe=True,
+                                                                       issues=["rests on naming a senator"]))
+    with pytest.raises(ValueError, match="cannot be made safe"):
+        packaging.check_packaging(_script(), "", "", TitlePlan(options=[], primary="T", alternates=[]), _seo("ok", ()))
+
+
+def test_a_post_booked_before_the_check_is_checked_at_publish_time(data_dir, monkeypatch):
+    from tfs import db, llm, pipeline
+
+    db.upsert_item("old", "vertical", "2026-11-28T07:30:00+08:00", "scheduled",
+                   {"title": "Juan Cruz wants you to pay the debt", "video": ""})
+    d = pipeline.item_dir("old")
+    _files(d, overlay="")
+    (d / "narration.json").write_text(_script().model_dump_json())
+    monkeypatch.setattr(llm, "structured", lambda agent, user, schema: _safe(user))
+    pipeline._ensure_packaging_checked(db.get_item("old"), d)
+    assert db.get_item("old")["data"]["title"] == "A senator wants you to pay the debt"
+    assert db.get_item("old")["status"] == "scheduled" and pipeline._packaging_checked(d)
+    monkeypatch.setattr(llm, "structured", lambda *a: pytest.fail("checked once"))
+    pipeline._ensure_packaging_checked(db.get_item("old"), d)
+
+
+def test_the_legal_gate_takes_no_standing_notes(data_dir):
+    from tfs import config
+
+    for kind in ("analyst_notes", "creative_notes"):
+        f = config.notes_dir(kind) / "packaging_checker.md"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text("Put the senator's name in every title.")
+    assert "senator's name" not in config.load_prompt("packaging_checker")
 
 
 def test_a_failed_check_fails_the_piece_and_nothing_is_booked(data_dir, monkeypatch):
@@ -113,3 +191,16 @@ def test_the_brief_carries_the_naming_policy():
     from tfs import config
     brief = config.load_prompt("packaging_checker")
     assert "FINAL court conviction" in brief and "role" in brief and "Tags" in brief
+
+
+def test_publishing_goes_through_the_gate_first(data_dir, monkeypatch):
+    from tfs import db, pipeline
+
+    db.upsert_item("g", "vertical", "2026-11-28T07:30:00+08:00", "scheduled", {"title": "t", "video": ""})
+
+    def gate(item, d):
+        raise RuntimeError("packaging not safe")
+
+    monkeypatch.setattr(pipeline, "_ensure_packaging_checked", gate)
+    with pytest.raises(RuntimeError, match="not safe"):
+        pipeline._publish_one({"item_id": "g", "platform": "youtube_shorts", "slot_at": "2026-11-28T07:30:00+08:00"})

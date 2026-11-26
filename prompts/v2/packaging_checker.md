@@ -27,3 +27,6 @@ For every piece of packaging text:
 
 Return every field, corrected where needed, plus `issues`: one line per change saying what was wrong. Return an
 empty list when everything was already safe.
+
+Set `unsafe: true` only when the packaging cannot be made safe by rewriting (for example the whole piece rests on
+naming a living person with an allegation). That stops the piece; nothing is posted.

@@ -587,29 +587,70 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     _schedule(item, title=titles.primary, video=str(video), thumbnail=str(thumb_path or ""), **_qa_note(report))
 
 
+def _packaging_sha(d: Path) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    for name in ("titles.json", "seo.json", "thumbnails.json"):
+        f = d / name
+        h.update(f.read_bytes() if f.exists() else b"-")
+    return h.hexdigest()
+
+
+def _packaging_checked(d: Path) -> bool:
+    """True when packaging_check.json covers exactly the titles, captions and thumbnail text on disk now."""
+    try:
+        return json.loads((d / "packaging_check.json").read_text(encoding="utf-8")).get("sha") == _packaging_sha(d)
+    except (OSError, ValueError):
+        return False
+
+
 def _check_packaging(item: dict, d: Path, script: Script, titles: TitlePlan, thumb_path: Path | None) -> TitlePlan:
-    """Runs the packaging check once and writes its corrections into titles.json, seo.json and the thumbnail."""
-    f = d / "packaging_check.json"
-    if f.exists():
+    """Packaging Legal & Fact Check: writes its corrections into titles.json, seo.json and the thumbnail, then a
+    marker holding a hash of what it checked (any later change to those files means a new check)."""
+    if _packaging_checked(d):
         return titles
     plan_file = d / "thumbnails.json"
     plan = ThumbnailPlan.model_validate_json(plan_file.read_text(encoding="utf-8")) if plan_file.exists() else None
     overlay = plan.concepts[0].overlay_text if plan and plan.concepts else ""
     pack = SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8"))
     checked = packaging.check_packaging(script, _dossier(d), overlay, titles, pack)
+    if thumb_path and (checked.thumbnail_text != overlay or not thumb_path.exists()):
+        art = d / "thumb_art.png"                   # redrawn before anything is saved, so a failure redoes it
+        if not art.exists():
+            raise FileNotFoundError(f"{art}: cannot redraw the thumbnail with the checked text")
+        compose.thumbnail(art, checked.thumbnail_text, thumb_path)
     titles = titles.model_copy(update={"primary": checked.title, "alternates": checked.alternates})
     (d / "titles.json").write_text(titles.model_dump_json(indent=2), encoding="utf-8")
     (d / "seo.json").write_text(checked.seo.model_dump_json(indent=2), encoding="utf-8")
-    if plan and checked.thumbnail_text != overlay:
+    if plan and plan.concepts:
         plan.concepts[0].overlay_text = checked.thumbnail_text
         plan_file.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
-        art = d / "thumb_art.png"
-        if thumb_path and art.exists():
-            compose.thumbnail(art, checked.thumbnail_text, thumb_path)
-    f.write_text(checked.model_dump_json(indent=2), encoding="utf-8")
+    (d / "packaging_check.json").write_text(json.dumps({"sha": _packaging_sha(d), "issues": checked.issues},
+                                                       ensure_ascii=False, indent=1), encoding="utf-8")
     if checked.issues:
         log.info("packaging check %s: %s", item["id"], "; ".join(checked.issues)[:600])
     return titles
+
+
+def _ensure_packaging_checked(item: dict, d: Path) -> None:
+    """Publish-time gate: a piece made before the check existed, or whose packaging changed since, is checked
+    now (or the post fails, and nothing goes out)."""
+    if not (d / "seo.json").exists() or _packaging_checked(d):
+        return
+    if (d / "narration.json").exists():
+        script = Script.model_validate_json((d / "narration.json").read_text(encoding="utf-8"))
+    else:
+        script = FactCheck.model_validate_json((d / "factcheck.json").read_text(encoding="utf-8")).script
+    tf = d / "titles.json"
+    title = item["data"].get("title") or ""
+    titles = TitlePlan.model_validate_json(tf.read_text(encoding="utf-8")) if tf.exists() else \
+        TitlePlan(options=[], primary=title, alternates=[])
+    if title and title != titles.primary:            # the booked title is the one that would be posted
+        titles = titles.model_copy(update={"primary": title})
+    thumb = item["data"].get("thumbnail")
+    titles = _check_packaging(item, d, script, titles, media(thumb) if thumb else None)
+    if titles.primary != title:
+        db.set_status(item["id"], item["status"], item.get("error") or "", title=titles.primary)
 
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
@@ -747,7 +788,10 @@ def _due(post: dict) -> bool:
 def _publish_one(post: dict) -> tuple[str, str]:
     """Returns (status, remote_id). `submitted` = accepted by Post for Me, confirmed later by reconcile()."""
     item = db.get_item(post["item_id"])
-    d, data = item_dir(item["id"]), item["data"]
+    d = item_dir(item["id"])
+    _ensure_packaging_checked(item, d)
+    item = db.get_item(post["item_id"])
+    data = item["data"]
     from .publish import limits
     from .publish.limits import enforce_seo
     seo = enforce_seo(SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8")))

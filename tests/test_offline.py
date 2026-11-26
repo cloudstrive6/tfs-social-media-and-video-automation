@@ -352,6 +352,8 @@ def test_publish_one_reaches_each_provider(data_dir, monkeypatch, platform):
     from tfs.models import SeoPack
     from tfs.publish import meta, postforme, youtube
 
+    monkeypatch.setattr(pipeline, "_ensure_packaging_checked", lambda item, d: None)   # covered in its own tests
+
     d = item_dir("2026-09-27-vert0")
     (d / "video.mp4").write_bytes(b"v")
     (d / "s0.jpg").write_bytes(b"j")

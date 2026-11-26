@@ -122,6 +122,7 @@ class PackagingCheck(BaseModel):
     alternates: list[str]
     seo: SeoPack
     issues: list[str] = []
+    unsafe: bool = False          # true only when the packaging cannot be made safe by rewriting: the piece fails
 
 
 # ---------- Visuals ----------
