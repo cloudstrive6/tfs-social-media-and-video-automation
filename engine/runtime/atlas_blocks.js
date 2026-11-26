@@ -413,7 +413,8 @@ window.TFS_BLOCKS = function (ctx) {
       `<div style="font:800 ${px(V ? 30 : 28)}/1.15 Montserrat;color:#fff;background:${C.ink};padding:${px(8)} ${px(14)}">${esc(s.name)}</div>` +
       (s.role ? `<div style="display:inline-block;font:700 ${px(V ? 19 : 18)} ${MONO};letter-spacing:1px;color:${C.ink};background:${C.yel};padding:${px(5)} ${px(12)}">${esc(s.role)}</div>` : "") + `</div>` : "";
     const chips = (s.chips || []).map((c, i) => `<div class="mc" style="position:absolute;left:${px(16)};top:${px(16 + i * 46)};font:700 ${px(V ? 19 : 18)} ${MONO};letter-spacing:2px;` +
-      `color:${C.red};background:rgba(248,242,228,.95);border:${px(3)} solid ${C.red};border-radius:${px(6)};padding:${px(4)} ${px(10)};white-space:nowrap;opacity:0">${esc(c.text)}</div>`).join("");
+      `color:${C.red};background:rgba(248,242,228,.95);border:${px(3)} solid ${C.red};border-radius:${px(6)};padding:${px(4)} ${px(10)};` +
+      `max-width:calc(100% - ${px(52)});white-space:normal;line-height:1.25;opacity:0">${esc(c.text)}</div>`).join("");
     const credit = s.credit ? `<div style="font:700 ${px(15)}/1.3 ${MONO};letter-spacing:.5px;color:${C.muted};margin-top:${px(8)};max-width:${cardW}px">${esc(s.credit.toUpperCase())}</div>` : "";
     const list = side ? `<div style="position:absolute;left:${V ? (left + cardW + W * 0.04).toFixed(0) : (left + cardW + W * 0.04).toFixed(0)}px;right:${V ? "12%" : "8%"};top:${(top + 10 * U).toFixed(0)}px">` +
       rows.map((r) => `<div class="sl" style="margin-bottom:${px(16)};background:${C.sheet};border:${px(3)} solid ${r.color === "red" ? C.red : C.ink};` +

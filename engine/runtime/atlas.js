@@ -167,8 +167,12 @@
       const items = s.items.map((it, i) => `<div class="cd cd${i}" style="background:${C.sheet};border:${px(4)} solid ${C.ink};border-radius:${px(18)};box-shadow:${px(8)} ${px(8)} 0 ${C.ink};` +
         `padding:${px(22)} ${px(30)};${V ? "" : "flex:1"}"><div style="font:400 ${px(V ? 78 : 70)}/1 Anton;color:${it.color === "teal" ? C.teal : it.color === "ink" ? C.ink : C.red}">${esc(it.big)}</div>` +
         `<div style="font:800 ${px(V ? 30 : 26)}/1.25 Montserrat;color:${C.ink};margin-top:${px(10)}">${esc(it.small)}</div></div>`).join("");
-      n.innerHTML = `<div style="position:absolute;left:6%;right:${RIGHT(6)}%;top:${V ? 22 : 30}%;display:flex;flex-direction:${V ? "column" : "row"};gap:${px(28)}">${items}</div>` +
-        `<div style="position:absolute;left:6%;top:${V ? 60 : 70}%">${badge(s.src)}</div>`;
+      // safe verticals: the source box flows right under the cards, clear of the stamp band (round 3: a stamp at 67%
+      // covered a source box fixed at 60%)
+      n.innerHTML = SAFE
+        ? `<div style="position:absolute;left:6%;right:14%;top:20%;display:flex;flex-direction:column;gap:${px(28)}">${items}<div>${badge(s.src)}</div></div>`
+        : `<div style="position:absolute;left:6%;right:${RIGHT(6)}%;top:${V ? 22 : 30}%;display:flex;flex-direction:${V ? "column" : "row"};gap:${px(28)}">${items}</div>` +
+          `<div style="position:absolute;left:6%;top:${V ? 60 : 70}%">${badge(s.src)}</div>`;
       tl.set(n, { opacity: 1 }, s.t0);
       s.items.forEach((_, i) => tl.fromTo(n.querySelectorAll(".cd")[i], { opacity: 0, y: 50 * U }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.6)" },
         s.t0 + i * Math.max(0.5, (s.t1 - s.t0 - 1) / s.items.length)));
