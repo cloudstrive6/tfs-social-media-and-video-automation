@@ -30,6 +30,36 @@ PUBLISH_EVERY = 60                      # seconds between publish checks while a
 LINGER = timedelta(minutes=35)          # a run stays up for an exact-time post due within this window
 HARD_STOP = timedelta(hours=5, minutes=20)  # job timeout is 340 min; leave time to save state
 _publishing = threading.Lock()          # the publisher thread and the main thread never publish at once
+_STARTED = time.monotonic()             # this job's clock (the process starts with the job step)
+SAVE_MARGIN = timedelta(minutes=10)     # kept free at the end of a job to save state to R2
+ROUND_MARGIN = 1.2                      # another build + review starts only if 1.2x the longest one still fits
+LONG_START = timedelta(minutes=60)      # a long-form's first build + review takes about 4 h (dry run 2026-11-26),
+                                        # so a new one only starts in the first hour of a run
+
+
+class RoundDeferred(Exception):
+    """Not enough time left in this job for another build and review; the saved work resumes on the next run."""
+
+
+def _time_left() -> float:
+    return (HARD_STOP - SAVE_MARGIN).total_seconds() - (time.monotonic() - _STARTED)
+
+
+def _round_secs(d: Path, took: float | None = None) -> float:
+    """Longest build + review seen for this item (kept in its folder, so a resumed run knows it too)."""
+    f = d / "qa_timing.json"
+    try:
+        known = float(json.loads(f.read_text(encoding="utf-8")).get("round_secs", 0))
+    except (OSError, ValueError):
+        known = 0.0
+    if took is not None and took > known:
+        known = took
+        f.write_text(json.dumps({"round_secs": round(took)}), encoding="utf-8")
+    return known
+
+
+def _fits(d: Path) -> bool:
+    return _time_left() > _round_secs(d) * ROUND_MARGIN
 
 
 # ---------------------------------------------------------------- helpers
@@ -406,23 +436,44 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
     def repeated_major() -> bool:          # balanced: a one-off narration flag never blocks
         return len(history) >= 2 and bool(set(history[-2].major_scenes) & set(history[-1].major_scenes))
 
+    def timed(name: str) -> tuple[T, ReviewReport]:
+        t0 = time.monotonic()
+        b = build()
+        r = cached(d / name, ReviewReport, lambda: qa.safe(review, b))
+        _round_secs(d, time.monotonic() - t0)
+        return b, r
+
+    def no_time(report: ReviewReport) -> bool:
+        """True (accept with notes) when only minor narration notes are left; raises when a real problem is left."""
+        if _fits(d):
+            return False
+        left = f"{_time_left() / 60:.0f} min left, a round takes {_round_secs(d) / 60:.0f} min"
+        if not report.redo_images and not report.major_audio:
+            log.info("review %s: accepted with minor notes; no time for another round (%s)", item["id"], left)
+            return True
+        raise RoundDeferred(f"{item['id']}: the next fix round resumes on the next run ({left})")
+
     for rnd in range(rounds + 1):
-        built = build()
         if not qa.enabled():
-            return built, None
-        report = cached(d / f"qa_r{rnd}.json", ReviewReport, lambda: qa.safe(review, built))
+            return build(), None
+        built, report = timed(f"qa_r{rnd}.json")
         history.append(report)
         log.info("review r%d %s: %s", rnd, item["id"], report.summary)
         if report.passed:
             return _polish(item, d, build, review, fix, built, report)
         if rnd < rounds:
+            if item["kind"] == "long_form" and not report.redo_images and not report.major_audio:
+                log.info("review %s: accepted with minor narration notes (not worth a long-form rebuild)", item["id"])
+                return built, report
+            if no_time(report):
+                return built, report
             fix(report)
     extra = rnd
     while repeated_major() and not report.redo_images and extra < rounds + AUDIO_EXTRA_ROUNDS:
         extra += 1                         # visuals are fine; the same line keeps failing: another take
+        no_time(report)                    # a major problem never gets accepted for lack of time: it raises
         fix(report)
-        built = build()
-        report = cached(d / f"qa_r{extra}.json", ReviewReport, lambda: qa.safe(review, built))
+        built, report = timed(f"qa_r{extra}.json")
         history.append(report)
         log.info("review r%d (voice only) %s: %s", extra, item["id"], report.summary)
         if report.passed:
@@ -443,6 +494,9 @@ def _polish(item: dict, d: Path, build: Callable[[], T], review: Callable[[T], R
     cfg = qa.cfg()
     if not report.improve or not report.appeal or report.appeal >= cfg.get("min_appeal", 7) \
             or (d / "qa_polish.json").exists():
+        return built, report
+    if not _fits(d):                                  # polish is optional: never at the cost of the job limit
+        log.info("polish %s: skipped, no time for another round", item["id"])
         return built, report
     targets = dict(sorted(report.improve.items(), key=lambda kv: -len(kv[1]))[:cfg.get("polish_max_frames", 5)])
     log.info("polish %s: appeal %d/10, improving %s", item["id"], report.appeal, sorted(targets))
@@ -633,6 +687,9 @@ def produce(item_id: str) -> bool:
         _produce_video(item, d, dossier)
     except VoiceDeferred as e:                       # the local GPU worker has the narration; try again next run
         log.info("waiting for local narration: %s", e)
+        return False
+    except RoundDeferred as e:                       # the work so far is saved with the item; the next run goes on
+        log.warning("%s", e)
         return False
     except UsageLimitError as e:
         log.warning("usage limit reached; %s will retry on the next run (%s)", item_id, e)
@@ -944,6 +1001,8 @@ def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
                 continue
             todo = [i for i in db.items_with_status("planned", "approved")
                     if i["id"] not in tried and i["kind"] not in paused_kinds()]
+            if now() - started > LONG_START:         # too late in this run to start a long-form; the next run does
+                todo = [i for i in todo if i["kind"] != "long_form" or (item_dir(i["id"]) / "qa_r0.json").exists()]
             if todo and now() - started < budget:
                 tried.add(todo[0]["id"])
                 produce(todo[0]["id"])
