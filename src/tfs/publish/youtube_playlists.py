@@ -104,8 +104,9 @@ def _insert_item(playlist_id: str, video_id: str, sleep=time.sleep) -> None:
         try:
             api().playlistItems().insert(part="snippet", body=body).execute()
             return
-        except Exception as e:
-            if not _not_found(e) or attempt == 5:
+        except Exception as e:      # 404 (new playlist not visible yet), 409 SERVICE_UNAVAILABLE, 5xx: all temporary
+            status = getattr(getattr(e, "resp", None), "status", None)
+            if status not in (404, 409, 500, 502, 503) or attempt == 5:
                 raise
             sleep(5 * (attempt + 1))
 
