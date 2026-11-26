@@ -68,7 +68,7 @@ _TL_MONTH_DIGIT = re.compile(r"\b(" + "|".join(_TL_MONTHS) + r")\s+\d+|\d+\s+(?:
 # A yes or no question that opens with a bare root verb ("Bayaran mo ba iyon?") where Tagalog needs the
 # aspect form ("Babayaran mo ba iyon?"). After "kailangan", "dapat", "pwede" the root form is right.
 _ROOT_Q = re.compile(r"(?:^|[.?!]\s+|,\s+)([A-Za-z]+(?:an|in|han|hin))\s+"
-                     r"(?:(mo|ko|natin|namin|ninyo|nila|niya|nyo|iyon|ito)\s+)?(?:ba|bang)\b")
+                     r"(?:(mo|ko|natin|namin|ninyo|nila|niya|nyo|iyon|yon|ito)\s+)?(?:ba|bang)\b")
 _NOT_VERBS = {"saan", "nasaan", "kailan", "kanino", "ilan", "alin", "kailangan", "pwedeng", "dahilan", "ngayon",
               "naman", "lamang", "tayo", "kasalanan", "pamahalaan", "bayan", "batasan", "halalan", "kalaban",
               "paaralan", "simbahan", "hukuman", "lungsod", "senador", "ganoon", "ganiyan"}
@@ -79,6 +79,16 @@ _NOT_VERBS = {"saan", "nasaan", "kailan", "kanino", "ilan", "alin", "kailangan",
 _IYONG = re.compile(r"\biyong\b", re.I)
 _YUNG_SPELLING = re.compile(r"(?<![\w'])(?:'yung|'yong|yong)\b", re.I)    # one caption spelling: "yung"
 _NG_YUNG = re.compile(r"\b(?:ng|sa)\s+yung\b", re.I)
+# Bryce, 2026-11-27: "yon sounds more natural" than "iyon"; "pwede is what we normally use"; law dates as
+# "ikalawang Lunes ng Mayo", not "second Monday ng May".
+_IYON = re.compile(r"\biyon\b", re.I)
+_PUWEDE = re.compile(r"\bpuwede\w*", re.I)
+_EN_ORD_WEEKDAY = re.compile(r"\b(first|second|third|fourth|fifth|last)\s+(Monday|Tuesday|Wednesday|Thursday|"
+                             r"Friday|Saturday|Sunday)\b", re.I)
+_TL_ORD_WORD = {"first": "unang", "second": "ikalawang", "third": "ikatlong", "fourth": "ikaapat na",
+                "fifth": "ikalimang", "last": "huling"}
+_TL_WEEKDAY = {"monday": "Lunes", "tuesday": "Martes", "wednesday": "Miyerkoles", "thursday": "Huwebes",
+               "friday": "Biyernes", "saturday": "Sabado", "sunday": "Linggo"}
 
 
 def _prev_word(text: str, pos: int) -> str:
@@ -155,6 +165,14 @@ def problems(text: str) -> list[str]:
         tl = m.group(1) or m.group(2)
         out.append(f'"{m.group(0).strip()}": dates with digits use English months '
                    f'("{_EN_MONTHS[_TL_MONTHS.index(tl)]}")')
+    for m in _IYON.finditer(t):
+        out.append(f'"{m.group(0)}": write "yon" (Bryce: "yon sounds more natural")')
+    for m in _PUWEDE.finditer(t):
+        out.append(f'"{m.group(0)}": write "{m.group(0).lower().replace("puwede", "pwede")}" (the everyday spelling)')
+    for m in _EN_ORD_WEEKDAY.finditer(t):
+        o, d = m.group(1).lower(), m.group(2).lower()
+        out.append(f'"{m.group(0)}": say it in Tagalog, "{_TL_ORD_WORD[o]} {_TL_WEEKDAY[d]}" '
+                   f'("ikalawang Lunes ng Mayo")')
     for m in _IYONG.finditer(t):
         out.append(f'"{m.group(0)}": write "yung [thing]" when it means "the/that", or "[thing] mo" when it means '
                    f'"your" ("ang share mo", not "ang iyong share")')

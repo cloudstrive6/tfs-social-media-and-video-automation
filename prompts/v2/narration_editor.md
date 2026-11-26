@@ -30,14 +30,16 @@ with ONLY these changes, scene by scene:
 8. A bare span gets its missing words: "sa 7 months ng 2026" becomes "sa unang pitong buwan ng 2026" (or "mula
    January hanggang July 2026" when the months are known), and "sa 7 months" becomes "sa loob ng pitong buwan".
    Keep the meaning the script already states.
-9. A question about what will happen takes the contemplated aspect: "Bayaran mo ba iyon?" becomes "Babayaran
-   mo ba iyon?", "Gawin ba iyon?" becomes "Gagawin ba iyon?". After kailangan, dapat, puwede or gusto the root
+9. A question about what will happen takes the contemplated aspect: "Bayaran mo ba yon?" becomes "Babayaran
+   mo ba yon?", "Gawin ba yon?" becomes "Gagawin ba yon?". After kailangan, dapat, pwede or gusto the root
    form stays ("Kailangan mo bang bayaran?").
 10. "iyong" never stays. Meaning "the/that": "ang iyong X" becomes "yung X", but after ng or sa drop it ("ng X",
    "sa X"), never "ng yung" or "sa yung". Meaning "your": "mo" goes after the noun and its modifiers ("ang iyong
    buwanang share" becomes "ang buwanang share mo", "sa iyong bahay" becomes "sa bahay mo"). One spelling:
-   "yung" ("Yung" at the start of a sentence), never "'yung" or "yong". "sa iyo" (to you, for you) and "iyon"
-   (that) stay as they are.
+   "yung" ("Yung" at the start of a sentence), never "'yung" or "yong". "sa iyo" (to you, for you) stays.
+11. "iyon" (that) becomes "yon" (Bryce, 2026-11-27: "yon sounds more natural"); "puwede" becomes "pwede". A date
+   the law gives as a weekday in a month becomes Tagalog: "second Monday ng May" becomes "ikalawang Lunes ng
+   Mayo", "fourth Monday of July" becomes "ikaapat na Lunes ng Hulyo".
 
 Never change meaning, facts, names, order or tone. Never add sentences. No em-dashes or en-dashes. Return
 every scene, with the same ids, speakers, chapters and visuals.
