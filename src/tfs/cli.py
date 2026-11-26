@@ -49,6 +49,7 @@ def main() -> None:
     pl = sub.add_parser("playlists", help="YouTube playlists: show scopes, playlists and every upload with its "
                                           "planned playlist; --apply also creates them and adds the videos")
     pl.add_argument("--apply", action="store_true")
+    pl.add_argument("--delete-id", default="", help="delete this one playlist id (videos untouched); owner OK only")
     a = p.parse_args()
 
     match a.cmd:
@@ -136,6 +137,12 @@ def main() -> None:
             from .publish import youtube
             print("YOUTUBE_REFRESH_TOKEN=" + youtube.authorize())
         case "playlists":
+            if a.delete_id:
+                from .publish import youtube_playlists
+                youtube_playlists.delete(a.delete_id)
+                left = youtube_playlists.existing()
+                print(f"deleted {a.delete_id}; playlists now: {', '.join(f'{t} ({i})' for t, i in left.items())}")
+                sys.exit(0 if a.delete_id not in left.values() else 1)
             from .playlist_backfill import run as backfill
             sys.exit(backfill(apply=a.apply))
         case "status":

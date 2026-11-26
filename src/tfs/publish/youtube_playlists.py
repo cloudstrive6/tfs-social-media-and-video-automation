@@ -79,6 +79,13 @@ def ensure(key: str, have: dict[str, str] | None = None) -> str:
     return pid
 
 
+def delete(playlist_id: str) -> None:
+    """Delete one of the channel's playlists (the videos in it are not touched). Only on Bryce's explicit OK."""
+    from .youtube import api
+
+    api().playlists().delete(id=playlist_id).execute()
+
+
 def _not_found(e: Exception) -> bool:
     return getattr(getattr(e, "resp", None), "status", None) == 404
 
