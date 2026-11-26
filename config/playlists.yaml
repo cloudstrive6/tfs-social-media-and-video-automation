@@ -20,6 +20,10 @@ playlists:
     title: "Fact Check"
     description: >-
       Viral claims about Philippine government and politics, checked against the record.
+  history:
+    title: "Philippine History, Explained"
+    description: >-
+      The Philippine past that still shapes our politics and government today, told with the record.
 
 # format (long_form | vertical) and pillar -> playlist keys
 rules:
@@ -28,4 +32,8 @@ rules:
     how_it_works: [know_your_government]
     now_explained: [now_explained]
     myths_factchecks: [fact_check]
+    history: [history]
+    # style v1 pillars (September 2026 uploads)
+    why_were_like_this: [know_your_government]
+    history_retold: [history]
     default: [now_explained]

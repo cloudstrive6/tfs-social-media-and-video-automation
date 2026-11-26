@@ -24,6 +24,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
     "https://www.googleapis.com/auth/yt-analytics.readonly",
+    # playlists (create, add) and videos.update (hold/unschedule, title fixes) need this one (added 2026-11-26)
+    "https://www.googleapis.com/auth/youtube.force-ssl",
 ]
 
 
@@ -31,7 +33,9 @@ def _creds() -> Credentials:
     return Credentials(None, refresh_token=require_env("YOUTUBE_REFRESH_TOKEN"),
                        token_uri="https://oauth2.googleapis.com/token",
                        client_id=require_env("YOUTUBE_CLIENT_ID"),
-                       client_secret=require_env("YOUTUBE_CLIENT_SECRET"), scopes=SCOPES)
+                       client_secret=require_env("YOUTUBE_CLIENT_SECRET"))
+    # no scopes on refresh: Google then returns a token with everything the refresh token was granted. Asking for a
+    # scope it lacks (e.g. force-ssl before the 2026-11-26 re-consent) would make the refresh fail and stop uploads.
 
 
 @lru_cache

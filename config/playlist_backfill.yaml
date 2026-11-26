@@ -1,0 +1,6 @@
+# Reviewed playlist placement for uploads the pipeline's record gets wrong or does not know (2026-11-26).
+# video id -> playlist keys from config/playlists.yaml; [] leaves a video out of every playlist.
+videos:
+  1z36_yXqMp4: [know_your_government]   # Senate Resolution vs Law: a rule explainer, logged as now_explained
+  STspRBJQDlE: [now_explained]          # GCash down: a current story (v1 why_were_like_this)
+  CKCZlozgAAQ: [now_explained]          # National Debt Per Filipino (publish-file, no pipeline record)
