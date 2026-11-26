@@ -19,8 +19,10 @@
 # day-to-day differences (20:30 vs 21:00) and per-platform offsets (Threads +30 min) are kept.
 
 # Master switch. false = the run loop plans nothing new under this schedule (nothing new is made or posted).
-# Bryce flips it to true when he says go.
-live: false
+# Bryce said go on 2026-11-26 ("Switch on now the regular automation"); planning starts at `live_from`, after the
+# two Shorts already scheduled by hand (impeachment 20:30 PHT 26 Nov, OFW remittances 12:30 PHT 27 Nov).
+live: true
+live_from: "2026-11-27T13:00:00+08:00"
 
 production_lead_hours: 10     # production starts this long before the first slot, so the local GPU worker gets about
                               # 5 h to narrate before Modal takes over (tts.voxcpm.local_until_hours_before_slot: 5)

@@ -34,10 +34,19 @@ class Unit:
         return min(self.platforms.values())
 
 
-def is_live(sched: dict | None = None) -> bool:
-    """The master switch (`live` in schedule.yaml). Missing means live, so an old-format config keeps running."""
+def is_live(sched: dict | None = None, at: datetime | None = None) -> bool:
+    """The master switch (`live` in schedule.yaml). Missing means live, so an old-format config keeps running.
+    `live_from` (ISO time, optional) holds planning until then, so a go-live can wait for posts already scheduled
+    by hand (Bryce, 2026-11-26: start after the OFW Short at 12:30 PHT on 27 Nov)."""
     sched = schedule() if sched is None else sched
-    return bool(sched.get("live", True))
+    if not sched.get("live", True):
+        return False
+    start = sched.get("live_from")
+    if start:
+        from .config import now
+        t = at or now()
+        return t >= datetime.fromisoformat(str(start))
+    return True
 
 
 def _at(d: date, hhmm: str, shift: timedelta = timedelta(0)) -> datetime:

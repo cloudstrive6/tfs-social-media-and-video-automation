@@ -94,11 +94,16 @@ def test_weekly_totals_and_unique_items():
     assert formats == ["multi", "single", "multi"]                               # Mon, Wed, Fri
 
 
-def test_config_is_held_until_bryce_says_go():
+def test_config_goes_live_at_live_from():
+    from datetime import datetime
+
     from tfs import config, slots
 
     sched = config.schedule()
-    assert sched["live"] is False and not slots.is_live()
+    assert sched["live"] is True and sched["live_from"] == "2026-11-27T13:00:00+08:00"   # Bryce said go, 2026-11-26
+    assert not slots.is_live(sched, at=datetime.fromisoformat("2026-11-27T12:59:00+08:00"))
+    assert slots.is_live(sched, at=datetime.fromisoformat("2026-11-27T13:00:00+08:00"))
+    assert not slots.is_live({"live": False, "live_from": "2020-01-01T00:00:00+08:00"})
     assert "long_form" not in (sched.get("paused") or [])                       # unpaused, held by `live`
     assert slots.is_live({"slots": {}}) is True                                 # old configs keep running
     assert sched["platforms"]["carousel"] == ["instagram_carousel", "facebook_post", "tiktok_carousel",
