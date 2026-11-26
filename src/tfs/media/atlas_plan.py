@@ -544,7 +544,9 @@ def chart_problems(shots: list[dict]) -> list[str]:
 # ---------------------------------------------------------------- planner fixes (2026-11-25, "fix the planner first")
 PHOTO_WORDS = re.compile(r"\b(FILE\s*PHOTO|PHOTO|FILE|IMAGE|PICTURE|FOOTAGE)\b", re.I)
 MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEPT", "OCT", "NOV", "DEC"]
-ICON_WORDS = [("person", ("crowd", "people", "person", "citizen", "voter", "worker", "family", "taxpayer")),
+ICON_WORDS = [("building", ("house of representatives", "congress", "senate", "batasan", "palace", "malacanang",
+                           "court", "sandiganbayan", "ombudsman", "treasury", "agency", "department", "city hall")),
+              ("person", ("crowd", "people", "person", "citizen", "voter", "worker", "family", "taxpayer")),
               ("coins", ("money", "peso", "cash", "budget", "debt", "tax", "fund", "bank", "coin")),
               ("document", ("law", "decree", "document", "bill", "constitution", "ruling", "report", "record")),
               ("ballot", ("vote", "election", "ballot", "comelec")),

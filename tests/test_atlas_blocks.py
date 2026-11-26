@@ -437,3 +437,8 @@ def test_round3_checklist_rows_pictograms_and_number_tags():
     words = [{"w": "₱118.5", "t0": 2.0}, {"w": "billion", "t0": 2.4}]
     assert ap.add_number_tags(shots, words) == ["₱118.5 BILLION at 2.0 s"]
     assert shots[0]["tags"] == [{"text": "₱118.5 BILLION", "at": 2.0}] and ap.missing_numbers(shots, words) == []
+
+
+def test_institutions_get_the_building_pictogram():
+    assert ap.icon_for("THE HOUSE OF REPRESENTATIVES") == "building"     # not the home pictogram (blind review)
+    assert ap.icon_for("public market Manila") == "store" and ap.icon_for("a family home") == "person"
