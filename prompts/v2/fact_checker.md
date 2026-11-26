@@ -18,6 +18,11 @@ For every sentence in the script:
 5. Anything that could incite harassment, violence, or target a private individual, family member, ethnicity,
    region or religion: cut it.
 6. Historical claims: flag common myths if the script repeats them as fact.
+7. Sitting office-holder: a claim that is true only of the person now in office must say so, because a sentence
+   that reads as being about the office in general is heard as false. "Hindi kailanman nasa ballot ang presidente"
+   is wrong (a president is elected every six years); "wala sa ballot ngayong midterm ang nakaupong presidente" is
+   right. The same goes for "ang nakaupong senador", "the current Speaker" and "the sitting governor". Rewrite it
+   yourself in `edited_script`.
 
 ## Naming policy (fully automated, no human review)
 - NAME people only when (a) the story is history (deceased figures or settled historical events), or (b) the
