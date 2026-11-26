@@ -4,12 +4,26 @@
 google_trends_rss:
   - https://trends.google.com/trending/rss?geo=PH
 
+# tier tells the scout how far a story has spread: national outlets first, then regional and Filipino-language
+# ones (a story reaching the second tier is an early "about to explode" signal). Outlets added 2026-11-26 (Bryce,
+# instead of Reddit, whose API now needs Reddit's written approval for commercial use) were each checked live.
+# Not usable on 2026-11-26: ABS-CBN and Manila Bulletin (403 to feed readers), PNA (no feed), Bombo Radyo (stale).
 news_rss:
-  - {name: Rappler, url: https://www.rappler.com/feed/}
-  - {name: Google News PH - politics, url: "https://news.google.com/rss/search?q=Philippines+senate+OR+congress+OR+ombudsman&hl=en-PH&gl=PH&ceid=PH:en"}
-  - {name: Google News PH - corruption, url: "https://news.google.com/rss/search?q=Philippines+corruption+OR+anomaly+OR+COA&hl=en-PH&gl=PH&ceid=PH:en"}
-  - {name: Google News PH - top, url: "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en"}
-  - {name: Google News PH - Filipino, url: "https://news.google.com/rss?hl=fil&gl=PH&ceid=PH:fil"}
+  - {name: Rappler, tier: national, url: https://www.rappler.com/feed/}
+  - {name: Google News PH - politics, tier: aggregator, url: "https://news.google.com/rss/search?q=Philippines+senate+OR+congress+OR+ombudsman&hl=en-PH&gl=PH&ceid=PH:en"}
+  - {name: Google News PH - corruption, tier: aggregator, url: "https://news.google.com/rss/search?q=Philippines+corruption+OR+anomaly+OR+COA&hl=en-PH&gl=PH&ceid=PH:en"}
+  - {name: Google News PH - top, tier: aggregator, url: "https://news.google.com/rss?hl=en-PH&gl=PH&ceid=PH:en"}
+  - {name: Google News PH - Filipino, tier: filipino, url: "https://news.google.com/rss?hl=fil&gl=PH&ceid=PH:fil"}
+  - {name: Inquirer, tier: national, url: https://newsinfo.inquirer.net/feed}
+  - {name: Philstar - Nation, tier: national, url: https://www.philstar.com/rss/nation}
+  - {name: GMA News - Nation, tier: national, url: https://data.gmanetwork.com/gno/rss/news/nation/feed.xml}
+  - {name: Manila Times, tier: national, url: https://www.manilatimes.net/news/feed/}
+  - {name: BusinessWorld, tier: national, url: https://www.bworldonline.com/feed/}
+  - {name: GMA News - Regions, tier: regional, url: https://data.gmanetwork.com/gno/rss/news/regions/feed.xml}
+  - {name: SunStar, tier: regional, url: https://www.sunstar.com.ph/api/v1/collections/home.rss}
+  - {name: Mindanao Times, tier: regional, url: https://mindanaotimes.com.ph/feed/}
+  - {name: Abante, tier: filipino, url: https://www.abante.com.ph/feed/}
+  - {name: Philstar - Pang Masa, tier: filipino, url: https://www.philstar.com/rss/pang-masa}
 
 x_trends_page: https://trends24.in/philippines/
 

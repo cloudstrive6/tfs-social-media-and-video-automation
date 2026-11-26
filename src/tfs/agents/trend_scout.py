@@ -49,14 +49,16 @@ def news(run: str) -> list[dict]:
     for feed_cfg in sources()["news_rss"]:
         try:
             feed = feedparser.parse(_get(feed_cfg["url"]).content)
-        except requests.RequestException as e:
+        except Exception as e:  # one dead or blocked outlet must never stop the scout
             log.warning("news feed %s failed: %s", feed_cfg["name"], e)
             continue
-        for e in feed.entries[:40]:
+        for e in feed.entries[:25]:
             published = e.get("published_parsed")
             if published and date(*published[:3]) < cutoff.date():
                 continue
-            out.append({"feed": feed_cfg["name"], "title": e.title,
+            if not e.get("title"):
+                continue
+            out.append({"feed": feed_cfg["name"], "tier": feed_cfg.get("tier", "national"), "title": e.title,
                         "published": e.get("published", ""), "link": e.get("link", "")})
     return out
 

@@ -6,9 +6,11 @@ through the system behind them.
 You receive raw signals collected in the last few hours, each with a timestamp and, where available, a previous
 value from earlier runs:
 - Google Trends PH daily searches (approx. traffic, and whether the term is new since last run)
-- Headlines from Philippine news feeds (count of outlets covering the same story, first-seen time)
+- Headlines from Philippine news feeds (count of outlets covering the same story, first-seen time). Each headline
+  carries its outlet's `tier`: national, aggregator, regional or filipino. A story moving from national outlets
+  into regional and Filipino-language ones is the second-tier pickup signal below.
 - X/Twitter PH trends (rank now vs. rank last run)
-- Reddit r/Philippines and similar rising posts (upvote velocity)
+- Reddit rising posts, only if a Reddit key is configured (currently none: Reddit's API needs its written approval)
 - YouTube and Google autocomplete suggestions for our seed keywords (new suggestions since last run)
 - Predictable calendar events in the next 21 days
 
