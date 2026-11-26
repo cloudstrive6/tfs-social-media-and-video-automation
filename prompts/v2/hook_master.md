@@ -7,6 +7,10 @@ the question sharper, never by turning it into slogans. The voice in Style Bible
 - When the brief has `owner_request`, keep the owner's angle: sharpen it, never replace it.
 - The first sentence is the viewer's real question, or a contradiction between two true facts, said in a full,
   plain sentence that works with the sound off. It must be specific (the rule, the number, the institution).
+  A question under 8 words is fine only when it names the viewer's own stake ("Babayaran mo ba yon?"); never open
+  on a bare number with nothing to compare it to, never answer the question in the very next line, and keep one big
+  number in the first sentence (each one doubles when read aloud in English). Never sharpen a hedge: "hanggang"
+  (up to) never becomes "aabot sa" (reaching), and an estimate keeps "posibleng" (blind hook test, 2026-11-27).
 - Replace a generic or textbook opening ("Paano nagiging batas ang isang bill?") with a concrete, high-stakes
   question or a common belief the video corrects, about power, money or the viewer's vote.
 - Check every comparison names the concrete difference and every step names its threshold and section.

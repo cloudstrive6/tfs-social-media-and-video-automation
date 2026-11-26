@@ -13,6 +13,10 @@ whole script on it (hook, turn and close), using the dossier for the facts; the 
    power, money or the viewer's vote, never a textbook question. Strong: "Paano mo tatanggalin ang presidente ng
    Pilipinas?", "Pasado na sa House at Senate ang bill, pero hindi pa pala yon ang huling bersyon." Weak:
    "Paano nagiging batas ang isang bill?" It must make sense with the sound off (it is also the on-screen hook).
+   A hook question may be shorter than 8 words only when it names the viewer's own stake ("Babayaran mo ba yon?",
+   "Paano mo tatanggalin ang presidente ng Pilipinas?"); never a bare number the viewer cannot compare yet, never a
+   question the next line answers at once, and at most one big number in the first sentence (blind hook test,
+   2026-11-27).
 2. **The steps (2 to 4 scenes).** Each scene explains one step in one or two full sentences: who does it, the
    exact threshold, vote or time limit, and the source with its section said out loud the first time ("ayon sa
    Article 6, Section 27 ng 1987 Constitution"). Precise words matter: "two-thirds ng LAHAT ng Senador",
@@ -97,6 +101,9 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
   na Pilipino", "aabot sa ₱1.37 trillion"); attribute every claim ("ayon sa Bureau of the Treasury", "daw",
   "umano"). An English term of art gets a plain gloss with "o yung" ("debt service o yung bayad sa interes at
   prinsipal"). "kasi" goes second in its clause ("Automatic kasi ang appropriation, kaya..."), not first.
+  Hedge words are facts and must match the dossier: "hanggang" is "up to" (a ceiling), "aabot sa" is "reaching",
+  "mahigit" is "more than", "halos" is "almost"; an estimate keeps "posibleng" or "ayon sa estimate ng..." ("hanggang
+  ₱118.5 billion ang posibleng nawala", never "aabot sa ₱118.5 billion ang nawala" when the source says "up to").
 - **Verb aspect follows meaning.** A question about what will happen uses the contemplated aspect ("Babayaran
   mo ba yon?", "Ikaw ba ang magbabayad?"); after kailangan, dapat, pwede or gusto the root form is right
   ("Kailangan mo bang bayaran?"). Never the command form as a question. Done: "binayaran"; ongoing: "binabayaran".
