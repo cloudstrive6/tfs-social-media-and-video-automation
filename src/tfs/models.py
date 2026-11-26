@@ -115,6 +115,16 @@ class SeoPack(BaseModel):
     tiktok_caption: str
 
 
+class PackagingCheck(BaseModel):
+    """Packaging Legal & Fact Check: thumbnail text, titles and every caption, corrected (2026-11-27)."""
+    thumbnail_text: str
+    title: str
+    alternates: list[str]
+    seo: SeoPack
+    issues: list[str] = []
+    unsafe: bool = False          # true only when the packaging cannot be made safe by rewriting: the piece fails
+
+
 # ---------- Visuals ----------
 Style = Literal["story", "satire", "comic", "archival"]
 

@@ -43,14 +43,16 @@ def run(kind: str = "vertical") -> Path:
     out.mkdir(exist_ok=True)
     rejected = item["status"] != "sample"
     if rejected:                       # keep what was made, so the review itself can be judged
-        (out / "REJECTED.txt").write_text(f"{item['status']}: {item.get('error') or ''}", encoding="utf-8")
+        why = ("out of job time before the next fix round: this is the last reviewed version"
+               if item["status"] == "planned" else item.get("error") or "")
+        (out / "REJECTED.txt").write_text(f"{item['status']}: {why}", encoding="utf-8")
         files = [d / "video.mp4"] if (d / "video.mp4").exists() else sorted((d / "slides").glob("slide*.jpg"))
     else:
         files = [Path(data["video"])] if data.get("video") else [Path(p) for p in data.get("slides", [])]
     for f in files:
         shutil.copy2(f, out / f.name)
     for extra in ("seo.json", "titles.json", "dossier.md", "factcheck.json", "script_r0.json", "hook_r0.json", "narration.json", "motion.json", "atlas.json", "atlas_shots.json", "atlas_qc.json",
-                  "licences.json", "sound_report.json", "captions.srt", "thumbnail.jpg", "critic_r0.json", "critic_r1.json", "qa_r0.json", "qa_r1.json", "qa_r2.json", "qa_r3.json", "qa_r4.json"):   # factcheck.json holds the final script
+                  "licences.json", "sound_report.json", "captions.srt", "thumbnail.jpg", "critic_r0.json", "critic_r1.json", "qa_timing.json", "qa_r0.json", "qa_r1.json", "qa_r2.json", "qa_r3.json", "qa_r4.json"):   # factcheck.json holds the final script
         src = pipeline.item_dir(unit.id) / extra
         if src.exists():
             shutil.copy2(src, out / extra)

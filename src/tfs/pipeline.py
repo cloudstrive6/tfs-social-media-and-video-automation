@@ -19,7 +19,8 @@ from .config import channel, data_dir, env, item_dir, media, now, paused_kinds, 
 from .llm import UsageLimitError
 from .media.tts_voxcpm import VoiceDeferred
 from .media import compose, render, tts
-from .models import (FactCheck, HookReview, ReviewReport, Scene, Script, SeoPack, ShotList, ThumbnailPlan,
+from .models import (FactCheck, HookReview, PackagingCheck, ReviewReport, Scene, Script, SeoPack, ShotList,
+                     ThumbnailPlan,
                      TitlePlan)
 
 log = logging.getLogger(__name__)
@@ -30,6 +31,36 @@ PUBLISH_EVERY = 60                      # seconds between publish checks while a
 LINGER = timedelta(minutes=35)          # a run stays up for an exact-time post due within this window
 HARD_STOP = timedelta(hours=5, minutes=20)  # job timeout is 340 min; leave time to save state
 _publishing = threading.Lock()          # the publisher thread and the main thread never publish at once
+_STARTED = time.monotonic()             # this job's clock (the process starts with the job step)
+SAVE_MARGIN = timedelta(minutes=10)     # kept free at the end of a job to save state to R2
+ROUND_MARGIN = 1.2                      # another build + review starts only if 1.2x the longest one still fits
+LONG_START = timedelta(minutes=60)      # a long-form's first build + review takes about 4 h (dry run 2026-11-26),
+                                        # so a new one only starts in the first hour of a run
+
+
+class RoundDeferred(Exception):
+    """Not enough time left in this job for another build and review; the saved work resumes on the next run."""
+
+
+def _time_left() -> float:
+    return (HARD_STOP - SAVE_MARGIN).total_seconds() - (time.monotonic() - _STARTED)
+
+
+def _round_secs(d: Path, took: float | None = None) -> float:
+    """Longest build + review seen for this item (kept in its folder, so a resumed run knows it too)."""
+    f = d / "qa_timing.json"
+    try:
+        known = float(json.loads(f.read_text(encoding="utf-8")).get("round_secs", 0))
+    except (OSError, ValueError):
+        known = 0.0
+    if took is not None and took > known:
+        known = took
+        f.write_text(json.dumps({"round_secs": round(took)}), encoding="utf-8")
+    return known
+
+
+def _fits(d: Path) -> bool:
+    return _time_left() > _round_secs(d) * ROUND_MARGIN
 
 
 # ---------------------------------------------------------------- helpers
@@ -406,23 +437,44 @@ def _reviewed(item: dict, d: Path, build: Callable[[], T], review: Callable[[T],
     def repeated_major() -> bool:          # balanced: a one-off narration flag never blocks
         return len(history) >= 2 and bool(set(history[-2].major_scenes) & set(history[-1].major_scenes))
 
+    def timed(name: str) -> tuple[T, ReviewReport]:
+        t0 = time.monotonic()
+        b = build()
+        r = cached(d / name, ReviewReport, lambda: qa.safe(review, b))
+        _round_secs(d, time.monotonic() - t0)
+        return b, r
+
+    def no_time(report: ReviewReport) -> bool:
+        """True (accept with notes) when only minor narration notes are left; raises when a real problem is left."""
+        if _fits(d):
+            return False
+        left = f"{_time_left() / 60:.0f} min left, a round takes {_round_secs(d) / 60:.0f} min"
+        if not report.redo_images and not report.major_audio:
+            log.info("review %s: accepted with minor notes; no time for another round (%s)", item["id"], left)
+            return True
+        raise RoundDeferred(f"{item['id']}: the next fix round resumes on the next run ({left})")
+
     for rnd in range(rounds + 1):
-        built = build()
         if not qa.enabled():
-            return built, None
-        report = cached(d / f"qa_r{rnd}.json", ReviewReport, lambda: qa.safe(review, built))
+            return build(), None
+        built, report = timed(f"qa_r{rnd}.json")
         history.append(report)
         log.info("review r%d %s: %s", rnd, item["id"], report.summary)
         if report.passed:
             return _polish(item, d, build, review, fix, built, report)
         if rnd < rounds:
+            if item["kind"] == "long_form" and not report.redo_images and not report.major_audio:
+                log.info("review %s: accepted with minor narration notes (not worth a long-form rebuild)", item["id"])
+                return built, report
+            if no_time(report):
+                return built, report
             fix(report)
     extra = rnd
     while repeated_major() and not report.redo_images and extra < rounds + AUDIO_EXTRA_ROUNDS:
         extra += 1                         # visuals are fine; the same line keeps failing: another take
+        no_time(report)                    # a major problem never gets accepted for lack of time: it raises
         fix(report)
-        built = build()
-        report = cached(d / f"qa_r{extra}.json", ReviewReport, lambda: qa.safe(review, built))
+        built, report = timed(f"qa_r{extra}.json")
         history.append(report)
         log.info("review r%d (voice only) %s: %s", extra, item["id"], report.summary)
         if report.passed:
@@ -443,6 +495,9 @@ def _polish(item: dict, d: Path, build: Callable[[], T], review: Callable[[T], R
     cfg = qa.cfg()
     if not report.improve or not report.appeal or report.appeal >= cfg.get("min_appeal", 7) \
             or (d / "qa_polish.json").exists():
+        return built, report
+    if not _fits(d):                                  # polish is optional: never at the cost of the job limit
+        log.info("polish %s: skipped, no time for another round", item["id"])
         return built, report
     targets = dict(sorted(report.improve.items(), key=lambda kv: -len(kv[1]))[:cfg.get("polish_max_frames", 5)])
     log.info("polish %s: appeal %d/10, improving %s", item["id"], report.appeal, sorted(targets))
@@ -527,8 +582,75 @@ def _produce_video(item: dict, d: Path, dossier: str) -> None:
     titles = cached(d / "titles.json", TitlePlan, lambda: packaging.titles(item, script, thumb_moment))
     chapters = render.chapters(script.scenes, starts) if kind == "long_form" else []
     cached(d / "seo.json", SeoPack, lambda: packaging.seo(item, script, titles.primary, chapters))
+    titles = _check_packaging(item, d, script, titles, thumb_path)
 
     _schedule(item, title=titles.primary, video=str(video), thumbnail=str(thumb_path or ""), **_qa_note(report))
+
+
+def _packaging_sha(d: Path) -> str:
+    import hashlib
+    h = hashlib.sha256()
+    for name in ("titles.json", "seo.json", "thumbnails.json"):
+        f = d / name
+        h.update(f.read_bytes() if f.exists() else b"-")
+    return h.hexdigest()
+
+
+def _packaging_checked(d: Path) -> bool:
+    """True when packaging_check.json covers exactly the titles, captions and thumbnail text on disk now."""
+    try:
+        return json.loads((d / "packaging_check.json").read_text(encoding="utf-8")).get("sha") == _packaging_sha(d)
+    except (OSError, ValueError):
+        return False
+
+
+def _check_packaging(item: dict, d: Path, script: Script, titles: TitlePlan, thumb_path: Path | None) -> TitlePlan:
+    """Packaging Legal & Fact Check: writes its corrections into titles.json, seo.json and the thumbnail, then a
+    marker holding a hash of what it checked (any later change to those files means a new check)."""
+    if _packaging_checked(d):
+        return titles
+    plan_file = d / "thumbnails.json"
+    plan = ThumbnailPlan.model_validate_json(plan_file.read_text(encoding="utf-8")) if plan_file.exists() else None
+    overlay = plan.concepts[0].overlay_text if plan and plan.concepts else ""
+    pack = SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8"))
+    checked = packaging.check_packaging(script, _dossier(d), overlay, titles, pack)
+    if thumb_path and (checked.thumbnail_text != overlay or not thumb_path.exists()):
+        art = d / "thumb_art.png"                   # redrawn before anything is saved, so a failure redoes it
+        if not art.exists():
+            raise FileNotFoundError(f"{art}: cannot redraw the thumbnail with the checked text")
+        compose.thumbnail(art, checked.thumbnail_text, thumb_path)
+    titles = titles.model_copy(update={"primary": checked.title, "alternates": checked.alternates})
+    (d / "titles.json").write_text(titles.model_dump_json(indent=2), encoding="utf-8")
+    (d / "seo.json").write_text(checked.seo.model_dump_json(indent=2), encoding="utf-8")
+    if plan and plan.concepts:
+        plan.concepts[0].overlay_text = checked.thumbnail_text
+        plan_file.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
+    (d / "packaging_check.json").write_text(json.dumps({"sha": _packaging_sha(d), "issues": checked.issues},
+                                                       ensure_ascii=False, indent=1), encoding="utf-8")
+    if checked.issues:
+        log.info("packaging check %s: %s", item["id"], "; ".join(checked.issues)[:600])
+    return titles
+
+
+def _ensure_packaging_checked(item: dict, d: Path) -> None:
+    """Publish-time gate: a piece made before the check existed, or whose packaging changed since, is checked
+    now (or the post fails, and nothing goes out)."""
+    if not (d / "seo.json").exists() or _packaging_checked(d):
+        return
+    if (d / "narration.json").exists():
+        script = Script.model_validate_json((d / "narration.json").read_text(encoding="utf-8"))
+    else:
+        script = FactCheck.model_validate_json((d / "factcheck.json").read_text(encoding="utf-8")).script
+    tf = d / "titles.json"
+    title = item["data"].get("title") or ""
+    titles = TitlePlan.model_validate_json(tf.read_text(encoding="utf-8")) if tf.exists() else \
+        TitlePlan(options=[], primary=title, alternates=[])
+    if title and title != titles.primary:            # the booked title is the one that would be posted
+        titles = titles.model_copy(update={"primary": title})
+    thumb = item["data"].get("thumbnail")
+    titles = _check_packaging(item, d, script, titles, media(thumb) if thumb else None)
+    if titles.primary != title:
+        db.set_status(item["id"], item["status"], item.get("error") or "", title=titles.primary)
 
 
 PLATFORM_LABEL = {"youtube": "YouTube", "youtube_shorts": "YT Shorts", "instagram_reel": "IG Reel",
@@ -634,6 +756,9 @@ def produce(item_id: str) -> bool:
     except VoiceDeferred as e:                       # the local GPU worker has the narration; try again next run
         log.info("waiting for local narration: %s", e)
         return False
+    except RoundDeferred as e:                       # the work so far is saved with the item; the next run goes on
+        log.warning("%s", e)
+        return False
     except UsageLimitError as e:
         log.warning("usage limit reached; %s will retry on the next run (%s)", item_id, e)
         _alert_once("limit", f"⏸️ Production paused: {str(e)[:300]}\n"
@@ -663,7 +788,10 @@ def _due(post: dict) -> bool:
 def _publish_one(post: dict) -> tuple[str, str]:
     """Returns (status, remote_id). `submitted` = accepted by Post for Me, confirmed later by reconcile()."""
     item = db.get_item(post["item_id"])
-    d, data = item_dir(item["id"]), item["data"]
+    d = item_dir(item["id"])
+    _ensure_packaging_checked(item, d)
+    item = db.get_item(post["item_id"])
+    data = item["data"]
     from .publish import limits
     from .publish.limits import enforce_seo
     seo = enforce_seo(SeoPack.model_validate_json((d / "seo.json").read_text(encoding="utf-8")))
@@ -944,6 +1072,8 @@ def cloud_run(budget: timedelta = timedelta(hours=4)) -> None:
                 continue
             todo = [i for i in db.items_with_status("planned", "approved")
                     if i["id"] not in tried and i["kind"] not in paused_kinds()]
+            if now() - started > LONG_START:         # too late in this run to start a long-form; the next run does
+                todo = [i for i in todo if i["kind"] != "long_form" or (item_dir(i["id"]) / "qa_r0.json").exists()]
             if todo and now() - started < budget:
                 tried.add(todo[0]["id"])
                 produce(todo[0]["id"])

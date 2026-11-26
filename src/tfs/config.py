@@ -96,6 +96,9 @@ def style_bible() -> str:
 V2_NATIVE = {"atlas_designer"}      # written for the atlas engine from the start; lives in prompts/
 
 
+NO_STANDING_NOTES = {"packaging_checker"}
+
+
 class RetiredBriefError(RuntimeError):
     """An agent with no style v2 brief was asked for; there is no other brief to fall back on."""
 
@@ -109,6 +112,8 @@ def load_prompt(agent: str) -> str:
             raise RetiredBriefError(f"no style v2 brief for '{agent}'")
         path = ROOT / "prompts" / f"{agent}.md"
     prompt = path.read_text(encoding="utf-8")
+    if agent in NO_STANDING_NOTES:          # a legal gate never takes growth or style advice
+        return prompt
     notes = notes_dir("analyst_notes") / f"{agent}.md"
     if notes.exists():
         prompt += "\n\n## Standing notes from the Growth Analyst\n" + notes.read_text(encoding="utf-8")
