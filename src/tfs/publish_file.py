@@ -28,6 +28,8 @@ def _post(platform: str, video: Path, p: dict) -> tuple[str, str]:
     from .publish import meta, postforme, youtube
     if platform == "youtube_shorts":
         vid = youtube.upload(video, p["title"], p["youtube_description"], p.get("tags", []), now())
+        from .publish import youtube_playlists          # never raises; post.json may carry "pillar"
+        youtube_playlists.add_for(vid, "vertical", p.get("pillar"))
         return vid, f"https://youtube.com/shorts/{vid}"
     if platform == "facebook_reel":
         rid = meta.fb_reel(video, p["facebook"])

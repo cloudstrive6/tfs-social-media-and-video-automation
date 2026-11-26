@@ -693,7 +693,10 @@ def _publish_one(post: dict) -> tuple[str, str]:
         case "youtube" | "youtube_shorts":
             thumb = media(data["thumbnail"]) if data.get("thumbnail") else None
             # "submitted" until reconcile() confirms YouTube actually made it public at the slot
-            return "submitted", youtube.upload(video, title, caption, seo.tags, slot, thumb)
+            vid = youtube.upload(video, title, caption, seo.tags, slot, thumb)
+            from .publish import youtube_playlists      # never raises; a failed playlist add leaves the upload alone
+            youtube_playlists.add_for(vid, "long_form" if platform == "youtube" else "vertical", data.get("pillar"))
+            return "submitted", vid
         case "instagram_reel":
             return "published", meta.ig_reel(video, caption)
         case "facebook_reel":

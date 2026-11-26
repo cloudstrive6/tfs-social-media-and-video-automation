@@ -1,0 +1,31 @@
+# YouTube playlists (Bryce, 2026-11-26: "create playlist/s in YouTube and add the videos to their respective
+# Playlist/s"). Every upload is added by format and pillar right after it is uploaded (src/tfs/publish/youtube_playlists.py);
+# a scheduled (private) video joins its playlist now and shows there once it goes public.
+# Playlists are found by exact title, and created (public) if missing. Renaming a title here makes a new playlist.
+playlists:
+  built_to_fail:
+    title: "Built to Fail: How Philippine Government Works"
+    description: >-
+      Long-form explainers on one Philippine system at a time: how it was designed, where it fails in practice,
+      how another democracy does the same job, and what would change it. Every fact sourced.
+  know_your_government:
+    title: "Know Your Government"
+    description: >-
+      One rule of the Philippine government in under a minute, with its source. Share it with someone who should know.
+  now_explained:
+    title: "Now, Explained"
+    description: >-
+      Today's Philippine news, explained through the law and the system behind it. Non-partisan, every fact sourced.
+  fact_check:
+    title: "Fact Check"
+    description: >-
+      Viral claims about Philippine government and politics, checked against the record.
+
+# format (long_form | vertical) and pillar -> playlist keys
+rules:
+  long_form: [built_to_fail]
+  vertical:
+    how_it_works: [know_your_government]
+    now_explained: [now_explained]
+    myths_factchecks: [fact_check]
+    default: [now_explained]

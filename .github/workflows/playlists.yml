@@ -1,0 +1,16 @@
+# Actions -> playlists -> Run workflow. Default is read-only: prints scopes, playlists and where each upload would go.
+# Tick "apply" to create the playlists (public) and add the videos (Bryce, 2026-11-26).
+name: playlists
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: create playlists and add videos (otherwise read-only)
+        type: boolean
+        default: false
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: ${{ inputs.apply && 'playlists --apply' || 'playlists' }}
+    secrets: inherit

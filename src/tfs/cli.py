@@ -46,6 +46,9 @@ def main() -> None:
     sub.add_parser("retry", help="re-queue a post (id), an item's held/failed posts (item id), or 'failed' = every failed post ahead"
                    ).add_argument("post_id")
     sub.add_parser("auth").add_argument("service", choices=["youtube"])
+    pl = sub.add_parser("playlists", help="YouTube playlists: show scopes, playlists and every upload with its "
+                                          "planned playlist; --apply also creates them and adds the videos")
+    pl.add_argument("--apply", action="store_true")
     a = p.parse_args()
 
     match a.cmd:
@@ -132,6 +135,9 @@ def main() -> None:
         case "auth":
             from .publish import youtube
             print("YOUTUBE_REFRESH_TOKEN=" + youtube.authorize())
+        case "playlists":
+            from .playlist_backfill import run as backfill
+            sys.exit(backfill(apply=a.apply))
         case "status":
             from . import state
             if state.enabled():
