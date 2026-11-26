@@ -8,7 +8,7 @@ import re
 from .. import llm
 from ..config import channel
 from ..models import FactCheck, HookReview, Script
-from ..taglish_lint import script_problems
+from ..taglish_lint import TL_BARE, TL_NUM, TL_ORD, script_problems
 
 log = logging.getLogger(__name__)
 
@@ -105,6 +105,34 @@ def fact_check(script: Script, dossier: str, kind: str = "", hook_text: str = ""
 
 _TAG = re.compile(r"\[S\d+[a-z]?\]")
 _DIGITS = re.compile(r"\d[\d,.]*\d|\d")
+_TL_SMALL = ({w.split()[0]: n for n, w in TL_NUM.items()} | {w.split()[0]: n for n, w in TL_ORD.items()}
+             | {w: n for n, w in TL_BARE.items()} | {"ika" + w: n for n, w in TL_BARE.items() if n > 1}
+             | {"una": 1, "ikalawa": 2, "ikatlo": 3})
+_TL_SMALL_RX = re.compile(r"\b(" + "|".join(sorted(_TL_SMALL, key=len, reverse=True)) + r")\b", re.I)
+_SMALL_TOKEN = re.compile(r"\d[\d,.]*\d|\d|\b[A-Za-z]+\b")
+
+
+def _big(text: str) -> list[str]:
+    """Numbers that must survive a language-only retry exactly: everything but a bare 1 to 10."""
+    return sorted(d for d in _DIGITS.findall(text) if not (d.isdigit() and 1 <= int(d) <= 10))
+
+
+def _small(text: str) -> list[int]:
+    """Small counts in order, as digits or Tagalog numerals ("7", "pitong", "ikapito" are all 7), so a retry may
+    spell a small count out (Bryce, 2026-11-26) but may not drop, change or swap one."""
+    out = []
+    for tok in _SMALL_TOKEN.findall(text):
+        if tok.isdigit() and 1 <= int(tok) <= 10:
+            out.append(int(tok))
+        elif tok.lower() in _TL_SMALL:
+            out.append(_TL_SMALL[tok.lower()])
+    return out
+
+
+def _same_small(x: str, y: str) -> bool:
+    """Counts other than 1 match in order; 1s may only be added ("isang" and "unang" are also plain words)."""
+    a, b = _small(x), _small(y)
+    return [n for n in a if n != 1] == [n for n in b if n != 1] and b.count(1) >= a.count(1)
 
 
 def _same_content(a: Script, b: Script) -> bool:
@@ -117,7 +145,7 @@ def _same_content(a: Script, b: Script) -> bool:
             return False
         if _TAG.findall(x.text) != _TAG.findall(y.text):
             return False
-        if sorted(_DIGITS.findall(x.text)) != sorted(_DIGITS.findall(y.text)):
+        if _big(x.text) != _big(y.text) or not _same_small(x.text, y.text):
             return False
         if len(y.text.split()) < 0.8 * len(x.text.split()):
             return False

@@ -28,12 +28,16 @@ Audience: Filipinos in the Philippines and abroad, 18 to 45, curious, tired of n
   wala pang presidente ng Pilipinas na natanggal sa ganitong paraan.").
 - **Teach with the real rule.** Name the source out loud the first time ("ayon sa Article 11, Section 3 ng 1987
   Constitution"), give the exact threshold or number, and say what it means in practice.
-- **Numbers are said in English** and written as digits in the script ("₱170,598", "2026", "30 days"); the
-  engine reads them the way Manila explainers do ("one hundred seventy thousand five hundred ninety-eight
-  pesos", "twenty twenty-six"). Never Tagalog number words. Fractions in words ("one-third").
-- **A number and its unit are in the same language**, the way Filipinos speak ("seven months", never "seven
-  buwan"): "sa loob ng 7 months ng 2026", "mula January hanggang July 2026", "sa 7th month", "July 15, 2026", "₱1.37 trillion",
-  "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). "yung" for
+- **Big figures are said in English** and written as digits in the script ("₱170,598", "2026", "30 days",
+  "55.9%", "20 to 3"); the engine reads them the way Manila explainers do ("one hundred seventy thousand five
+  hundred ninety-eight pesos", "twenty twenty-six"). Never big figures in Tagalog number words. Fractions in
+  words ("one-third").
+- **Small counts are Tagalog words** (Bryce, 2026-11-26: "it's better hearing 'Isang chief justice' rather than
+  'one chief justice'"): 1 to 10 people, things or time units take the linked numeral, even before an English
+  noun ("isang chief justice", "dalawang senador", "pitong buwan", "ikapitong buwan").
+- **A number and its unit are in the same language**, the way Filipinos speak ("pitong buwan" or "30 days", never
+  "seven buwan"): "sa unang pitong buwan ng 2026", "mula January hanggang July 2026", "July 15, 2026",
+  "₱1.37 trillion", "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). "yung" for
   "the/that [thing]" and "[thing] mo" for "your", never "iyong" (Bryce, 2026-11-25); "sa iyo" and "iyon" stay.
   No vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
   pairs: Bryce-Brain `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.

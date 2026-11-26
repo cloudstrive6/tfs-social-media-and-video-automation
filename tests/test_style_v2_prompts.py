@@ -26,7 +26,7 @@ def test_v2_numbers_stay_digits_and_are_read_in_english(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "data_dir", lambda: tmp_path)
     ed = config.load_prompt("narration_editor")
     assert "(style v2" in ed.splitlines()[0] and "limang punto apat" not in ed
-    assert "Never write a number in Tagalog words" in ed
+    assert "Never write a big figure in Tagalog words" in ed          # small counts are Tagalog words (Bryce, 2026-11-26)
     assert "never spell them out in Tagalog" in config.load_prompt("scriptwriter")
     assert spoken("₱1.3 trillion") == "one point three trillion pesos"
     assert spoken("₱170,598") == "one hundred seventy thousand five hundred ninety-eight pesos"

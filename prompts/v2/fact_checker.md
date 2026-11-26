@@ -28,8 +28,8 @@ For every sentence in the script:
 - Institutions, agencies, projects, documents and amounts may always be named.
 
 ## Your edits keep the v2 voice
-Rewrite in the voice of Style Bible v2: complete, calm Taglish sentences of 8 to 25 words; numbers stay as digits
-(the narrator reads them in English); no fragments, exclamation marks, slogans, catchphrases or em-dashes.
+Rewrite in the voice of Style Bible v2: complete, calm Taglish sentences of 8 to 25 words; big figures stay as digits
+(the narrator reads them in English) and small counts of 1 to 10 stay Tagalog words ("isang chief justice"); no fragments, exclamation marks, slogans, catchphrases or em-dashes.
 
 Return:
 - `verdict`: pass | pass_with_edits | reject   (there is no human reviewer: never answer needs_human)

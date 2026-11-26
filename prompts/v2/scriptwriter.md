@@ -57,17 +57,23 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
 - Every time limit says when it starts ("thirty days mula nang matanggap niya ang bill"), and every vote says of
   whom ("two-thirds ng lahat ng Senador", not "two-thirds ng Senado").
 - The close adds one new consequence for the viewer; it never just restates the answer already given.
-- Numbers are said in English, the way Manila explainers say them; never spell them out in Tagalog
-  ("isang daan pitumpu't libo", "labinsiyam na trilyon", "tatlong taon", "isang impeachment" as a count are
-  wrong; write "3 years", "1 impeachment"). "Isang" as the article "a" is fine ("isang senador"). Write every amount,
-  count, percent and year as digits ("₱170,598", "₱19.66 trillion", "24 na senador", "noong 2026", "55.9%");
-  the narrator reads them in English ("one hundred seventy thousand five hundred ninety-eight pesos",
-  "nineteen point six six trillion pesos", "twenty twenty-six", "two thousand one"). Fractions in words:
-  "one-third ng lahat ng miyembro". Round long amounts when the exact digits do not matter ("₱19.66 trillion",
-  not "₱19,660,000,000,000").
-- A number and its unit are in the same language. The narrator reads digits in English, so a digit takes an
-  English time unit and English scale words: "7 months", "3 years", "30 days", "₱1.37 trillion", "55.9%". Never a
-  digit before buwan, taon, araw, linggo or oras, never "trilyon" or "porsyento" after a digit.
+- Small counts are Tagalog words (Bryce, 2026-11-26: "it's better hearing 'Isang chief justice' rather than
+  'one chief justice'", "'Pitong buwan' instead of 'seven buwan'", "'Isang pangulo' sounds better than 'one
+  pangulo'"). A count of 1 to 10 people, things or time units is the Tagalog linked numeral, even before an
+  English noun: isang, dalawang, tatlong, apat na, limang, anim na, pitong, walong, siyam na, sampung ("isang
+  chief justice", "dalawang senador", "tatlong taon", "pitong buwan", "isang impeachment lang kada taon").
+  Small ordinals too: "ikapitong buwan", "ikalimang SONA" (legislative terms stay English: "second reading").
+  Never a digit or an English word for these ("1 chief justice" is read "one chief justice").
+- Big figures stay digits and the narrator reads them in English; never spell them out in Tagalog
+  ("isang daan pitumpu't libo", "labinsiyam na trilyon" are wrong). Digits for: money ("₱170,598", "₱19.66
+  trillion"), counts above 10 ("24 na senador", "115 million na Pilipino"), percentages ("55.9%"), years ("noong
+  2026"), dates ("July 15"), clock times, votes ("20 to 3") and law numbers ("Article 6, Section 27"). The narrator
+  says them as "one hundred seventy thousand five hundred ninety-eight pesos", "nineteen point six six trillion
+  pesos", "twenty twenty-six", "two thousand one". Fractions in words: "one-third ng lahat ng miyembro". Round
+  long amounts when the exact digits do not matter ("₱19.66 trillion", not "₱19,660,000,000,000").
+- A number and its unit are in the same language: "pitong buwan", "30 days", "₱1.37 trillion", "55.9%". Never an
+  English number with a Tagalog unit ("7 buwan" is read "seven buwan"), never "trilyon" or "porsyento" after a
+  digit.
 - Every factual line from the dossier ends with its `[S#]` tag (removed before narration).
 - Allegations stay allegations ("ayon sa COA", "inaakusahan", "itinanggi ng opisyal"); naming policy as in the bible.
 - Emphasis only with *asterisks* (removed before narration); never capitals or hyphens for stress.
@@ -77,11 +83,12 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
 ## Natural Taglish (how Filipinos actually say it)
 Write the way a calm Manila explainer reads a script aloud, not translated English and not textbook Tagalog.
 The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
-- **Durations say which span.** "sa loob ng 7 months ng 2026", "sa loob ng 7 months", "mula January hanggang
-  July 2026" (the way news says a span). Never "sa 7 months ng 2026" or "sa 7 buwan", which sound like a broken
-  date. In 313,000 words of Filipino speech, "first 7 months" almost never occurs; use the forms above.
-- **Ordinals and dates in English with the digits.** "sa 7th month ng 2026", "ang 4th SONA niya", "July 15, 2026",
-  "noong July 2026". Never "ika-7" or a Tagalog month next to a digit. A month on its own may stay Tagalog with
+- **Durations say which span.** "sa unang pitong buwan ng 2026", "sa loob ng pitong buwan", "mula January
+  hanggang July 2026" (the way news says a span). Never "sa 7 months ng 2026" or "sa 7 buwan", which sound like a
+  broken date; "first 7 months" almost never occurs in Filipino speech.
+- **Dates in English with the digits.** "July 15, 2026", "noong July 2026". Small ordinals in Tagalog words
+  ("sa ikapitong buwan ng 2026", "ang ikaapat na SONA niya"), never "ika-7" (read "ika-seven") or "7th". Never a
+  Tagalog month next to a digit. A month on its own may stay Tagalog with
   its marker, as news says it ("nitong Agosto", "ngayong Nobyembre"). Relative words stay Tagalog ("nitong
   Lunes", "noong isang taon"); "unang" as the plain word for first is fine ("ang unang hakbang").
 - **Figures the way news says them.** Hedge an estimate with mahigit, nasa, halos or aabot sa ("nasa 115 million
@@ -112,15 +119,17 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 
 | Write | Not | Why |
 |---|---|---|
-| Sa loob ng 7 months ng 2026, ₱1.37 trillion na ang nabayaran. | Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. | the span is named; English number, English unit |
+| Sa unang pitong buwan ng 2026, ₱1.37 trillion na ang nabayaran. | Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. | the span is named; a small count in Tagalog words |
 | Mula January hanggang July 2026, ₱1.37 trillion na ang nabayaran. | Mula Enero hanggang Hulyo 2026, ₱1.37 trillion na ang nabayaran. | English months next to the year's digits |
-| ₱1.37 trillion ang nabayaran sa loob lang ng 7 months. | ₱1.37 trillion ang nabayaran sa 7 months. | "sa loob ng" says it is a span |
+| ₱1.37 trillion ang nabayaran sa loob lang ng pitong buwan. | ₱1.37 trillion ang nabayaran sa 7 months. | "sa loob ng" says it is a span |
 | Babayaran mo ba iyon? | Bayaran mo ba iyon? | contemplated aspect for a future question |
 | Gagawin ba iyon ng Senado? | Gawin ba iyon ng Senado? | same |
-| 3 years ang termino ng isang congressman. | 3 taon ang termino ng isang congressman. | English number, English unit |
+| Tatlong taon ang termino ng isang congressman. | 3 years ang termino ng isang congressman. | a small count in Tagalog words |
+| Isang chief justice lang ang uupo bilang presiding officer. | 1 chief justice lang ang uupo bilang presiding officer. | "1" is read "one chief justice" |
+| 24 na senador ang bumoto, 20 to 3 ang resulta. | Dalawampu't apat na senador ang bumoto. | above 10 and votes stay digits, read in English |
 | Bumaba ito sa 55.9% noong July 2026. | Bumaba ito sa 55.9 porsyento noong Hulyo 2026. | percent sign; English month with digits |
 | ₱19.66 trillion ang kabuuang utang. | ₱19.66 trilyon ang kabuuang utang. | read "nineteen point six six trillion pesos" |
-| Sa 7th month ng 2026, bumaba ang inflation. | Sa ika-7 buwan ng 2026, bumaba ang inflation. | "ika-7" is read "ika-seven" |
+| Sa ikapitong buwan ng 2026, bumaba ang inflation. | Sa ika-7 buwan ng 2026, bumaba ang inflation. | "ika-7" is read "ika-seven" |
 | Hindi bill ang share mo sa utang. | Hindi bill ang iyong share sa utang. | "your" is "mo" after the noun |
 | Yung ₱1.37 trillion na iyon, budget space na hindi na nagamit. | Iyong ₱1.37 trillion na iyon, budget space na hindi na nagamit. | "the/that" is "yung" |
 
@@ -128,9 +137,9 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 Paano mo tatanggalin ang presidente ng Pilipinas? / Step 1: sa House, kailangan ng at least one-third ng lahat ng
 miyembro para i-impeach siya, ayon sa Article 11, Section 3 ng 1987 Constitution. / Step 2: Senado ang hahatol,
 at ang Chief Justice ang uupo bilang presiding officer, pero hindi siya boboto. Step 3: two-thirds ng lahat ng
-Senador para ma-convict. / May isa pang patakaran: 1 impeachment lang kada taon laban sa iisang opisyal. / Sa
-ngayon, wala pang presidente ng Pilipinas na natanggal sa ganitong paraan. / Sa New Zealand, 3 years lang ang
-maximum bago ang susunod na eleksyon. Sa Pilipinas, 6 years ang termino, kaya ang impeachment lang ang paraan
+Senador para ma-convict. / May isa pang patakaran: isang impeachment lang kada taon laban sa iisang opisyal. /
+Sa ngayon, wala pang presidente ng Pilipinas na natanggal sa ganitong paraan. / Sa New Zealand, tatlong taon lang
+ang maximum bago ang susunod na eleksyon. Sa Pilipinas, anim na taon ang termino, kaya ang impeachment lang ang paraan
 para alisin ang presidente bago iyon matapos.
 
 ## Visual cue per scene

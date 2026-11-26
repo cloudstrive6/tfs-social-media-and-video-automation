@@ -16,8 +16,10 @@ Mark a scene NOT ok only for real problems a viewer would notice:
 
 For each NOT-ok scene give a one-line `problem`. If the fix is pronunciation (numbers, acronyms, names), set
 `tts_text` to the scene text rewritten so the voice says it correctly while still reading naturally as a
-caption. Numbers are said in English: keep them as digits ("₱5.5 billion", "2026") or write them in English words
-("five point five billion pesos", "twenty twenty-six"); never in Tagalog number words. Spell acronyms read letter
+caption. Big figures are said in English: keep them as digits ("₱5.5 billion", "2026") or write them in English
+words ("five point five billion pesos", "twenty twenty-six"); never big figures in Tagalog number words. Small
+counts of 1 to 10 stay Tagalog words, never digits or English ("isang chief justice", "pitong buwan"; Bryce,
+2026-11-26), because the voice reads any digit in English. Spell acronyms read letter
 by letter with hyphens ("D-P-W-H"). Otherwise leave `tts_text` empty (the scene is simply re-voiced).
 
 Severity for every NOT-ok scene:
