@@ -548,7 +548,9 @@ ICON_WORDS = [("person", ("crowd", "people", "person", "citizen", "voter", "work
               ("coins", ("money", "peso", "cash", "budget", "debt", "tax", "fund", "bank", "coin")),
               ("document", ("law", "decree", "document", "bill", "constitution", "ruling", "report", "record")),
               ("ballot", ("vote", "election", "ballot", "comelec")),
-              ("house", ("house", "home", "housing", "barangay"))]
+              ("house", ("house", "home", "housing", "barangay")),
+              ("store", ("market", "store", "shop", "sari-sari", "grocery", "palengke", "mall")),
+              ("school", ("school", "classroom", "education", "tuition", "student", "university"))]
 
 
 def item_text(it: AtlasItem) -> str:
@@ -801,7 +803,7 @@ def settled_time(shots: list[dict], a: float, b: float) -> float:
     big_at = s.get("bigAt") if isinstance(s.get("bigAt"), (int, float)) else None
     if s["k"] == "linechart":                                  # line draw and count-up: 2.25 s
         ready = max(ready, (big_at if big_at is not None and big_at < s["t1"] - 1 else s["t0"] + 0.55) + 2.4)
-    elif s["k"] == "balance":                                  # count-up: 1.2 s, tag 1.25 s after
+    elif s["k"] == "balance":                                  # count-up: 0.5 s, tag 1.25 s after
         ready = max(ready, (big_at if big_at is not None and big_at >= s["t0"] + 0.6 else s["t0"] + 0.9) + 1.5)
     elif s["k"] == "waffle":                                   # grid wipe, fill, label
         ready = max(ready, s["t0"] + 2.6, (big_at or 0) + 0.4)

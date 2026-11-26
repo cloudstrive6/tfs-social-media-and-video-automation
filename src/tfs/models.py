@@ -267,7 +267,7 @@ class AtlasShot(BaseModel):
     big_word: str = ""            # the spoken word of the key number (linechart draw, waffle and balance label)
     name: str = ""                # media: lower third name or role ("SENATE FINANCE COMMITTEE")
     role: str = ""                # media: lower third second line
-    icon: Literal["", "person", "building", "house", "coins", "document", "ballot"] = ""  # media: drawn stand-in
+    icon: Literal["", "person", "building", "house", "coins", "document", "ballot", "store", "school"] = ""  # media: drawn stand-in
     rows: list[AtlasItem] = []    # media: 2 to 4 side-list rows (`text`, `color`, `at_word`)
     chips: list[AtlasItem] = []   # media: honesty chips ("ILLUSTRATIVE", "ALLEGED · NOT PROVEN") on their word
 

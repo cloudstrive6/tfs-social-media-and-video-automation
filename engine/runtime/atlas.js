@@ -129,7 +129,7 @@
         `<div style="position:absolute;inset:0;filter:url(#grain);opacity:.55"></div>` : "";
       const word = s.word ? `<div class="bw" style="position:absolute;left:${V ? 7 : 5}%;${SAFE ? "max-width:72%;" : ""}top:${V ? 52 : 62}%;font:400 ${px(V ? 64 : 76)}/1 Anton;color:${C.paper};letter-spacing:1px;` +
         `background:rgba(140,20,25,.82);padding:${px(10)} ${px(22)};border-radius:${px(10)};box-shadow:${px(6)} ${px(6)} 0 rgba(15,20,32,.8)">${esc(s.word)}</div>` : "";
-      const credit = s.credit ? `<div style="position:absolute;right:${px(22)};top:${px(20)};font:700 ${px(V ? 20 : 19)} 'Segoe UI',sans-serif;color:#fff;` +
+      const credit = s.credit ? `<div style="position:absolute;${SAFE ? "left:6%;top:64%;max-width:74%;" : `right:${px(22)};top:${px(20)};`}font:700 ${px(V ? 20 : 19)} 'Segoe UI',sans-serif;color:#fff;` +
         `background:rgba(15,20,32,.7);padding:${px(5)} ${px(12)};border-radius:${px(6)}">${esc(s.credit)}</div>` : "";
       n.innerHTML = `<div style="position:absolute;inset:0;background:#111"></div>${media}${gate}${word}${credit}`;
       if (s.vid) {                                     // move the static video into this layer, under the gate, word and credit

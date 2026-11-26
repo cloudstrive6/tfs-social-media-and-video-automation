@@ -234,7 +234,7 @@ window.TFS_BLOCKS = function (ctx) {
     TICK.push((t) => {
       if (t < s.t0 - 0.05 || t > s.t1 + 0.05) return;
       const u = L.prog(t, drawAt, drawDur);
-      big.textContent = L.figAt(s.big, u);
+      big.textContent = L.figAt(s.big, o2(L.prog(t, drawAt, 0.6)));   // final in 0.6 s; the line keeps drawing
       if (u > 0 && u < 1) {                                            // the head dot rides the tip of the line
         const p = ln.getPointAtLength(ln.getTotalLength() * u);
         hd.setAttribute("cx", p.x); hd.setAttribute("cy", p.y); hd.setAttribute("opacity", 1);
@@ -286,7 +286,7 @@ window.TFS_BLOCKS = function (ctx) {
       if (t < s.t0 - 0.05 || t > s.t1 + 0.05) return;
       items.forEach((it, i) => {
         const u = o2(L.prog(t, at[i], 0.5));
-        bv[i].textContent = L.figAt(it.value, u);
+        bv[i].textContent = L.figAt(it.value, o2(L.prog(t, at[i], 0.35)));
         bv[i].style.top = `${(base - hgt(it) * u - 54 * U).toFixed(0)}px`;       // the number rides the bar's top
       });
     });
@@ -362,7 +362,7 @@ window.TFS_BLOCKS = function (ctx) {
     const sl = q(".bs");
     TICK.push((t) => {
       if (t < s.t0 - 0.05 || t > s.t1 + 0.05) return;
-      bn.textContent = L.figAt(s.big, o2(L.prog(t, fillAt, 1.2)));
+      bn.textContent = L.figAt(s.big, o2(L.prog(t, fillAt, 0.5)));
       if (t > sliverAt + 0.6) sl.style.filter = `brightness(${(1 + 0.18 * Math.sin((t - sliverAt - 0.6) * Math.PI)).toFixed(3)})`;  // breathes
     });
   };
@@ -394,6 +394,8 @@ window.TFS_BLOCKS = function (ctx) {
     coins: "M24 72 a26 8 0 1 0 52 0 a26 8 0 1 0 -52 0 M24 72 v10 a26 8 0 0 0 52 0 v-10 M24 52 a26 8 0 1 0 52 0 a26 8 0 1 0 -52 0 M24 52 v10 a26 8 0 0 0 52 0 M24 32 a26 8 0 1 0 52 0 a26 8 0 1 0 -52 0 M24 32 v10 a26 8 0 0 0 52 0",
     document: "M28 12 H62 L76 26 V88 H28 Z M62 12 V26 H76 M38 42 H66 M38 54 H66 M38 66 H56",
     ballot: "M16 50 H84 V88 H16 Z M36 62 H64 M38 50 L44 14 H68 L62 50",
+    store: "M14 40 L22 16 H78 L86 40 Z M14 40 a9 7 0 0 0 18 0 a9 7 0 0 0 18 0 a9 7 0 0 0 18 0 a9 7 0 0 0 18 0 M20 46 V86 H80 V46 M40 86 V62 H60 V86",
+    school: "M50 14 L88 32 L50 50 L12 32 Z M24 38 V60 C24 68 76 68 76 60 V38 M88 32 V56",
   };
   build.media = function (s) {
     const n = layer();
