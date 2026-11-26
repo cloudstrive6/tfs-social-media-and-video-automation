@@ -8,6 +8,7 @@ Quota: playlists.list / playlistItems.list 1 unit, playlists.insert / playlistIt
 from __future__ import annotations
 
 import logging
+import time
 from functools import lru_cache
 from pathlib import Path
 
@@ -78,25 +79,46 @@ def ensure(key: str, have: dict[str, str] | None = None) -> str:
     return pid
 
 
+def _not_found(e: Exception) -> bool:
+    return getattr(getattr(e, "resp", None), "status", None) == 404
+
+
 def contains(playlist_id: str, video_id: str) -> bool:
     from .youtube import api
 
-    r = api().playlistItems().list(part="id", playlistId=playlist_id, videoId=video_id, maxResults=1).execute()
+    try:
+        r = api().playlistItems().list(part="id", playlistId=playlist_id, videoId=video_id, maxResults=1).execute()
+    except Exception as e:
+        if _not_found(e):            # a playlist created seconds ago is not readable yet: it is empty
+            return False
+        raise
     return bool(r.get("items"))
+
+
+def _insert_item(playlist_id: str, video_id: str, sleep=time.sleep) -> None:
+    """playlistItems.insert, retried while a just-created playlist is still 404 on YouTube's side (2026-11-26)."""
+    from .youtube import api
+
+    body = {"snippet": {"playlistId": playlist_id, "resourceId": {"kind": "youtube#video", "videoId": video_id}}}
+    for attempt in range(6):
+        try:
+            api().playlistItems().insert(part="snippet", body=body).execute()
+            return
+        except Exception as e:
+            if not _not_found(e) or attempt == 5:
+                raise
+            sleep(5 * (attempt + 1))
 
 
 def add(video_id: str, keys: list[str], have: dict[str, str] | None = None) -> list[str]:
     """Add a video to each playlist key; returns the playlist titles it was newly added to."""
-    from .youtube import api
-
     have = existing() if have is None else have
     added = []
     for key in keys:
         pid = ensure(key, have)
         if contains(pid, video_id):
             continue
-        api().playlistItems().insert(part="snippet", body={"snippet": {
-            "playlistId": pid, "resourceId": {"kind": "youtube#video", "videoId": video_id}}}).execute()
+        _insert_item(pid, video_id)
         added.append(config()["playlists"][key]["title"])
     return added
 

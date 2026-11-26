@@ -26,6 +26,28 @@ def test_hook_never_raises(monkeypatch):
     assert yp.add_for("abc123", "vertical", "how_it_works") == []
 
 
+def test_insert_retries_while_new_playlist_is_404(monkeypatch):
+    import tfs.publish.youtube as yt
+    tries = []
+
+    class NotYet(Exception):
+        resp = type("R", (), {"status": 404})()
+
+    class Items:
+        def insert(self, part, body):
+            class Run:
+                def execute(self_inner):
+                    tries.append(1)
+                    if len(tries) < 3:
+                        raise NotYet()
+                    return {}
+            return Run()
+
+    monkeypatch.setattr(yt, "api", lambda: type("A", (), {"playlistItems": lambda self: Items()})())
+    yp._insert_item("PLnew", "v1", sleep=lambda s: None)
+    assert len(tries) == 3
+
+
 def test_add_skips_existing_and_creates_missing(monkeypatch):
     calls = []
 
