@@ -6,7 +6,7 @@ sound on the visual beat the atlas runtime (engine atlas.js) animates, a synthes
 
 - speech gate from the narration (0.3 s moving averages) for the SFX bus;
 - the music director (`music_duck`) for the bed: held about 15 dB under the voice through every pause shorter
-  than 1.5 s, opening only at the intro, the outro and long pauses such as chapter cards (Bryce, 2026-11-27:
+  than 2.2 s, opening only at the intro, the outro and long pauses such as chapter cards (Bryce, 2026-11-27:
   the music must not jump up whenever the narrator pauses);
 - bed swelling about 10 dB over the 1.5 s before each reveal, silent from
   reveal - 0.8 s to reveal + 1.6 s, then back over 0.8 s ("silence is a sound");
@@ -54,7 +54,8 @@ VOICING = [dict(bass=33, cello=45, triad=[57, 60, 64]), dict(bass=29, cello=41, 
 PULSE_BPM = 80
 MUSIC_TAIL = 1.5         # each chord block rings this long into the next
 MUSIC_TRIM = 1.1         # unity-scale trim: the bed's integrated loudness matches the v2 sine pad (measured over 120 s)
-HOLD_GAP = 1.5           # the music director: pauses shorter than this keep the bed ducked (lines are 0.35 s apart)
+HOLD_GAP = 2.2           # the music director: pauses shorter than this keep the bed ducked (lines are 0.35 s apart,
+                         # long-form chapter cards 2.6 s; at 1.5 s a 1.6 s pause gave a quick 10 dB bump)
 OPEN_DELAY = 0.35        # a longer pause opens the bed this long after the voice stops ...
 OPEN_RISE = 1.2          # ... over this long ...
 CLOSE_LEAD = 0.2         # ... and it is back under the voice this long before the voice returns ...
@@ -520,6 +521,8 @@ def music_pad(total: float, length: int | None = None, sr: int = SR) -> np.ndarr
     if sr != SR:
         raise ValueError(f"sfx_v2 is built at {SR} Hz (got {sr})")
     L = length if length is not None else int((total + 0.5) * sr)
+    if L <= 0:
+        return np.zeros(0, np.float32)
     dry = np.zeros(L + int((MUSIC_TAIL + 1) * sr))
     for i in range(int(L / sr / CHORD_SECONDS) + 1):
         b = _chord_block(i); s = int(i * CHORD_SECONDS * sr)

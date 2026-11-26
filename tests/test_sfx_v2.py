@@ -122,7 +122,16 @@ def test_string_bed_follows_chord_plan_and_is_deterministic():
     env = sv._smooth(np.abs(sv.band(bed, 80, 400)).astype(np.float64), int(0.02 * SR))[int(1 * SR):int(12 * SR)]
     es = np.abs(np.fft.rfft(env - env.mean())); ef = np.fft.rfftfreq(len(env), 1 / SR)
     pulse = es[(ef > 2.5) & (ef < 2.85)].max()
-    assert pulse > 3 * np.median(es[(ef > 1) & (ef < 8)])
+    assert pulse > 2 * np.median(es[(ef > 1) & (ef < 8)])               # 3.7 on this seed, 2.7 to 4.4 on others
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
+def test_string_bed_loudness_matches_the_old_pad(tmp_path):
+    """MUSIC_TRIM keeps PAD_LEVEL meaning what it did: the v2 sine pad measured -8.6 LUFS at unity scale."""
+    total = 48.0
+    lufs, _ = sv.loudness(sv.write_wav(tmp_path / "bed.wav", sv.music_pad(total)))
+    assert lufs == pytest.approx(-8.6, abs=0.7)
+    assert len(sv.music_pad(0.0, 0)) == 0
 
 
 def gappy_voice(pauses, talk=2.0, lead=0.5, tail=3.0, seed=5):
@@ -138,31 +147,37 @@ def gappy_voice(pauses, talk=2.0, lead=0.5, tail=3.0, seed=5):
 
 
 def test_music_holds_through_short_pauses_and_opens_in_long_ones():
-    v = gappy_voice([0.35, 1.0, 2.6])                                    # line gap, a long breath, a chapter card
+    v = gappy_voice([0.35, 1.8, 2.6])                                    # line gap, a long breath, a chapter card
     duck = sv.music_duck(v)
     at = lambda s: duck[int(s * SR)]                                       # noqa: E731
-    # speech runs: 0.5-2.5, 2.85-4.85, 5.85-7.85, 10.45-12.45; then the outro
-    assert duck[int(0.6 * SR):int(7.8 * SR)].min() == 1.0                 # held through the 0.35 s and 1.0 s gaps
-    assert at(7.85 + 0.3) == 1.0                                          # the chapter pause waits OPEN_DELAY ...
-    assert at(7.85 + 0.35 + 1.2 + 0.05) < 0.05                            # ... then opens fully
-    assert at(10.45 - 0.15) == 1.0                                        # back under the voice before it returns
-    assert duck[int(10.45 * SR):int(12.4 * SR)].min() == 1.0
-    assert at(12.45 + 2.0) < 0.05                                         # the outro opens
+    # speech runs: 0.5-2.5, 2.85-4.85, 6.65-8.65, 11.25-13.25; then the outro
+    assert duck[int(0.6 * SR):int(8.6 * SR)].min() == 1.0                 # held through the 0.35 s and 1.8 s gaps
+    assert at(8.65 + 0.3) == 1.0                                          # the chapter pause waits OPEN_DELAY ...
+    assert at(8.65 + 0.35 + 1.2 + 0.05) < 0.05                            # ... then opens fully
+    assert at(11.25 - 0.15) == 1.0                                        # back under the voice before it returns
+    assert duck[int(11.25 * SR):int(13.2 * SR)].min() == 1.0
+    assert at(13.25 + 2.0) < 0.05                                         # the outro opens
     assert np.abs(np.diff(duck)).max() < 3.0 / (0.8 * SR)                 # no steps: smooth ramps only
     assert np.array_equal(sv.music_duck(np.zeros(SR)), np.zeros(SR))      # no voice: the bed stays open
 
 
 def test_mix_keeps_music_down_between_lines():
-    """The bed must not rise in the 0.35 s gaps between lines (Bryce, 2026-11-27)."""
-    v = gappy_voice([0.35, 0.35, 0.35], lead=0.5, tail=0.5)
+    """Through `mix` itself: the bed must not rise in the gaps between lines or in a 1.8 s pause (Bryce,
+    2026-11-27), yet it does open in a chapter-card pause."""
+    v = gappy_voice([0.35, 0.35, 1.8, 2.6], lead=0.5, tail=0.5)
     total = len(v) / SR
-    gain = sv.pad_gain_curve(sv.music_duck(v), [])
-    under = sv.PAD_LEVEL * (1 - sv.PAD_DUCK)
-    gaps = [2.5, 4.85, 7.2]
-    for g in gaps:
-        assert gain[int((g + 0.05) * SR):int((g + 0.3) * SR)].max() == pytest.approx(under)
-    _, report = sv.mix(v, [], total)
+    mixed, report = sv.mix(v, [], total)                                  # no shots: the mix is voice + bed only
     assert report["reveals"] == []
+    bed = sv.music_pad(total, len(mixed))
+    music = mixed - np.pad(v, (0, len(mixed) - len(v)))
+    under = sv.PAD_LEVEL * (1 - sv.PAD_DUCK)
+    def gain(a, b):                                                       # bed gain the mix applied in [a, b) s
+        sl = slice(int(a * SR), int(b * SR)); m = np.abs(bed[sl]) > 0.05
+        return float(np.max(np.abs(music[sl][m] / bed[sl][m])))
+    # speech runs 0.5-2.5, 2.85-4.85, 5.2-7.2, 9.0-11.0, 13.6-15.6
+    for a, b in ((2.55, 2.8), (4.9, 5.15), (7.25, 8.95)):
+        assert gain(a, b) == pytest.approx(under, rel=1e-3)
+    assert gain(11.0, 13.6) > 4 * under                                   # the chapter pause opens the bed
 
 
 def synthetic_voice(total, seed=3):
