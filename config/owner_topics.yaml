@@ -1,0 +1,82 @@
+# Owner topic queue: the channel owner's own topics, made in this order before the trend pool (2026-11-28).
+# When the scheduled planner fills vertical slots, the earliest open full slot (one that posts to every platform)
+# takes the first entry not yet used, and so on; post-now and samples never take one. An entry is used once an
+# item holds it. Only a piece that ran out of time before its slot gives its entry back, once (2 tries at most);
+# a gate rejection or a human reject retires it. When no entry is left, slots go back to the trend pool as before.
+#
+# Fields:
+#   id        stable key, never reused (the state db remembers it)
+#   kind      vertical (Shorts and Reels); long_form and carousel also work
+#   title     working title (packaging writes the real one)
+#   pillar    now_explained | how_it_works | myths_factchecks
+#   keyword   primary search keyword
+#   request   the owner's angle, as the writers must keep it (reaches every writer as `owner_request`)
+#   notes     what the researcher and fact checker must establish first; claims follow the records, never the angle
+#
+# Every piece still goes through every gate: research, fact check, Tagalog language team rules, voice checks,
+# visual QC, the packaging legal check and the virality final PASS. Nothing here posts outside the normal slots.
+# The owner's request, 2026-11-28: "For the next shorts/reels topics, do topics around these, in order".
+
+topics:
+  - id: owner-2026-11-28-nuvali-traffic
+    kind: vertical
+    title: "Sta. Rosa to Tagaytay traffic: planning after the mall, not before"
+    pillar: now_explained
+    keyword: Sta Rosa Tagaytay traffic
+    request: >-
+      Traffic from Sta. Rosa up to Tagaytay got worse when a big mall opened at Nuvali. The angle: road and traffic
+      planning that reacts after the problem appears instead of planning before it, shown from the records (what
+      plans existed, what was required, what was done and when).
+    notes: >-
+      First confirm the mall's exact name, owner and opening date: Nuvali is an Ayala Land estate, so establish what
+      SM actually opened there and where. Then sourced traffic facts only: statements from the Sta. Rosa city
+      government, Laguna or Cavite LGUs, MMDA, DPWH or LTO; the road plans and projects for the Sta. Rosa-Tagaytay
+      Road; whether a traffic impact assessment was required for the development and whether one was done. The
+      "reactive, not proactive" point must come from dates in the records (plans announced after the jams began),
+      not from opinion.
+
+  - id: owner-2026-11-28-modest-lives
+    kind: vertical
+    title: "Officials must lead modest lives: what the law says, and what we see"
+    pillar: how_it_works
+    keyword: public officials modest lives law
+    request: >-
+      The law requires public officials to live simply. Show what the rule says, then the contrast with officials
+      and their families seen flaunting wealth, travelling abroad and living in luxury, using documented cases.
+    notes: >-
+      Get the legal basis exactly right and say which is which: 1987 Constitution Art. XI Sec. 1 (public office is a
+      public trust; officials and employees "lead modest lives") and RA 6713 Sec. 4(h) (simple living, which is
+      where the families part comes from; the Constitution does not mention families). The contrast uses published
+      cases only: news reports, SALN coverage, the 2025 "nepo baby" reporting. No accusation against a named person
+      beyond what the cited report says; no implied crime.
+
+  - id: owner-2026-11-28-good-governance
+    kind: vertical
+    title: "What good governance looks like, and what citizens can expect"
+    pillar: how_it_works
+    keyword: good governance Philippines LGU
+    request: >-
+      What good governance is and what people should expect from their local government, with Pasig City under
+      Mayor Vico Sotto as an example of specific practices.
+    notes: >-
+      Non-partisan: define good governance by practices (transparency, open procurement, freedom of information,
+      SALN disclosure, citizen participation), each with a source. Use Pasig's documented practices as one example
+      (for example its FOI ordinance or published budgets and procurement), sourced, not as an endorsement of a
+      person, and name one or two other LGUs with documented good practices too.
+
+  - id: owner-2026-11-28-ghost-projects
+    kind: vertical
+    title: "Ghost projects and overpriced repairs: where does the extra money go?"
+    pillar: now_explained
+    keyword: ghost projects overpricing COA
+    request: >-
+      Government ghost projects and overspending on a single job, for example a reported P35M bridge repainting.
+      Ask the question "where does the extra money go?" and answer it only with audit findings and filed or decided
+      cases.
+    notes: >-
+      Documented facts only: COA audit findings, the 2025 Senate and House hearings on flood-control ghost
+      projects, and a sourced overpricing case such as the bridge repainting once its amount, place and source are
+      verified (drop it if it cannot be verified). The answer to "where does the money go" is only what audit
+      findings and filed or decided cases state. Hearing testimony is an allegation: report it only as attributed
+      testimony ("a witness told the Senate..."), never as a finding. No claim that named officials or contractors
+      pocketed money unless a conviction or the cited finding says so.

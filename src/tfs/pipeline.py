@@ -930,13 +930,13 @@ def plan_upcoming() -> list[str]:
     today = now().date()
     units = [u for day in (today, today + timedelta(days=1)) for u in slots.day_units(day)
              if now() < u.anchor <= horizon and not db.get_item(u.id)]
-    return editor.plan(units) if units else []
+    return editor.plan(units, owner_topics=True) if units else []
 
 
 def expire_stale() -> None:
     for item in db.items_with_status("planned", "awaiting_approval", "failed"):
         if datetime.fromisoformat(item["anchor_at"]) <= now():
-            db.set_status(item["id"], "skipped", item.get("error") or "not ready by first slot")
+            db.set_status(item["id"], "skipped", item.get("error") or "not ready by first slot", expired=True)
             notify.send(f"⏭️ {item['id']} skipped — not ready by {item['anchor_at']}.")
 
 
