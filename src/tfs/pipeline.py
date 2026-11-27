@@ -342,7 +342,10 @@ def _atlas_video(item: dict, d: Path, script: Script, size: tuple[int, int], hoo
                 shutil.copy(png, d / "thumb_art.png")
             except Exception:
                 log.exception("thumbnail snapshot failed; using a frame of the video")
-    mixed, report = sfx_v2.mix(voice.astype(np.float32), shots, total)
+    mixed, report = sfx_v2.mix(voice.astype(np.float32), shots, total,
+                               music_text=" ".join(str((item.get("data") or {}).get(k) or "")
+                                                  for k in ("title", "working_title", "angle", "topic")),
+                               music_seed=str(item["id"]))
     raw, mastered = work / "mix_raw.wav", work / "mix.wav"
     sfx_v2.write_wav(raw, mixed)
     lufs, peak = sfx_v2.master(raw, mastered)

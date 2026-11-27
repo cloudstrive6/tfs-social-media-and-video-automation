@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 PREFIX = "state/"
 DB = "tfs.sqlite3"
 SKIP_DIRS = {"work", "style_preview"}           # render scratch; never needed by a later run
+SKIP_TOP = {"music"}                             # data/music: the music library cache (its own R2 prefix)
 REQUESTS = "requests/"
 KEEP_MEDIA_DAYS = 10                             # after that only an item's text files stay in R2
 _lock = threading.Lock()
@@ -123,7 +124,7 @@ def push() -> int:
             rel = _rel(path)
             folders = rel.split("/")[:-1]
             if (not path.is_file() or rel == DB or path.name.startswith(".")
-                    or SKIP_DIRS & set(folders) or any(f.startswith("work_") or f.endswith(".prepolish")
+                    or SKIP_DIRS & set(folders) or (folders and folders[0] in SKIP_TOP) or any(f.startswith("work_") or f.endswith(".prepolish")
                                                        for f in folders)):
                 continue
             st = path.stat()
