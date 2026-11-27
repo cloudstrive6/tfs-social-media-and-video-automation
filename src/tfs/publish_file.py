@@ -35,7 +35,11 @@ def _post(platform: str, video: Path, p: dict) -> tuple[str, str]:
         rid = meta.fb_reel(video, p["facebook"])
         return rid, f"https://www.facebook.com/reel/{rid}"
     if platform == "instagram_reel":
-        rid = meta.ig_reel(video, p["instagram"])
+        from .config import channel
+        if channel()["publishing"].get("overrides", {}).get("instagram_reel") == "postforme":
+            rid = postforme.create_post("instagram_reel", p["instagram"], [video], now())
+        else:
+            rid = meta.ig_reel(video, p["instagram"])
         return rid, "https://www.instagram.com/thefilipinostandard/"
     if platform == "tiktok":
         rid = postforme.create_post("tiktok", p["tiktok"], [video], now(), title=p["title"][:90])

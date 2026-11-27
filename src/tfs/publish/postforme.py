@@ -31,10 +31,19 @@ PLATFORMS = {
 }
 
 
+# Platforms connected in the Quickstart project "TFS TikTok" (Post for Me's own approved apps), whose key is
+# POSTFORME_API_KEY_TIKTOK. Instagram joined it on 2026-11-27: Meta restricted the TFS business portfolio and the
+# Page lost its Instagram link, so Graph API Reels failed; Post for Me's Instagram Login needs no Page.
+QUICKSTART = {"instagram": "TIKTOK"}
+HANDLE = "thefilipinostandard"
+
+
 def _key(platform: str | None) -> str:
     """POSTFORME_API_KEY_<PLATFORM> (e.g. a Quickstart project for TikTok/YouTube) overrides POSTFORME_API_KEY."""
     if platform and env(f"POSTFORME_API_KEY_{platform.upper()}"):
         return env(f"POSTFORME_API_KEY_{platform.upper()}")
+    if platform in QUICKSTART and env(f"POSTFORME_API_KEY_{QUICKSTART[platform]}"):
+        return env(f"POSTFORME_API_KEY_{QUICKSTART[platform]}")
     return require_env("POSTFORME_API_KEY")
 
 
@@ -58,8 +67,10 @@ def account_id(platform: str) -> str:
     accounts = _call("GET", "/social-accounts", platform, params={"platform": platform})["data"]
     connected = [a for a in accounts if a.get("status") == "connected"]
     if not connected:
-        raise RuntimeError(f"No connected {platform} account in Post for Me — connect it in the dashboard")
-    return connected[0]["id"]
+        raise RuntimeError(f"No connected {platform} account in Post for Me: connect it in the dashboard")
+    ours = [a for a in connected if HANDLE in f"{a.get('username', '')} {a.get('external_id', '')}".lower()
+            .replace(" ", "")]
+    return (ours or connected)[0]["id"]
 
 
 def upload(path: Path, platform: str | None = None) -> str:

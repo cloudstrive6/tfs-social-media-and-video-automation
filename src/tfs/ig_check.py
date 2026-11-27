@@ -57,8 +57,16 @@ def _recent() -> str:
                    for m in d.get("data", [])) or "none"
 
 
+def _postforme() -> str:
+    from .publish import postforme
+    accounts = postforme._call("GET", "/social-accounts", "instagram", params={"platform": "instagram"})["data"]
+    live = [f"@{a.get('username')} ({a.get('status')})" for a in accounts]
+    return f"{live or 'none'}; posts go to the {postforme.HANDLE} account: {bool(postforme.account_id('instagram'))}"
+
+
 def run() -> None:
     print(f"Graph API version: {env('META_GRAPH_VERSION', 'v23.0')}")
     for label, fn in (("Page token", _token), ("Page link", _linked), ("Instagram account", _account),
-                      ("Publishing quota", _quota), ("Latest Instagram media", _recent)):
+                      ("Publishing quota", _quota), ("Latest Instagram media", _recent),
+                      ("Post for Me Instagram", _postforme)):
         _try(label, fn)
