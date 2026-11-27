@@ -90,94 +90,14 @@ def test_reveal_detection():
 def test_pad_silent_inside_reveal_window():
     total, r = 20.0, 10.0
     L = int((total + 0.5) * SR)
-    gain = sv.pad_gain_curve(np.zeros(L), [r])
-    pad = sv.music_pad(total, L) * gain
+    pad = sv.music_pad(total, L) * sv.pad_gain_curve(np.zeros(L), [r])
     seg = lambda a, b: np.abs(pad[int(a * SR) + 1:int(b * SR)])  # noqa: E731  (+1: float rounding at the edge)
     assert seg(r - 0.8, r + 1.6).max() == 0.0                          # silent from r - 0.8 to r + 1.6
     assert seg(r + 2.4, r + 3.4).max() > 0.01                          # back after 0.8 s
-    # swell before the cut, measured on the gain (the string pulse makes short windows of the bed itself uneven)
-    assert gain[int((r - 1.0) * SR)] > 2.5 * gain[int((r - 4.0) * SR)]
+    assert seg(r - 1.2, r - 0.85).mean() > 2.5 * seg(r - 4.0, r - 3.0).mean()   # swell before the cut
     # under speech the pad sits about 15 dB lower than in the gaps
     assert 20 * np.log10(sv.pad_gain_curve(np.ones(10), [])[0] / sv.pad_gain_curve(np.zeros(10), [])[0]) == \
         pytest.approx(-14.9, abs=0.3)
-
-
-def test_string_bed_follows_chord_plan_and_is_deterministic():
-    total = 13.0
-    L = int((total + 0.5) * SR)
-    bed = sv.music_pad(total, L)
-    assert bed.dtype == np.float32 and len(bed) == L and np.isfinite(bed).all()
-    assert np.array_equal(bed, sv.music_pad(total, L))                    # same samples every call
-    # each chord's held notes are present: the spectrum around 7 to 11 s (inside F) peaks near F, A and C
-    seg = bed[int(7.5 * SR):int(10.5 * SR)].astype(np.float64)
-    spec = np.abs(np.fft.rfft(seg * np.hanning(len(seg))))
-    freqs = np.fft.rfftfreq(len(seg), 1 / SR)
-    def level(f):                                                         # strongest bin within a quarter tone
-        m = (freqs > f * 2 ** (-1 / 24)) & (freqs < f * 2 ** (1 / 24))
-        return spec[m].max()
-    floor = np.median(spec[(freqs > 100) & (freqs < 2000)])
-    for midi in (57 + 12, 60 + 12, 65 + 12, 41):                           # held violins A4 C5 F5 (triad + 12), cello pulse F2
-        assert level(sv._hz(midi)) > 20 * floor
-    # the pulse: 80 bpm eighths give an envelope rhythm at 2.67 Hz
-    env = sv._smooth(np.abs(sv.band(bed, 80, 400)).astype(np.float64), int(0.02 * SR))[int(1 * SR):int(12 * SR)]
-    es = np.abs(np.fft.rfft(env - env.mean())); ef = np.fft.rfftfreq(len(env), 1 / SR)
-    pulse = es[(ef > 2.5) & (ef < 2.85)].max()
-    assert pulse > 2 * np.median(es[(ef > 1) & (ef < 8)])               # 3.7 on this seed, 2.7 to 4.4 on others
-
-
-@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
-def test_string_bed_loudness_matches_the_old_pad(tmp_path):
-    """MUSIC_TRIM keeps PAD_LEVEL meaning what it did: the v2 sine pad measured -8.6 LUFS at unity scale."""
-    total = 48.0
-    lufs, _ = sv.loudness(sv.write_wav(tmp_path / "bed.wav", sv.music_pad(total)))
-    assert lufs == pytest.approx(-8.6, abs=0.7)
-    assert len(sv.music_pad(0.0, 0)) == 0
-
-
-def gappy_voice(pauses, talk=2.0, lead=0.5, tail=3.0, seed=5):
-    """Speech-band noise bursts of `talk` s separated by the given pauses."""
-    rng = np.random.default_rng(seed)
-    parts = [np.zeros(int(lead * SR))]
-    for p in list(pauses) + [None]:
-        parts.append(sv.band(rng.standard_normal(int(talk * SR)).astype(np.float32), 200, 3400) * 0.3)
-        if p is not None:
-            parts.append(np.zeros(int(p * SR)))
-    parts.append(np.zeros(int(tail * SR)))
-    return np.concatenate(parts).astype(np.float32)
-
-
-def test_music_holds_through_short_pauses_and_opens_in_long_ones():
-    v = gappy_voice([0.35, 1.8, 2.6])                                    # line gap, a long breath, a chapter card
-    duck = sv.music_duck(v)
-    at = lambda s: duck[int(s * SR)]                                       # noqa: E731
-    # speech runs: 0.5-2.5, 2.85-4.85, 6.65-8.65, 11.25-13.25; then the outro
-    assert duck[int(0.6 * SR):int(8.6 * SR)].min() == 1.0                 # held through the 0.35 s and 1.8 s gaps
-    assert at(8.65 + 0.3) == 1.0                                          # the chapter pause waits OPEN_DELAY ...
-    assert at(8.65 + 0.35 + 1.2 + 0.05) < 0.05                            # ... then opens fully
-    assert at(11.25 - 0.15) == 1.0                                        # back under the voice before it returns
-    assert duck[int(11.25 * SR):int(13.2 * SR)].min() == 1.0
-    assert at(13.25 + 2.0) < 0.05                                         # the outro opens
-    assert np.abs(np.diff(duck)).max() < 3.0 / (0.8 * SR)                 # no steps: smooth ramps only
-    assert np.array_equal(sv.music_duck(np.zeros(SR)), np.zeros(SR))      # no voice: the bed stays open
-
-
-def test_mix_keeps_music_down_between_lines():
-    """Through `mix` itself: the bed must not rise in the gaps between lines or in a 1.8 s pause (Bryce,
-    2026-11-27), yet it does open in a chapter-card pause."""
-    v = gappy_voice([0.35, 0.35, 1.8, 2.6], lead=0.5, tail=0.5)
-    total = len(v) / SR
-    mixed, report = sv.mix(v, [], total)                                  # no shots: the mix is voice + bed only
-    assert report["reveals"] == []
-    bed = sv.music_pad(total, len(mixed))
-    music = mixed - np.pad(v, (0, len(mixed) - len(v)))
-    under = sv.PAD_LEVEL * (1 - sv.PAD_DUCK)
-    def gain(a, b):                                                       # bed gain the mix applied in [a, b) s
-        sl = slice(int(a * SR), int(b * SR)); m = np.abs(bed[sl]) > 0.05
-        return float(np.max(np.abs(music[sl][m] / bed[sl][m])))
-    # speech runs 0.5-2.5, 2.85-4.85, 5.2-7.2, 9.0-11.0, 13.6-15.6
-    for a, b in ((2.55, 2.8), (4.9, 5.15), (7.25, 8.95)):
-        assert gain(a, b) == pytest.approx(under, rel=1e-3)
-    assert gain(11.0, 13.6) > 4 * under                                   # the chapter pause opens the bed
 
 
 def synthetic_voice(total, seed=3):

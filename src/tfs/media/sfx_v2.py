@@ -1,14 +1,11 @@
 """TFS sound design v2 (map-explainer style, approved by Bryce on 2026-11-24 with the v2.2 pilot).
 
 A synthesized "paper desk" SFX palette (owned outright, so no Content ID risk), a cue engine that places each
-sound on the visual beat the atlas runtime (engine atlas.js) animates, a synthesized documentary string bed
-("pulse strings" on the same 4-chord plan, Bryce 2026-11-27; it replaced the pilot's sine pad), and the mix chain:
+sound on the visual beat the atlas runtime (engine atlas.js) animates, a synthesized 4-chord documentary pad,
+and the pilot's mix chain:
 
-- speech gate from the narration (0.3 s moving averages) for the SFX bus;
-- the music director (`music_duck`) for the bed: held about 15 dB under the voice through every pause shorter
-  than 2.2 s, opening only at the intro, the outro and long pauses such as chapter cards (Bryce, 2026-11-27:
-  the music must not jump up whenever the narrator pauses);
-- bed swelling about 10 dB over the 1.5 s before each reveal, silent from
+- speech gate from the narration (0.3 s moving averages);
+- pad about 15 dB quieter under speech, swelling about 10 dB over the 1.5 s before each reveal, silent from
   reveal - 0.8 s to reveal + 1.6 s, then back over 0.8 s ("silence is a sound");
 - SFX bus gain 1.78 * (1 - 0.75 * gate): about +5 dB in gaps, about 7 dB under speech;
 - QC: voice-over-SFX margin in 50 ms windows where the voice is above -40 dBFS.
@@ -37,7 +34,7 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import butter, oaconvolve, sosfilt
+from scipy.signal import butter, sosfilt
 
 SR = 48000
 SEED = 7
@@ -47,19 +44,8 @@ PAD_LEVEL = 0.035        # pad bed gain in gaps
 PAD_DUCK = 0.82          # 1 - 0.82 is about -15 dB under speech
 SFX_BUS = 1.78           # about +5 dB in gaps
 SFX_DUCK = 0.75          # 1.78 * 0.25 is about -7 dB under speech
+CHORDS = [[220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [130.81, 196.0, 261.63], [196.0, 246.94, 293.66]]
 CHORD_SECONDS = 6.0
-# The string bed's chord plan in MIDI notes (Am, F, C(add G), G): basses, the cello pulse root, the held triad
-VOICING = [dict(bass=33, cello=45, triad=[57, 60, 64]), dict(bass=29, cello=41, triad=[57, 60, 65]),
-           dict(bass=36, cello=48, triad=[55, 60, 64]), dict(bass=31, cello=43, triad=[55, 59, 62])]
-PULSE_BPM = 80
-MUSIC_TAIL = 1.5         # each chord block rings this long into the next
-MUSIC_TRIM = 1.1         # unity-scale trim: the bed's integrated loudness matches the v2 sine pad (measured over 120 s)
-HOLD_GAP = 2.2           # the music director: pauses shorter than this keep the bed ducked (lines are 0.35 s apart,
-                         # long-form chapter cards 2.6 s; at 1.5 s a 1.6 s pause gave a quick 10 dB bump)
-OPEN_DELAY = 0.35        # a longer pause opens the bed this long after the voice stops ...
-OPEN_RISE = 1.2          # ... over this long ...
-CLOSE_LEAD = 0.2         # ... and it is back under the voice this long before the voice returns ...
-CLOSE_FALL = 0.8         # ... after closing over this long
 
 _rng = np.random.default_rng(SEED)
 
@@ -404,134 +390,20 @@ def _v3_cues(s: dict) -> list[tuple]:
 
 
 # ---- music pad and mix -----------------------------------------------------------------------------------------
-def _hz(midi: float) -> float: return 440.0 * 2 ** ((midi - 69) / 12)
-
-
-def _lp(x, f, order=2): return sosfilt(butter(order, f, btype="low", fs=SR, output="sos"), x)
-def _hp(x, f, order=2): return sosfilt(butter(order, f, btype="high", fs=SR, output="sos"), x)
-
-
-def _peaking(x, f0, gain_db, q):
-    """RBJ peaking EQ biquad."""
-    A = 10 ** (gain_db / 40); w = 2 * np.pi * f0 / SR; al = np.sin(w) / (2 * q)
-    b = np.array([1 + al * A, -2 * np.cos(w), 1 - al * A]); a = np.array([1 + al / A, -2 * np.cos(w), 1 - al / A])
-    return sosfilt(np.concatenate([b / a[0], a / a[0]])[None, :], x)
-
-
-def _saw(freq: np.ndarray) -> np.ndarray:
-    """Band-limited sawtooth (polyBLEP) from an instantaneous frequency curve in Hz."""
-    dt = freq / SR
-    t = np.cumsum(dt) % 1.0
-    y = 2 * t - 1
-    m = t < dt
-    x = t[m] / dt[m]; y[m] -= 2 * x - x * x - 1
-    m = t > 1 - dt
-    x = (t[m] - 1) / dt[m]; y[m] -= x * x + 2 * x + 1
-    return y
-
-
-def _bowed(midi, dur, rng, players, vib_cents, dark, bright, attack=1.4, release=1.5, vib_rate=5.2, detune=5.0):
-    """A string section holding one note: detuned players who never start together, vibrato that comes in after the
-    bow settles, a slow smooth bow attack, and a tone that brightens with bow pressure (the envelope)."""
-    L = int(dur * SR); t = np.arange(L) / SR
-    out = np.zeros(L)
-    for _ in range(players):
-        det = rng.normal(0, detune)
-        rate = vib_rate * (1 + rng.normal(0, 0.07))
-        ph = rng.uniform(0, 2 * np.pi)
-        drift = _lp(rng.standard_normal(L), 1.5, 1) * 40                    # slow pitch wander, a couple of cents
-        cents = det + vib_cents * np.clip((t - 0.35) / 1.2, 0, 1) * np.sin(2 * np.pi * rate * t + ph) + drift
-        s = int(rng.uniform(0, 0.06) * SR)
-        out[s:] += _saw(_hz(midi) * 2 ** (cents / 1200))[: L - s]
-    out /= np.sqrt(players)
-    a = np.clip(t / attack, 0, 1); a = a * a * (3 - 2 * a)
-    r = np.clip((dur - t) / release, 0, 1); r = r * r * (3 - 2 * r)
-    env = a * r * (1 + 0.12 * np.sin(np.pi * np.clip(t / dur, 0, 1)))
-    w = np.clip(env, 0, 1) ** 2
-    return _hp(_lp(out, dark) * (1 - w) + _lp(out, bright) * w, max(35.0, _hz(midi) * 0.7)) * env
-
-
-def _spiccato(midi, dur, rng, players, accent):
-    """One short bounced bow stroke for a section (about 0.16 s decay)."""
-    L = int(dur * SR); t = np.arange(L) / SR
-    y = np.zeros(L)
-    for _ in range(players):
-        s = int(abs(rng.normal(0, 0.006)) * SR)
-        y[s:] += _saw(np.full(L, _hz(midi) * 2 ** (rng.normal(0, 6) / 1200)))[: L - s]
-    env = np.clip(t / 0.018, 0, 1) * np.exp(-t / 0.16)
-    return _hp(_lp(y / np.sqrt(players), 2000), _hz(midi) * 0.7) * env * accent
-
-
-_BLOCKS: dict[int, np.ndarray] = {}
-_IR: list[np.ndarray] = []
-
-
-def _chord_block(i: int) -> np.ndarray:
-    """Chord i of the plan (VOICING[i % 4]), CHORD_SECONDS + MUSIC_TAIL long, unity scale. Eight distinct blocks
-    (i % 8, own seeded RNG so the SFX RNG is never touched), cached for the process: deterministic."""
-    key = i % 8
-    if key in _BLOCKS:
-        return _BLOCKS[key]
-    v = VOICING[key % 4]
-    rng = np.random.default_rng(SEED * 1000 + key)
-    dur = CHORD_SECONDS + MUSIC_TAIL
-    L = int(dur * SR)
-    out = np.zeros(L)
-
-    def add(x, at=0.0, g=1.0):
-        s = int(at * SR); k = min(len(x), L - s)
-        out[s:s + k] += g * x[:k]
-
-    add(_bowed(v["bass"], dur, rng, 3, 4, 600, 1000), g=0.6)                              # basses, legato roots
-    for m in v["triad"]:
-        add(_bowed(m + 12, dur, rng, 6, 10, 2200, 3800, attack=1.8), g=0.14)             # high violins, held
-    eighth = 60 / PULSE_BPM / 2
-    root, fifth = v["cello"], v["cello"] + 7
-    pattern = [root, root, fifth, root, root + 12, root, fifth, root]
-    for k in range(int(CHORD_SECONDS / eighth)):
-        acc = 1.0 if k % 4 == 0 else (0.75 if k % 2 == 0 else 0.6)
-        add(_spiccato(pattern[k % 8], 0.45, rng, 3, acc), at=k * eighth, g=0.5)         # cellos
-        if k % 2 == 0:
-            add(_spiccato(pattern[k % 8] + 12, 0.4, rng, 3, acc * 0.7), at=k * eighth + 0.002, g=0.28)   # violas
-    _BLOCKS[key] = out
-    return out
-
-
-def _hall_ir() -> np.ndarray:
-    """Synthesized hall impulse response: early reflections, then a tail that darkens as it decays (RT60 2.6 s
-    below 1.5 kHz, 1.3 s above)."""
-    if not _IR:
-        rng = np.random.default_rng(11)
-        L = int(3.2 * SR); t = np.arange(L) / SR
-        nz = rng.standard_normal(L)
-        tail = (_lp(nz, 1500) * np.exp(-6.91 * t / 2.6) + 0.6 * _hp(nz, 1500) * np.exp(-6.91 * t / 1.3)) \
-            * np.clip((t - 0.02) / 0.03, 0, 1)
-        for d, g in ((0.011, 0.5), (0.019, -0.35), (0.027, 0.3), (0.041, -0.22), (0.057, 0.18)):
-            tail[int(d * SR)] += g * 3
-        _IR.append(tail / np.sqrt((tail ** 2).sum()))
-    return _IR[0]
-
-
 def music_pad(total: float, length: int | None = None, sr: int = SR) -> np.ndarray:
-    """The documentary string bed ("pulse strings", picked by Bryce on 2026-11-27 over chamber strings and a small
-    orchestra): the TFS chord plan (Am, F, C(add G), G; 6 s each) played by legato basses and held high violins over
-    a spiccato cello and viola eighth-note pulse at 80 bpm (two bars per chord), in a synthesized hall. Synthesized
-    from nothing, so owned outright. Unity scale, loudness matched to the v2 sine pad (so PAD_LEVEL keeps its
-    meaning); `mix` applies the bed gain."""
-    if sr != SR:
-        raise ValueError(f"sfx_v2 is built at {SR} Hz (got {sr})")
+    """The pilot's documentary pad: 4 chords of 6 s (Am, F, C(add G), G), each with a 1.8 s fade in and a 1.5 s
+    overlap fade out, sine plus a soft octave. Unity scale; `mix` applies the bed gain."""
     L = length if length is not None else int((total + 0.5) * sr)
-    if L <= 0:
-        return np.zeros(0, np.float32)
-    dry = np.zeros(L + int((MUSIC_TAIL + 1) * sr))
-    for i in range(int(L / sr / CHORD_SECONDS) + 1):
-        b = _chord_block(i); s = int(i * CHORD_SECONDS * sr)
-        k = min(len(b), len(dry) - s)
-        dry[s:s + k] += b[:k]
-    dry = dry[:L]
-    y = 0.72 * dry + 0.55 * oaconvolve(dry, _hall_ir())[:L]
-    y = _peaking(_peaking(_hp(y, 38), 2500, -4.0, 0.8), 250, -1.5, 1.0)                 # room for the voice
-    return (y * MUSIC_TRIM).astype(np.float32)
+    t = np.arange(L) / sr
+    pad = np.zeros(L, np.float32)
+    seg = CHORD_SECONDS
+    for i in range(int(L / sr / seg) + 1):
+        a0, a1 = int(i * seg * sr), min(L, int((i + 1) * seg * sr + 1.5 * sr))
+        tt = t[a0:a1] - i * seg
+        env = np.minimum(1, tt / 1.8) * np.minimum(1, np.maximum(0, (seg + 1.5 - tt) / 1.5))
+        for f in CHORDS[i % 4]:
+            pad[a0:a1] += env * (np.sin(2 * np.pi * f * tt) + 0.3 * np.sin(2 * np.pi * 2 * f * tt + 0.7)) / 3
+    return pad
 
 
 def _smooth(x: np.ndarray, win: int) -> np.ndarray:
@@ -545,35 +417,6 @@ def speech_gate(voice: np.ndarray, sr: int = SR) -> np.ndarray:
     win = int(0.3 * sr)
     speech = _smooth(np.abs(voice), win)
     return _smooth(np.clip(speech / (speech.max() * 0.08 + 1e-9), 0, 1), win)
-
-
-def music_duck(voice: np.ndarray, sr: int = SR) -> np.ndarray:
-    """The music director's duck curve for the bed (0 = open, 1 = held under the voice). Bryce, 2026-11-27: the
-    music must not jump up every time the narrator pauses. So a pause shorter than HOLD_GAP (breaths, the 0.35 s
-    between lines) keeps the bed down; only the intro, the outro and long pauses (the 2.6 s long-form chapter cards)
-    open it: OPEN_DELAY after the voice stops it rises over OPEN_RISE, and it is back down CLOSE_LEAD before the voice
-    returns (offline, so it can look ahead), closing over CLOSE_FALL. Smooth (smoothstep) both ways."""
-    L = len(voice)
-    env = _smooth(np.abs(np.asarray(voice, dtype=np.float64)), max(1, int(0.05 * sr)))
-    peak = env.max() if L else 0.0
-    if peak <= db(-60):
-        return np.zeros(L)
-    active = env > 0.04 * peak
-    edges = np.flatnonzero(np.diff(np.concatenate([[0], active.astype(np.int8), [0]])))
-    starts, ends = edges[0::2], edges[1::2]                                  # speech runs [start, end)
-    gaps = [(0, starts[0], True, False)]                                    # (a, b, leading, trailing)
-    gaps += [(ends[k], starts[k + 1], False, False) for k in range(len(starts) - 1)]
-    gaps.append((ends[-1], L, False, True))
-    duck = np.ones(L)
-    ss = lambda x: x * x * (3 - 2 * x)                                       # noqa: E731
-    for a, b, leading, trailing in gaps:
-        if b <= a or (not leading and not trailing and (b - a) / sr < HOLD_GAP):
-            continue
-        t = np.arange(a, b) / sr
-        up = np.ones(b - a) if leading else ss(np.clip((t - a / sr - OPEN_DELAY) / OPEN_RISE, 0, 1))
-        down = np.ones(b - a) if trailing else ss(np.clip((b / sr - CLOSE_LEAD - t) / CLOSE_FALL, 0, 1))
-        duck[a:b] = 1 - np.minimum(up, down)
-    return duck
 
 
 def pad_gain_curve(gate: np.ndarray, reveals: list[float], sr: int = SR) -> np.ndarray:
@@ -618,7 +461,7 @@ def mix(voice: np.ndarray, shots: list[dict], total: float, sr: int = SR, seed: 
     gate = speech_gate(track, sr)
     cues, sfx, reveals = build_cues(shots, total, seed=seed)
     sfx = np.pad(sfx, (0, max(0, L - len(sfx))))[:L]
-    pad_g = pad_gain_curve(music_duck(track, sr), reveals, sr)             # the bed holds through short pauses
+    pad_g = pad_gain_curve(gate, reveals, sr)
     sfx_bus = sfx * (SFX_BUS * (1 - SFX_DUCK * gate))
     out = (track + music_pad(total, L, sr) * pad_g + sfx_bus).astype(np.float32)
     median, p10, worst = voice_over_sfx(track, sfx_bus, sr)
