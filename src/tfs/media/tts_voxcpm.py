@@ -4,7 +4,9 @@ Flow per scene (ported from the 2026-11 pilot, revamp-2026-11/pilot/engine/align
 1. Digits become spoken words before the text goes to VoxCPM ("1987" -> "nineteen eighty-seven").
 2. The deployed Modal function "tfs-voice"/"narrate" (modal_apps/tfs_voice.py) returns 2 takes per line
    (16-bit mono WAV at the native 48 kHz). Lines are sent in chunks of CHUNK, run in parallel containers.
-3. Each take is trimmed (silence below -38 dB of the peak, keeping 0.05 s before and 0.12 s after), heard by
+3. Each take is trimmed (silence below -38 dB of the peak, keeping 0.05 s before and 0.12 s after), its edges are
+   cleaned (VoxCPM2 sometimes starts a line with breathy, laugh-like bursts before the first word: Bryce heard them
+   on the national budget dry run, 2026-11-27; see clean_edges), then it is heard by
    faster-whisper (same model and language as qa.py, CPU int8) and scored by letter match against the script:
    difflib on the joined letters with autojunk=False, with numbers turned into words on both sides so Whisper's
    "Article 7" matches the spoken "Article seven".
@@ -57,6 +59,14 @@ SEED, TAKES = 19, 2         # seed 19 is the approved voice's design seed; 2 tak
 RETRY_SEED_STEP = 1000      # a retry round uses seed + 1000
 CHUNK = 16                  # lines per Modal call
 TOP_DB, PAD_BEFORE, PAD_AFTER = 38, 0.05, 0.12
+# Edge gate (2026-11-27). Measured on 24 clean pilot takes of this voice: at most 0.20 s of sound before the first
+# voiced run and 0.38 s after the last; the national budget dry run's line 1 had 0.56 s of breathy bursts before
+# "Sino". Only more than this is cut, so a clean take is never touched.
+EDGE_HEAD, EDGE_TAIL = 0.35, 0.60     # seconds of non-speech sound that make an edge a defect
+EDGE_VOICED, EDGE_RUN = 0.7, 4        # periodicity of a voiced frame; voiced frames in a row that make a real word
+EDGE_LOUD, EDGE_FLOOR = -20.0, -30.0  # dB under the take's loudest frame: a word's level; silence
+EDGE_FRIC = 0.5                       # share of energy above 4 kHz that marks /s/, /sh/, /ts/ next to a word
+EDGE_LEAD, EDGE_KEEP = 0.12, 0.20     # kept before the first voiced run (/h/, /k/, /p/, /t/) and after the last
 
 
 class NarrationQualityError(RuntimeError):
@@ -182,6 +192,76 @@ def trim(y: np.ndarray, sr: int, top_db: float = TOP_DB, frame: int = 2048, hop:
     return y[max(0, start - int(PAD_BEFORE * sr)): min(len(y), end + int(PAD_AFTER * sr))]
 
 
+def _edge_frames(y: np.ndarray, sr: int) -> tuple[np.ndarray, float]:
+    """Per 30 ms frame (10 ms hop): level in dB under the loudest frame, periodicity (window-corrected
+    autocorrelation peak for 70 to 400 Hz), share of energy above 4 kHz."""
+    win, hop = int(0.03 * sr), int(0.01 * sr)
+    if len(y) < win:
+        return np.zeros((0, 3)), hop / sr
+    w = np.hanning(win)
+    fr = np.lib.stride_tricks.sliding_window_view(y.astype(np.float64), win)[::hop] * w
+    spec = np.fft.rfft(fr, n=2 * win, axis=1)
+    power = np.abs(spec) ** 2
+    ac = np.fft.irfft(power, axis=1)[:, :win]
+    wac = np.fft.irfft(np.abs(np.fft.rfft(w, n=2 * win)) ** 2)[:win]
+    lo, hi = sr // 400, sr // 70
+    zero = ac[:, 0] <= 1e-12
+    voiced = np.where(zero, 0.0, (ac[:, lo:hi] / (np.maximum(ac[:, :1], 1e-12) * (wac[lo:hi] / wac[0]))).max(axis=1))
+    freqs = np.fft.rfftfreq(2 * win, 1 / sr)
+    high = power[:, freqs > 4000].sum(axis=1) / np.maximum(power.sum(axis=1), 1e-12)
+    level = 10 * np.log10(np.mean(fr ** 2, axis=1) + 1e-12)
+    return np.column_stack([level - level.max(), voiced, high]), hop / sr
+
+
+def edge_noise(y: np.ndarray, sr: int) -> tuple[float, float, int, int] | None:
+    """(seconds of non-speech sound before the first word, after the last word, first frame, last frame), or None
+    when no voiced run is found. Words are runs of loud periodic frames, widened over any /s/ next to them."""
+    a, step = _edge_frames(y, sr)
+    if len(a) < EDGE_RUN:                                   # silent or too short to judge (trim() returns [] for silence)
+        return None
+    ok = (a[:, 1] >= EDGE_VOICED) & (a[:, 0] >= EDGE_LOUD)
+    idx = np.flatnonzero(np.convolve(ok.astype(int), np.ones(EDGE_RUN, int), "valid") == EDGE_RUN)
+    if not len(idx):
+        return None
+    first, last = int(idx[0]), int(idx[-1]) + EDGE_RUN - 1
+    fric = (a[:, 2] >= EDGE_FRIC) & (a[:, 0] >= EDGE_FLOOR)
+    while first > 0 and fric[max(0, first - 3):first].any():          # an /s/ up to 30 ms before the vowel
+        first -= 1
+    while last < len(a) - 1 and fric[last + 1:last + 4].any():
+        last += 1
+    loud = a[:, 0] >= EDGE_FLOOR
+    head = loud[:max(0, first - round(EDGE_LEAD / step))].sum() * step
+    tail = loud[last + 1 + round(EDGE_KEEP / step):].sum() * step
+    return float(head), float(tail), first, last
+
+
+def clean_edges(y: np.ndarray, sr: int) -> tuple[np.ndarray, float, float]:
+    """Cuts breathy or garbled sound before the first word or after the last one when it runs past EDGE_HEAD or
+    EDGE_TAIL, keeping a consonant allowance and a short faded edge. Returns (audio, seconds cut at the head,
+    seconds cut at the tail). Whisper hears the cleaned take afterwards, so a cut word still fails the letter match."""
+    e = edge_noise(y, sr)
+    if e is None:
+        return y, 0.0, 0.0
+    head, tail, first, last = e
+    hop = int(0.01 * sr)
+    start, end = 0, len(y)
+    if head > EDGE_HEAD:
+        start = max(0, first * hop - int(EDGE_LEAD * sr))
+    if tail > EDGE_TAIL:
+        end = min(len(y), (last + 1) * hop + int(0.03 * sr) + int(EDGE_KEEP * sr))
+    if start == 0 and end == len(y):
+        return y, 0.0, 0.0
+    seg = y[start:end].copy()
+    fade = min(len(seg), int(0.01 * sr))
+    if start and fade:
+        seg[:fade] *= np.linspace(0.0, 1.0, fade, dtype=seg.dtype)
+    if end < len(y) and fade:
+        seg[-fade:] *= np.linspace(1.0, 0.0, fade, dtype=seg.dtype)
+    pad_a = np.zeros(int(PAD_BEFORE * sr) if start else 0, seg.dtype)
+    pad_b = np.zeros(int(PAD_AFTER * sr) if end < len(y) else 0, seg.dtype)
+    return np.concatenate([pad_a, seg, pad_b]), start / sr, (len(y) - end) / sr
+
+
 # ---------------------------------------------------------------- word times onto the script's words
 def map_words(script_text: str, heard: list[tuple[str, float, float]], dur: float) -> list[tuple[str, float, float]]:
     """Whisper's times on the script's own words, so captions keep the script spelling (and its digits)."""
@@ -270,11 +350,24 @@ def _narrate(chunks: list[list[str]], seed: int, takes: int):
 # ---------------------------------------------------------------- the provider
 def score_take(text: str, data: bytes, tmp: Path, tag: str) -> dict:
     y, sr = read_wav(data)
-    seg = trim(y, sr)
+    whole = trim(y, sr)
+    seg, cut_head, cut_tail = clean_edges(whole, sr)
     path = tmp / f"{tag}.wav"
     write_wav(path, seg, sr)
     heard, words = _transcribe(path)
-    return {"path": path, "dur": len(seg) / sr, "heard": heard, "words": words, "match": letter_match(text, heard)}
+    if cut_head or cut_tail:                            # the cut must not cost a word (a quiet first or last word
+        write_wav(tmp / f"{tag}_whole.wav", whole, sr)  # reads like non-speech to the level test): Whisper hears both
+        heard_w, words_w = _transcribe(tmp / f"{tag}_whole.wav")
+        if len(words) < len(words_w) or letter_match(text, heard) < letter_match(text, heard_w) - 0.01:
+            log.warning("take %s: edge cut would lose words (%r against %r); kept uncut", tag, heard[:60],
+                        heard_w[:60])
+            seg, cut_head, cut_tail, heard, words = whole, 0.0, 0.0, heard_w, words_w
+            write_wav(path, seg, sr)
+        else:
+            log.info("take %s: cut %.2f s of non-speech sound at the start and %.2f s at the end", tag, cut_head,
+                     cut_tail)
+    return {"path": path, "dur": len(seg) / sr, "heard": heard, "words": words, "match": letter_match(text, heard),
+            "edge_cut": [round(cut_head, 2), round(cut_tail, 2)]}
 
 
 def _pick(cands: list[dict]) -> dict:
