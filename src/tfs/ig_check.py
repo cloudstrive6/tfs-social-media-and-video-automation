@@ -28,9 +28,16 @@ def _token() -> str:
 
 
 def _linked() -> str:
-    page = meta._call("GET", env("META_PAGE_ID"), fields="name,instagram_business_account")
-    linked = (page.get("instagram_business_account") or {}).get("id", "")
-    return f"Page '{page.get('name')}', linked Instagram matches META_IG_USER_ID: {linked == env('META_IG_USER_ID')}"
+    page = meta._call("GET", env("META_PAGE_ID"), fields="name,instagram_business_account,connected_instagram_account")
+    out = [f"Page '{page.get('name')}'"]
+    for field in ("instagram_business_account", "connected_instagram_account"):
+        linked = (page.get(field) or {}).get("id", "")
+        if not linked:
+            out.append(f"{field}: none")
+            continue
+        name = meta._call("GET", linked, fields="username").get("username")
+        out.append(f"{field}: @{name} (same as META_IG_USER_ID: {linked == env('META_IG_USER_ID')})")
+    return "; ".join(out)
 
 
 def _account() -> str:
