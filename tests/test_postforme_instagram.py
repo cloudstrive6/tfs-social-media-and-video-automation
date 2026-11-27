@@ -45,3 +45,19 @@ def test_publish_file_sends_instagram_to_postforme(monkeypatch, tmp_path):
     video.write_bytes(b"x")
     rid, link = publish_file._post("instagram_reel", video, {"instagram": "cap"})
     assert rid == "pfm_1" and sent["key"] == "instagram_reel" and sent["media"] == [Path(video)]
+
+
+def test_publish_file_holds_a_future_post(monkeypatch, tmp_path):
+    from datetime import datetime, timedelta
+
+    from tfs import publish_file
+    from tfs.config import now
+    seen = {}
+    monkeypatch.setattr(postforme, "create_post", lambda key, caption, media, slot, **k: seen.update(slot=slot) or "p")
+    video = tmp_path / "v.mp4"
+    video.write_bytes(b"x")
+    later = (now() + timedelta(hours=3)).replace(microsecond=0)
+    publish_file._post("instagram_reel", video, {"instagram": "c", "at": later.isoformat()})
+    assert seen["slot"] == later
+    publish_file._post("instagram_reel", video, {"instagram": "c", "at": "2020-01-01T00:00:00+08:00"})
+    assert isinstance(seen["slot"], datetime) and seen["slot"] > later - timedelta(hours=4)
