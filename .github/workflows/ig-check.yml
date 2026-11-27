@@ -1,0 +1,12 @@
+# Read-only Instagram health check (tfs ig-check): token, Page link, publishing quota, latest media. Posts nothing.
+# Trigger: commit a file under ops-requests/ig-check-*.json on any branch (workflow_dispatch only works from main).
+name: ig-check
+on:
+  push:
+    paths: [ops-requests/ig-check-*.json]
+jobs:
+  run:
+    uses: ./.github/workflows/_run.yml
+    with:
+      command: ig-check
+    secrets: inherit
