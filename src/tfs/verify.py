@@ -41,6 +41,13 @@ def _postforme() -> str:
     return f"TikTok accounts connected: {live or 'none yet'}"
 
 
+def _postforme_ig() -> str:
+    from .publish import postforme
+    accounts = postforme._call("GET", "/social-accounts", "instagram", params={"platform": "instagram"})["data"]
+    live = [a.get("username") for a in accounts if a.get("status") == "connected"]
+    return f"Instagram accounts connected: {live or 'none yet'}"
+
+
 def _claude() -> str:
     import json
     import shutil
@@ -87,6 +94,7 @@ CHECKS = [
     ("YouTube", ("YOUTUBE_REFRESH_TOKEN",), _youtube),
     ("Facebook + Instagram", ("META_PAGE_ACCESS_TOKEN", "META_PAGE_ID", "META_IG_USER_ID"), _meta),
     ("Post for Me (TikTok)", ("POSTFORME_API_KEY_TIKTOK",), _postforme),
+    ("Post for Me (Instagram)", ("POSTFORME_API_KEY_TIKTOK",), _postforme_ig),
     ("Threads", ("THREADS_ACCESS_TOKEN",), _threads),
     ("Cloudflare R2 state", ("S3_ENDPOINT_URL", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_BACKUP_BUCKET"), _r2),
     ("Backblaze B2 archive", ("B2_ENDPOINT", "B2_BUCKET", "B2_KEY_ID", "B2_APP_KEY"), _b2),

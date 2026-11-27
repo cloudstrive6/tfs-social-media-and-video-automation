@@ -55,6 +55,102 @@ def test_trim_keeps_pilot_padding():
     assert len(vx.trim(np.zeros(4800, np.float32), sr)) == 0
 
 
+def _voice(secs, sr=48000, f0=120.0):
+    """A buzzy harmonic tone: periodic like a voiced vowel."""
+    t = np.arange(int(secs * sr)) / sr
+    return 0.4 * sum(np.sin(2 * np.pi * f0 * k * t) / k for k in range(1, 8)).astype(np.float32)
+
+
+def _breath(secs, sr=48000, seed=0):
+    """Low, unvoiced noise bursts like the VoxCPM2 onset artifact (no harmonics, nothing above 4 kHz)."""
+    n = np.random.default_rng(seed).standard_normal(int(secs * sr))
+    y = np.convolve(n, np.ones(24) / 24, "same")
+    gate = (np.sin(2 * np.pi * 6 * np.arange(len(y)) / sr) > -0.3)
+    return (0.25 * y / np.abs(y).max() * gate).astype(np.float32)
+
+
+def _hiss(secs, sr=48000, seed=1):
+    """An /s/: noise above 4 kHz."""
+    n = np.random.default_rng(seed).standard_normal(int(secs * sr))
+    return (0.2 * (n - np.convolve(n, np.ones(6) / 6, "same"))).astype(np.float32)
+
+
+def test_clean_take_is_left_alone():
+    sr = 48000
+    y = np.concatenate([_hiss(0.1), _voice(1.0), np.zeros(int(0.1 * sr), np.float32)])
+    out, head, tail = vx.clean_edges(y, sr)
+    assert (head, tail) == (0.0, 0.0) and len(out) == len(y)
+
+
+def test_breathy_onset_is_cut_and_the_word_kept():
+    sr = 48000
+    y = np.concatenate([_breath(0.7), _hiss(0.1), _voice(1.0)])      # like line 1 of the national budget dry run
+    noise = vx.edge_noise(y, sr)
+    assert noise and noise[0] > vx.EDGE_HEAD
+    out, head, tail = vx.clean_edges(y, sr)
+    assert 0.5 <= head <= 0.7 and tail == 0.0
+    left = vx.edge_noise(out, sr)
+    assert left[0] <= vx.EDGE_HEAD                                     # nothing left to cut
+    assert len(out) / sr >= 1.1 - 0.02                                 # the /s/ and the whole vowel stay
+
+
+def test_garbled_tail_is_cut():
+    sr = 48000
+    y = np.concatenate([_voice(1.0), _breath(1.3, seed=3)])
+    out, head, tail = vx.clean_edges(y, sr)
+    assert head == 0.0 and 0.8 <= tail <= 1.3
+    assert len(out) / sr >= 1.0
+
+
+def test_score_take_hears_the_cleaned_take(tmp_path, monkeypatch):
+    sr = 48000
+    y = np.concatenate([np.zeros(int(0.2 * sr), np.float32), _breath(0.7), _voice(1.0)])
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((y * 32767).astype("<i2").tobytes())
+    heard_len = {}
+
+    def transcribe(path):
+        a, s = vx.read_wav(path.read_bytes())
+        heard_len["secs"] = len(a) / s
+        return "Sino", [("Sino", 0.05, 0.6)]
+
+    monkeypatch.setattr(vx, "_transcribe", transcribe)
+    r = vx.score_take("Sino", buf.getvalue(), tmp_path, "001_r0_t0")
+    a, s = vx.read_wav(r["path"].read_bytes())                    # the file Whisper scored is the cut one
+    assert r["edge_cut"][0] >= 0.5 and len(a) / s == pytest.approx(r["dur"]) and r["dur"] < 1.35
+
+
+def test_silent_or_tiny_take_is_left_alone():
+    sr = 48000
+    for y in (np.zeros(0, np.float32), np.zeros(100, np.float32), vx.trim(np.zeros(sr, np.float32), sr)):
+        out, head, tail = vx.clean_edges(y, sr)
+        assert (head, tail) == (0.0, 0.0) and len(out) == len(y)
+
+
+def test_cut_that_loses_a_quiet_word_is_undone(tmp_path, monkeypatch):
+    sr = 48000
+    y = np.concatenate([0.1 * _voice(0.5, f0=200.0), np.zeros(int(0.05 * sr), np.float32), _voice(1.5)])
+    assert vx.clean_edges(y, sr)[1] > 0                              # the level test alone would cut "ang"
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((y * 32767).astype("<i2").tobytes())
+
+    def transcribe(path):
+        a, s = vx.read_wav(path.read_bytes())
+        if len(a) / s > 1.9:
+            return "ang presyo", [("ang", 0.05, 0.5), ("presyo", 0.6, 2.0)]
+        return "presyo", [("presyo", 0.1, 1.5)]
+
+    monkeypatch.setattr(vx, "_transcribe", transcribe)
+    r = vx.score_take("ang presyo", buf.getvalue(), tmp_path, "001_r0_t0")
+    assert r["edge_cut"] == [0.0, 0.0] and r["heard"] == "ang presyo" and r["dur"] > 1.9
+    a, s = vx.read_wav(r["path"].read_bytes())
+    assert len(a) / s == pytest.approx(r["dur"])
+
+
 # ---------------------------------------------------------------- word times
 def test_map_words_keeps_script_spelling():
     script = "Noong 2001, na-impeach si Estrada."

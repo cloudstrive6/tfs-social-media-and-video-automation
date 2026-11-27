@@ -60,3 +60,10 @@ def test_atlas_path_loads_only_v2_briefs_and_old_ones_are_retired(monkeypatch, t
             config.load_prompt(agent)
     assert "carousel" in config.paused_kinds()
     assert creative.agents() == ("atlas_designer", "thumbnail_artist")
+
+
+def test_fact_checker_says_when_a_claim_is_only_about_the_sitting_office_holder():
+    """Blind Tagalog review, 2026-11-27: "hindi kailanman ang presidente" (never on the ballot) is heard as false."""
+    from tfs import config
+    brief = config.load_prompt("fact_checker")
+    assert "Sitting office-holder" in brief and "nakaupong presidente" in brief

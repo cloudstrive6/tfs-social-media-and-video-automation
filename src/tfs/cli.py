@@ -39,6 +39,7 @@ def main() -> None:
     sub.add_parser("hold", help="stop posts that haven't gone live yet (one item, or all); never deletes").add_argument(
         "item_id", nargs="?", default="")
     sub.add_parser("verify", help="check every configured credential works (prints names only, never secrets)")
+    sub.add_parser("ig-check", help="read-only Instagram health check: token, link, quota, latest media (posts nothing)")
     sub.add_parser("telegram-setup", help="print the chat id(s) that messaged the bot; send a test message")
     for name in ("produce", "approve", "reject", "requeue"):
         sp = sub.add_parser(name)
@@ -124,6 +125,9 @@ def main() -> None:
         case "hold":
             from .hold import run as hold
             print("\n".join(hold("held by request", a.item_id)) or "nothing to hold")
+        case "ig-check":
+            from .ig_check import run as ig_check
+            ig_check()
         case "verify":
             from .verify import run_all
             sys.exit(0 if run_all() else 1)

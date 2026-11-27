@@ -11,8 +11,12 @@ whole script on it (hook, turn and close), using the dossier for the facts; the 
 ## Structure: Short (35 to 58 s, "Know Your Government")
 1. **The hook (one sentence).** A concrete, high-stakes question or a common belief the video will correct, about
    power, money or the viewer's vote, never a textbook question. Strong: "Paano mo tatanggalin ang presidente ng
-   Pilipinas?", "Pasado na sa House at Senate ang bill, pero hindi pa pala iyon ang huling bersyon." Weak:
+   Pilipinas?", "Pasado na sa House at Senate ang bill, pero hindi pa pala yon ang huling bersyon." Weak:
    "Paano nagiging batas ang isang bill?" It must make sense with the sound off (it is also the on-screen hook).
+   A hook question may be shorter than 8 words only when it names the viewer's own stake ("Babayaran mo ba yon?",
+   "Paano mo tatanggalin ang presidente ng Pilipinas?"); never a bare number the viewer cannot compare yet, never a
+   question the next line answers at once, and at most one big number in the first sentence (blind hook test,
+   2026-11-27).
 2. **The steps (2 to 4 scenes).** Each scene explains one step in one or two full sentences: who does it, the
    exact threshold, vote or time limit, and the source with its section said out loud the first time ("ayon sa
    Article 6, Section 27 ng 1987 Constitution"). Precise words matter: "two-thirds ng LAHAT ng Senador",
@@ -90,26 +94,32 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
   ("sa ikapitong buwan ng 2026", "ang ikaapat na SONA niya"), never "ika-7" (read "ika-seven") or "7th". Never a
   Tagalog month next to a digit. A month on its own may stay Tagalog with
   its marker, as news says it ("nitong Agosto", "ngayong Nobyembre"). Relative words stay Tagalog ("nitong
-  Lunes", "noong isang taon"); "unang" as the plain word for first is fine ("ang unang hakbang").
+  Lunes", "noong isang taon"); "unang" as the plain word for first is fine ("ang unang hakbang"). A date the law
+  gives as a weekday in a month is said in Tagalog (Bryce, 2026-11-27): "tuwing ikalawang Lunes ng Mayo", "sa ikaapat
+  na Lunes ng Hulyo", never "second Monday ng May".
 - **Figures the way news says them.** Hedge an estimate with mahigit, nasa, halos or aabot sa ("nasa 115 million
   na Pilipino", "aabot sa ₱1.37 trillion"); attribute every claim ("ayon sa Bureau of the Treasury", "daw",
   "umano"). An English term of art gets a plain gloss with "o yung" ("debt service o yung bayad sa interes at
   prinsipal"). "kasi" goes second in its clause ("Automatic kasi ang appropriation, kaya..."), not first.
+  Hedge words are facts and must match the dossier: "hanggang" is "up to" (a ceiling), "aabot sa" is "reaching",
+  "mahigit" is "more than", "halos" is "almost"; an estimate keeps "posibleng" or "ayon sa estimate ng..." ("hanggang
+  ₱118.5 billion ang posibleng nawala", never "aabot sa ₱118.5 billion ang nawala" when the source says "up to").
 - **Verb aspect follows meaning.** A question about what will happen uses the contemplated aspect ("Babayaran
-  mo ba iyon?", "Ikaw ba ang magbabayad?"); after kailangan, dapat, puwede or gusto the root form is right
+  mo ba yon?", "Ikaw ba ang magbabayad?"); after kailangan, dapat, pwede or gusto the root form is right
   ("Kailangan mo bang bayaran?"). Never the command form as a question. Done: "binayaran"; ongoing: "binabayaran".
-- **Spoken order.** Put the point first, the way people talk ("Average iyon, hindi bill."), not the written
+- **Spoken order.** Put the point first, the way people talk ("Average yon, hindi bill."), not the written
   "ang X ay Y" order. Switch languages at phrase boundaries; English for legal terms, institutions and terms of art,
   with Tagalog affixes on English verbs ("na-veto", "i-file", "nag-rule").
-- **yung, mo, iyo, iyon (Bryce, 2026-11-25).** "The/that [thing]" is "yung", as everyone says it, news anchors
-  included ("yung budget", "yung ₱1.37 trillion na iyon"); where only an article is needed, plain "ang". "Your
+- **yung, mo, iyo, yon, pwede (Bryce, 2026-11-25 and 2026-11-27).** "The/that [thing]" is "yung", as everyone says it, news anchors
+  included ("yung budget", "yung ₱1.37 trillion na yon"); where only an article is needed, plain "ang". "Your
   [thing]" is "[thing] mo", after the noun and its modifiers ("ang share mo", "ang buwanang kontribusyon mo sa
   SSS", "sa bahay mo"). Never "iyong": on the page it is both a stiff "the" and a deep, formal "your" ("sa iyong
   bahay") that nobody says. "yung" points at something already mentioned or shown; on first mention write "ang",
-  "may" or "isang" ("May bagong batas...", then "Yung batas na iyon..."). After ng or sa, no "yung" ("presyo ng
+  "may" or "isang" ("May bagong batas...", then "Yung batas na yon..."). After ng or sa, no "yung" ("presyo ng
   bigas", never "ng yung"). One spelling: "yung", never "'yung" or "yong". "To you / for you" is "sa iyo"
-  ("nakapangalan sa iyo"). "That" on its own is "iyon", stressed at the end of a clause ("Average iyon, hindi
-  bill."); "perang iyon" after a vowel. "meron", not "mayroon".
+  ("nakapangalan sa iyo"). "That" on its own is "yon", never "iyon" (Bryce: "yon sounds more natural"),
+  stressed at the end of a clause ("Average yon, hindi bill.", "yung batas na yon"). "pwede", never "puwede"
+  (Bryce: "pwede is what we normally use"). "meron", not "mayroon".
 - **Register.** Plain forms: ito, hindi. Connectors: pero, kasi, kaya, dahil, habang, ayon sa, at
   "daw" for a claim the dossier attributes to someone. Not vlog talk (eh, "di ba", "sige lang", "'to") and not
   textbook words (subalit, samakatuwid, upang, sapagkat, nararapat), and no deep Tagalog dropped into a Taglish
@@ -122,8 +132,8 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 | Sa unang pitong buwan ng 2026, ₱1.37 trillion na ang nabayaran. | Sa 7 buwan ng 2026, ₱1.37 trillion na ang nabayaran. | the span is named; a small count in Tagalog words |
 | Mula January hanggang July 2026, ₱1.37 trillion na ang nabayaran. | Mula Enero hanggang Hulyo 2026, ₱1.37 trillion na ang nabayaran. | English months next to the year's digits |
 | ₱1.37 trillion ang nabayaran sa loob lang ng pitong buwan. | ₱1.37 trillion ang nabayaran sa 7 months. | "sa loob ng" says it is a span |
-| Babayaran mo ba iyon? | Bayaran mo ba iyon? | contemplated aspect for a future question |
-| Gagawin ba iyon ng Senado? | Gawin ba iyon ng Senado? | same |
+| Babayaran mo ba yon? | Bayaran mo ba yon? | contemplated aspect for a future question |
+| Gagawin ba yon ng Senado? | Gawin ba yon ng Senado? | same |
 | Tatlong taon ang termino ng isang congressman. | 3 years ang termino ng isang congressman. | a small count in Tagalog words |
 | Isang chief justice lang ang uupo bilang presiding officer. | 1 chief justice lang ang uupo bilang presiding officer. | "1" is read "one chief justice" |
 | 24 na senador ang bumoto, 20 to 3 ang resulta. | Dalawampu't apat na senador ang bumoto. | above 10 and votes stay digits, read in English |
@@ -131,7 +141,7 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 | ₱19.66 trillion ang kabuuang utang. | ₱19.66 trilyon ang kabuuang utang. | read "nineteen point six six trillion pesos" |
 | Sa ikapitong buwan ng 2026, bumaba ang inflation. | Sa ika-7 buwan ng 2026, bumaba ang inflation. | "ika-7" is read "ika-seven" |
 | Hindi bill ang share mo sa utang. | Hindi bill ang iyong share sa utang. | "your" is "mo" after the noun |
-| Yung ₱1.37 trillion na iyon, budget space na hindi na nagamit. | Iyong ₱1.37 trillion na iyon, budget space na hindi na nagamit. | "the/that" is "yung" |
+| Yung ₱1.37 trillion na yon, budget space na hindi na nagamit. | Iyong ₱1.37 trillion na yon, budget space na hindi na nagamit. | "the/that" is "yung" |
 
 ## A reference you may imitate (approved pilot Short, the voice and rhythm to match)
 Paano mo tatanggalin ang presidente ng Pilipinas? / Step 1: sa House, kailangan ng at least one-third ng lahat ng
@@ -140,7 +150,7 @@ at ang Chief Justice ang uupo bilang presiding officer, pero hindi siya boboto. 
 Senador para ma-convict. / May isa pang patakaran: isang impeachment lang kada taon laban sa iisang opisyal. /
 Sa ngayon, wala pang presidente ng Pilipinas na natanggal sa ganitong paraan. / Sa New Zealand, tatlong taon lang
 ang maximum bago ang susunod na eleksyon. Sa Pilipinas, anim na taon ang termino, kaya ang impeachment lang ang paraan
-para alisin ang presidente bago iyon matapos.
+para alisin ang presidente bago yon matapos.
 
 ## Visual cue per scene
 Each scene's `visual` says what should be on screen to prove the line (the document and section, the number card,

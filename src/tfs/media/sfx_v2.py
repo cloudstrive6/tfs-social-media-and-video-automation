@@ -446,10 +446,22 @@ def voice_over_sfx(voice: np.ndarray, sfx_bus: np.ndarray, sr: int = SR):
     return float(np.median(d)), float(np.percentile(d, 10)), float(d.min())
 
 
-def mix(voice: np.ndarray, shots: list[dict], total: float, sr: int = SR, seed: int = SEED):
-    """Narration + ducked pad + SFX bus -> (mono float32 mix, report). `voice` is mono float32 at 48 kHz, placed
+def chapter_starts(shots: list[dict]) -> list[float]:
+    """Start times of long-form chapter cards (atlas title shots after the first)."""
+    titles = sorted(float(s["t0"]) for s in shots if s.get("k") == "title" and s.get("num"))
+    return titles[1:] if titles and titles[0] < 1.0 else titles
+
+
+def mix(voice: np.ndarray, shots: list[dict], total: float, sr: int = SR, seed: int = SEED,
+        music_text: str = "", music_seed: str = ""):
+    """Narration + music bed + SFX bus -> (mono float32 mix, report). `voice` is mono float32 at 48 kHz, placed
     at 0 s. Output length is max(len(voice), int((total + 0.5) * sr)). The mix is not normalised: write it
-    with `write_wav` (float, no clipping) and finish it with `master`."""
+    with `write_wav` (float, no clipping) and finish it with `master`.
+
+    Music (Bryce, 2026-11-27): the music team's documentary library (media/music_lib.py), Netflix-style driving
+    strings at 25 dB under the narrator in the phone band, held through pauses, the reveal on the cue's space
+    section. `music_text` (title and topic) picks the mood and `music_seed` (the item id) the variant. If the
+    library is unavailable the v2 pad is used, with its swell and drop at reveals."""
     if sr != SR:
         raise ValueError(f"sfx_v2 is built at {SR} Hz; resample the voice first (got {sr})")
     voice = np.asarray(voice, dtype=np.float32)
@@ -461,11 +473,20 @@ def mix(voice: np.ndarray, shots: list[dict], total: float, sr: int = SR, seed: 
     gate = speech_gate(track, sr)
     cues, sfx, reveals = build_cues(shots, total, seed=seed)
     sfx = np.pad(sfx, (0, max(0, L - len(sfx))))[:L]
-    pad_g = pad_gain_curve(gate, reveals, sr)
+    from . import music_lib
+    try:
+        music, mreport = music_lib.bed(track, L, reveals, chapter_starts(shots), music_text, music_seed or str(seed))
+    except Exception as e:                      # never fail a video over music: fall back to the pad
+        music, mreport = None, {"music": f"pad (library error: {e})"}
+    if music is None:
+        import logging
+        logging.getLogger(__name__).warning("music: library bed unavailable, using the v2 pad: %s", mreport.get("music"))
+        music = music_pad(total, L, sr) * pad_gain_curve(gate, reveals, sr)
     sfx_bus = sfx * (SFX_BUS * (1 - SFX_DUCK * gate))
-    out = (track + music_pad(total, L, sr) * pad_g + sfx_bus).astype(np.float32)
+    out = (track + music + sfx_bus).astype(np.float32)
     median, p10, worst = voice_over_sfx(track, sfx_bus, sr)
     report = {
+        "music": mreport,
         "cues": cues,
         "reveals": reveals,
         "voice_over_sfx_db_median": median,

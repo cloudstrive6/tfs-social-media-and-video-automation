@@ -37,8 +37,9 @@ Audience: Filipinos in the Philippines and abroad, 18 to 45, curious, tired of n
   noun ("isang chief justice", "dalawang senador", "pitong buwan", "ikapitong buwan").
 - **A number and its unit are in the same language**, the way Filipinos speak ("pitong buwan" or "30 days", never
   "seven buwan"): "sa unang pitong buwan ng 2026", "mula January hanggang July 2026", "July 15, 2026",
-  "₱1.37 trillion", "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba iyon?"). "yung" for
-  "the/that [thing]" and "[thing] mo" for "your", never "iyong" (Bryce, 2026-11-25); "sa iyo" and "iyon" stay.
+  "₱1.37 trillion", "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba yon?"). "yung" for
+  "the/that [thing]" and "[thing] mo" for "your", never "iyong" (Bryce, 2026-11-25); "yon", never "iyon", and "pwede", never "puwede"; law dates as
+  "ikalawang Lunes ng Mayo" (Bryce, 2026-11-27); "sa iyo" stays.
   No vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
   pairs: Bryce-Brain `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.
 - **Questions, not slogans.** Open with the question the viewer has, and return to it at the end with what they

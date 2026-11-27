@@ -30,8 +30,11 @@ def _call(method: str, path: str, files: dict | None = None, **params) -> dict:
     r = requests.request(method, f"{_graph()}/{path}", data=params if method == "POST" else None,
                          params=params if method == "GET" else None, files=files, timeout=300)
     data = r.json()
-    if "error" in data:
-        raise RuntimeError(f"Graph API {path}: {data['error'].get('message')}")
+    if "error" in data:                  # keep Meta's code, subcode and user message: "Fatal" alone says nothing
+        e = data["error"]
+        detail = "; ".join(f"{k}={e[k]}" for k in ("code", "error_subcode", "error_user_title", "error_user_msg")
+                           if e.get(k) not in (None, ""))
+        raise RuntimeError(f"Graph API {path}: {e.get('message')}" + (f" ({detail})" if detail else ""))
     return data
 
 
