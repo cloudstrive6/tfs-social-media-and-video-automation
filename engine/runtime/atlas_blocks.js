@@ -1,5 +1,5 @@
 /* TFS atlas blocks v3 (2026-11-25): globe, stamp, checklist, line chart, bar chart, waffle, balance bar, date cards,
- * media card with side list and honesty chips. Borrowed from the Worldwire "briefing" grammar (see the Bryce-Brain
+ * media card with side list and honesty chips. Borrowed from the Worldwire "briefing" grammar (see the studio notes
  * page answers/tfs-worldwire-briefing-style-2026-11.md), drawn in the TFS paper palette.
  *
  * Loaded by atlas.js through window.TFS_BLOCKS(ctx): it adds builders to ctx.build and returns

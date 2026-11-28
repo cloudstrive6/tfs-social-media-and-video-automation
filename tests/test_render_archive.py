@@ -1,4 +1,4 @@
-"""Final renders to the shared studio archive on B2 (Bryce, 2026-11-24), offline with a fake S3."""
+"""Final renders to the shared studio archive on B2 (owner, 2026-11-24), offline with a fake S3."""
 import json
 
 from tfs import render_archive as ra

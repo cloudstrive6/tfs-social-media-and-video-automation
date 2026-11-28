@@ -1,6 +1,6 @@
 """Narration queue between the cloud pipeline and the local GPU worker.
 
-Bryce, 2026-11-24: TFS narration runs on his RTX 3080 first and on Modal only when the GPU is busy or the PC is off.
+The owner, 2026-11-24: TFS narration runs on his RTX 3080 first and on Modal only when the GPU is busy or the PC is off.
 The cloud posts a job; tools/voice_worker.py on the PC narrates it between Taas Noo batches and uploads the WAVs;
 the cloud scores them like Modal takes. A job not finished by its deadline goes to Modal, so no slot is missed.
 

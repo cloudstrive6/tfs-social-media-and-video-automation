@@ -61,7 +61,7 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
 - Every time limit says when it starts ("thirty days mula nang matanggap niya ang bill"), and every vote says of
   whom ("two-thirds ng lahat ng Senador", not "two-thirds ng Senado").
 - The close adds one new consequence for the viewer; it never just restates the answer already given.
-- Small counts are Tagalog words (Bryce, 2026-11-26: "it's better hearing 'Isang chief justice' rather than
+- Small counts are Tagalog words (owner, 2026-11-26: "it's better hearing 'Isang chief justice' rather than
   'one chief justice'", "'Pitong buwan' instead of 'seven buwan'", "'Isang pangulo' sounds better than 'one
   pangulo'"). A count of 1 to 10 people, things or time units is the Tagalog linked numeral, even before an
   English noun: isang, dalawang, tatlong, apat na, limang, anim na, pitong, walong, siyam na, sampung ("isang
@@ -86,7 +86,7 @@ Mark chapters with `chapter: "Chapter N: <title>"`; the engine adds the numbered
 
 ## Natural Taglish (how Filipinos actually say it)
 Write the way a calm Manila explainer reads a script aloud, not translated English and not textbook Tagalog.
-The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
+The reasons and sources are in the channel's Taglish guide (owner, 2026-11-25).
 - **Durations say which span.** "sa unang pitong buwan ng 2026", "sa loob ng pitong buwan", "mula January
   hanggang July 2026" (the way news says a span). Never "sa 7 months ng 2026" or "sa 7 buwan", which sound like a
   broken date; "first 7 months" almost never occurs in Filipino speech.
@@ -95,7 +95,7 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
   Tagalog month next to a digit. A month on its own may stay Tagalog with
   its marker, as news says it ("nitong Agosto", "ngayong Nobyembre"). Relative words stay Tagalog ("nitong
   Lunes", "noong isang taon"); "unang" as the plain word for first is fine ("ang unang hakbang"). A date the law
-  gives as a weekday in a month is said in Tagalog (Bryce, 2026-11-27): "tuwing ikalawang Lunes ng Mayo", "sa ikaapat
+  gives as a weekday in a month is said in Tagalog (owner, 2026-11-27): "tuwing ikalawang Lunes ng Mayo", "sa ikaapat
   na Lunes ng Hulyo", never "second Monday ng May".
 - **Figures the way news says them.** Hedge an estimate with mahigit, nasa, halos or aabot sa ("nasa 115 million
   na Pilipino", "aabot sa ₱1.37 trillion"); attribute every claim ("ayon sa Bureau of the Treasury", "daw",
@@ -110,16 +110,16 @@ The reasons and sources are in the channel's Taglish guide (Bryce, 2026-11-25).
 - **Spoken order.** Put the point first, the way people talk ("Average yon, hindi bill."), not the written
   "ang X ay Y" order. Switch languages at phrase boundaries; English for legal terms, institutions and terms of art,
   with Tagalog affixes on English verbs ("na-veto", "i-file", "nag-rule").
-- **yung, mo, iyo, yon, pwede (Bryce, 2026-11-25 and 2026-11-27).** "The/that [thing]" is "yung", as everyone says it, news anchors
+- **yung, mo, iyo, yon, pwede (owner, 2026-11-25 and 2026-11-27).** "The/that [thing]" is "yung", as everyone says it, news anchors
   included ("yung budget", "yung ₱1.37 trillion na yon"); where only an article is needed, plain "ang". "Your
   [thing]" is "[thing] mo", after the noun and its modifiers ("ang share mo", "ang buwanang kontribusyon mo sa
   SSS", "sa bahay mo"). Never "iyong": on the page it is both a stiff "the" and a deep, formal "your" ("sa iyong
   bahay") that nobody says. "yung" points at something already mentioned or shown; on first mention write "ang",
   "may" or "isang" ("May bagong batas...", then "Yung batas na yon..."). After ng or sa, no "yung" ("presyo ng
   bigas", never "ng yung"). One spelling: "yung", never "'yung" or "yong". "To you / for you" is "sa iyo"
-  ("nakapangalan sa iyo"). "That" on its own is "yon", never "iyon" (Bryce: "yon sounds more natural"),
+  ("nakapangalan sa iyo"). "That" on its own is "yon", never "iyon" (owner: "yon sounds more natural"),
   stressed at the end of a clause ("Average yon, hindi bill.", "yung batas na yon"). "pwede", never "puwede"
-  (Bryce: "pwede is what we normally use"). "meron", not "mayroon".
+  (owner: "pwede is what we normally use"). "meron", not "mayroon".
 - **Register.** Plain forms: ito, hindi. Connectors: pero, kasi, kaya, dahil, habang, ayon sa, at
   "daw" for a claim the dossier attributes to someone. Not vlog talk (eh, "di ba", "sige lang", "'to") and not
   textbook words (subalit, samakatuwid, upang, sapagkat, nararapat), and no deep Tagalog dropped into a Taglish

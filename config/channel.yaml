@@ -71,14 +71,14 @@ publishing:
   overrides:
     tiktok: postforme
     tiktok_carousel: postforme
-    # Bryce, 2026-11-27: "TFS IG content will be published via PostForMe". Meta restricted the TFS business portfolio
+    # The owner, 2026-11-27: "TFS IG content will be published via PostForMe". Meta restricted the TFS business portfolio
     # and the Page lost its Instagram link, so Graph API Reels failed at media_publish (code -1, subcode 2207085).
     instagram_reel: postforme
     instagram_carousel: postforme
 
 tts:
   provider: voxcpm            # the VoxCPM2 narrator (the only voice since 2026-11-25)
-  # hybrid (Bryce, 2026-11-24): the local RTX 3080 worker (tools/voice_worker.py) narrates first; Modal only after the
+  # hybrid (owner, 2026-11-24): the local RTX 3080 worker (tools/voice_worker.py) narrates first; Modal only after the
   # deadline (slot minus local_until_hours_before_slot) or for lines the worker did not get right. Samples skip the wait.
   voxcpm: {mode: hybrid, takes: 1, seed: 19, threshold: 0.85, local_until_hours_before_slot: 5}
 

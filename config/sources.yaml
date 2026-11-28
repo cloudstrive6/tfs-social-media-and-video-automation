@@ -5,7 +5,7 @@ google_trends_rss:
   - https://trends.google.com/trending/rss?geo=PH
 
 # tier tells the scout how far a story has spread: national outlets first, then regional and Filipino-language
-# ones (a story reaching the second tier is an early "about to explode" signal). Outlets added 2026-11-26 (Bryce,
+# ones (a story reaching the second tier is an early "about to explode" signal). Outlets added 2026-11-26 (owner,
 # instead of Reddit, whose API now needs Reddit's written approval for commercial use) were each checked live.
 # Not usable on 2026-11-26: ABS-CBN and Manila Bulletin (403 to feed readers), PNA (no feed), Bombo Radyo (stale).
 news_rss:

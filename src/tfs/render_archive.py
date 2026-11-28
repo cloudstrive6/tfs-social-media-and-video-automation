@@ -1,6 +1,6 @@
 """Permanent copy of every final TFS render on Backblaze B2.
 
-Bryce, 2026-11-24: "for all the final/approved renders/versions of the video, be sure to save a copy in B2 Backblaze as
+The owner, 2026-11-24: "for all the final/approved renders/versions of the video, be sure to save a copy in B2 Backblaze as
 we might be able to use them in the future", and the same day: one bucket per channel, TFS finals in the existing
 tfs-content-archive bucket under finals/, with no new Actions key. Layout (as D:/AI-Video/archive/b2_archive.py):
     finals/<longform|shorts>/<YYYY-MM>/<item>.mp4               the final video

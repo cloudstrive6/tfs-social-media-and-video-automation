@@ -1,4 +1,4 @@
-# YouTube playlists (Bryce, 2026-11-26: "create playlist/s in YouTube and add the videos to their respective
+# YouTube playlists (owner, 2026-11-26: "create playlist/s in YouTube and add the videos to their respective
 # Playlist/s"). Every upload is added by format and pillar right after it is uploaded (src/tfs/publish/youtube_playlists.py);
 # a scheduled (private) video joins its playlist now and shows there once it goes public.
 # Playlists are found by exact title, and created (public) if missing. Renaming a title here makes a new playlist.

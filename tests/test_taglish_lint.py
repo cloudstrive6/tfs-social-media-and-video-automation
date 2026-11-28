@@ -1,7 +1,7 @@
-"""Natural Taglish (Bryce, 2026-11-25: "Sa 7 buwan ng 2026" is not how anyone says it; a blind reviewer flagged
+"""Natural Taglish (owner, 2026-11-25: "Sa 7 buwan ng 2026" is not how anyone says it; a blind reviewer flagged
 "Bayaran mo ba yon?"; 2026-11-26: "Isang chief justice", not "one chief justice"). Small counts are Tagalog
 linked numerals, big figures stay digits read in English with English units; a future question takes the
-contemplated aspect. Guide with sources: Bryce-Brain wiki/answers/tfs-natural-taglish-2026-11.md."""
+contemplated aspect. Guide with sources: the studio notes wiki/answers/tfs-natural-taglish-2026-11.md."""
 import re
 
 import pytest
@@ -55,7 +55,7 @@ def test_each_rule_names_the_fix():
     assert "pitong buwan" in problems("7 buwan na ang lumipas.")[0]
     assert "tatlong taon" in problems("3 taon ang termino.")[0]
     assert "24 months" in problems("24 buwan ang lumipas.")[0]
-    # Bryce, 2026-11-26: "Isang chief justice", not "one chief justice"; "Isang pangulo", not "one pangulo".
+    # The owner, 2026-11-26: "Isang chief justice", not "one chief justice"; "Isang pangulo", not "one pangulo".
     assert "isang chief" in problems("1 chief justice lang ang uupo.")[0]
     assert "isang pangulo" in problems("one pangulo lang")[0]
     assert "tatlong taon" in problems("3 years ang termino.")[0]
@@ -68,7 +68,7 @@ def test_each_rule_names_the_fix():
     assert "Babayaran" in problems("Bayaran mo ba yon?")[0]
     assert "Gawin ba" in problems("Gawin ba yon ng Senado?")[0]
     assert "sa loob ng tatlong taon" in problems("Natapos ito sa 3 years.")[-1]
-    # Bryce, 2026-11-25: "iyong" is "yung" (the/that) or "mo" (your); "sa iyo" and "yon" are fine.
+    # The owner, 2026-11-25: "iyong" is "yung" (the/that) or "mo" (your); "sa iyo" and "yon" are fine.
     msg = problems("Hindi bill ang iyong share sa utang.")[0]
     assert "yung" in msg and "share mo" in msg
     assert problems("Iyong budget na yon ang pinag-uusapan.")
@@ -209,7 +209,7 @@ def test_first_edit_with_other_scenes_returns_the_original_without_retry(monkeyp
     assert writers.narration_edit(original) == original and len(calls) == 1
 
 
-# ---------------------------------------------------------------- small counts (Bryce, 2026-11-26), review cases
+# ---------------------------------------------------------------- small counts (owner, 2026-11-26), review cases
 def _says(line, fix):
     return any(fix in p for p in problems(line))
 
@@ -258,7 +258,7 @@ def test_voice_and_fact_check_briefs_keep_small_counts_as_words(monkeypatch, tmp
 
 
 def test_yon_pwede_and_law_dates(monkeypatch, tmp_path):
-    """Bryce, 2026-11-27: "yon sounds more natural", "pwede is what we normally use", and law dates as
+    """The owner, 2026-11-27: "yon sounds more natural", "pwede is what we normally use", and law dates as
     "ikalawang Lunes ng Mayo"."""
     assert _says("Average iyon, hindi bill.", '"yon"')
     assert _says("Puwede bang magbayad?", '"pwede"')

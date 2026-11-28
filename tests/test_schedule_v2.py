@@ -1,4 +1,4 @@
-"""The revamp posting cadence (Bryce, 2026-11-24) as encoded in config/schedule.yaml and tfs.slots.
+"""The revamp posting cadence (owner, 2026-11-24) as encoded in config/schedule.yaml and tfs.slots.
 
 Source of truth: vault page wiki/answers/tfs-weekly-posting-schedule-2026-11.md (all times PHT).
 The week tested is Monday 2026-11-30 to Sunday 2026-12-06, the first full week of the 4-week test.
@@ -63,7 +63,7 @@ def test_each_weekday_matches_the_table(d):
                for u in units for t in u.platforms.values())
 
 
-def test_rule_counts_from_bryces_cadence():
+def test_rule_counts_from_owners_cadence():
     from tfs import slots
 
     for d in WEEK:
@@ -100,7 +100,7 @@ def test_config_goes_live_at_live_from():
     from tfs import config, slots
 
     sched = config.schedule()
-    assert sched["live"] is True and sched["live_from"] == "2026-11-27T13:00:00+08:00"   # Bryce said go, 2026-11-26
+    assert sched["live"] is True and sched["live_from"] == "2026-11-27T13:00:00+08:00"   # The owner said go, 2026-11-26
     assert not slots.is_live(sched, at=datetime.fromisoformat("2026-11-27T12:59:00+08:00"))
     assert slots.is_live(sched, at=datetime.fromisoformat("2026-11-27T13:00:00+08:00"))
     assert not slots.is_live({"live": False, "live_from": "2020-01-01T00:00:00+08:00"})

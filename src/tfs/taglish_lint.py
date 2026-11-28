@@ -1,7 +1,7 @@
-"""Machine checks for Taglish that a Filipino listener hears as unnatural (Bryce, 2026-11-25: "Sa 7 buwan ng 2026"
+"""Machine checks for Taglish that a Filipino listener hears as unnatural (owner, 2026-11-25: "Sa 7 buwan ng 2026"
 is not how anyone says it; 2026-11-26: "Isang chief justice", not "one chief justice"). The narrator reads digits in
 English (`tts_voxcpm.spoken`), so small counts (1 to 10) are written as Tagalog linked numerals and big figures stay
-digits next to English words. Guide with sources: Bryce-Brain wiki/answers/tfs-natural-taglish-2026-11.md.
+digits next to English words. Guide with sources: the studio notes wiki/answers/tfs-natural-taglish-2026-11.md.
 
 Each problem is a short string naming the words and the fix, so it can go back to a writer as feedback.
 """
@@ -23,7 +23,7 @@ _EN_TO_TL = {"second": "segundo", "seconds": "segundo", "minute": "minuto", "min
 _BARE_SPAN = re.compile(r"\bsa\s+(\d+)\s+(months|weeks|days|years|hours|buwan|linggo|araw|taon|oras)\b"
                         r"(?!\s+na\b)(?:\s+ng\s+\d{4})?", re.I)
 _IKA_DIGIT = re.compile(r"\bika-?\s?(\d+)", re.I)
-# Small counts (Bryce, 2026-11-26): Tagalog linked numerals, even before an English noun.
+# Small counts (owner, 2026-11-26): Tagalog linked numerals, even before an English noun.
 TL_NUM = {1: "isang", 2: "dalawang", 3: "tatlong", 4: "apat na", 5: "limang", 6: "anim na", 7: "pitong",
           8: "walong", 9: "siyam na", 10: "sampung"}
 TL_ORD = {1: "unang", 2: "ikalawang", 3: "ikatlong", 4: "ikaapat na", 5: "ikalimang", 6: "ikaanim na",
@@ -74,12 +74,12 @@ _NOT_VERBS = {"saan", "nasaan", "kailan", "kanino", "ilan", "alin", "kailangan",
               "paaralan", "simbahan", "hukuman", "lungsod", "senador", "ganoon", "ganiyan"}
 
 
-# "iyong" is two words on the page (Bryce, 2026-11-25): "that/the X" (iyon + -ng), which everyone says "yung",
+# "iyong" is two words on the page (owner, 2026-11-25): "that/the X" (iyon + -ng), which everyone says "yung",
 # and formal "your X" (iyo + -ng), which people say "X mo". Either way the narrator would read it stiffly.
 _IYONG = re.compile(r"\biyong\b", re.I)
 _YUNG_SPELLING = re.compile(r"(?<![\w'])(?:'yung|'yong|yong)\b", re.I)    # one caption spelling: "yung"
 _NG_YUNG = re.compile(r"\b(?:ng|sa)\s+yung\b", re.I)
-# Bryce, 2026-11-27: "yon sounds more natural" than "iyon"; "pwede is what we normally use"; law dates as
+# The owner, 2026-11-27: "yon sounds more natural" than "iyon"; "pwede is what we normally use"; law dates as
 # "ikalawang Lunes ng Mayo", not "second Monday ng May".
 _IYON = re.compile(r"\biyon\b", re.I)
 _PUWEDE = re.compile(r"\bpuwede\w*", re.I)
@@ -166,7 +166,7 @@ def problems(text: str) -> list[str]:
         out.append(f'"{m.group(0).strip()}": dates with digits use English months '
                    f'("{_EN_MONTHS[_TL_MONTHS.index(tl)]}")')
     for m in _IYON.finditer(t):
-        out.append(f'"{m.group(0)}": write "yon" (Bryce: "yon sounds more natural")')
+        out.append(f'"{m.group(0)}": write "yon" (owner: "yon sounds more natural")')
     for m in _PUWEDE.finditer(t):
         out.append(f'"{m.group(0)}": write "{m.group(0).lower().replace("puwede", "pwede")}" (the everyday spelling)')
     for m in _EN_ORD_WEEKDAY.finditer(t):

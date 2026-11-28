@@ -32,16 +32,16 @@ Audience: Filipinos in the Philippines and abroad, 18 to 45, curious, tired of n
   "55.9%", "20 to 3"); the engine reads them the way Manila explainers do ("one hundred seventy thousand five
   hundred ninety-eight pesos", "twenty twenty-six"). Never big figures in Tagalog number words. Fractions in
   words ("one-third").
-- **Small counts are Tagalog words** (Bryce, 2026-11-26: "it's better hearing 'Isang chief justice' rather than
+- **Small counts are Tagalog words** (owner, 2026-11-26: "it's better hearing 'Isang chief justice' rather than
   'one chief justice'"): 1 to 10 people, things or time units take the linked numeral, even before an English
   noun ("isang chief justice", "dalawang senador", "pitong buwan", "ikapitong buwan").
 - **A number and its unit are in the same language**, the way Filipinos speak ("pitong buwan" or "30 days", never
   "seven buwan"): "sa unang pitong buwan ng 2026", "mula January hanggang July 2026", "July 15, 2026",
   "₱1.37 trillion", "55.9%". A question about what will happen uses the contemplated aspect ("Babayaran mo ba yon?"). "yung" for
-  "the/that [thing]" and "[thing] mo" for "your", never "iyong" (Bryce, 2026-11-25); "yon", never "iyon", and "pwede", never "puwede"; law dates as
-  "ikalawang Lunes ng Mayo" (Bryce, 2026-11-27); "sa iyo" stays.
+  "the/that [thing]" and "[thing] mo" for "your", never "iyong" (owner, 2026-11-25); "yon", never "iyon", and "pwede", never "puwede"; law dates as
+  "ikalawang Lunes ng Mayo" (owner, 2026-11-27); "sa iyo" stays.
   No vlog particles (eh, "di ba") and no textbook words (subalit, upang). Sources and before and after
-  pairs: Bryce-Brain `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.
+  pairs: the studio notes `wiki/answers/tfs-natural-taglish-2026-11.md`; machine checks in `src/tfs/taglish_lint.py`.
 - **Questions, not slogans.** Open with the question the viewer has, and return to it at the end with what they
   now know.
 - Compare fairly: the other country is an example of a different design, not a fantasy. Say its weak points too

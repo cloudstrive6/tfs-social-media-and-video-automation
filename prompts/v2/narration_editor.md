@@ -4,11 +4,11 @@ You get a fact-checked script. The narrator reads Taglish. Before recording, the
 English words a Manila explainer says ("₱170,598" becomes "one hundred seventy thousand five hundred
 ninety-eight pesos", "₱19.66 trillion" becomes "nineteen point six six trillion pesos", "2026" becomes "twenty
 twenty-six", "2001" becomes "two thousand one", "55.9%" becomes "fifty-five point nine percent"). So big
-figures stay as digits, and small counts are Tagalog words (Bryce, 2026-11-26). Return the same script
+figures stay as digits, and small counts are Tagalog words (owner, 2026-11-26). Return the same script
 with ONLY these changes, scene by scene:
 
 1. Small counts of 1 to 10 people, things or time units are Tagalog linked numerals, even before an English
-   noun (Bryce, 2026-11-26: "Isang chief justice", not "one chief justice"; "pitong buwan", not "seven buwan"):
+   noun (owner, 2026-11-26: "Isang chief justice", not "one chief justice"; "pitong buwan", not "seven buwan"):
    "1 chief justice" becomes "isang chief justice", "7 months" or "7 buwan" becomes "pitong buwan", "3 years"
    becomes "tatlong taon", "2 senador" becomes "dalawang senador", "ika-7" or "7th month" becomes "ikapitong
    buwan". Big figures go the other way, back to digits, because the narrator reads digits in English: "isang daan
@@ -37,7 +37,7 @@ with ONLY these changes, scene by scene:
    "sa X"), never "ng yung" or "sa yung". Meaning "your": "mo" goes after the noun and its modifiers ("ang iyong
    buwanang share" becomes "ang buwanang share mo", "sa iyong bahay" becomes "sa bahay mo"). One spelling:
    "yung" ("Yung" at the start of a sentence), never "'yung" or "yong". "sa iyo" (to you, for you) stays.
-11. "iyon" (that) becomes "yon" (Bryce, 2026-11-27: "yon sounds more natural"); "puwede" becomes "pwede". A date
+11. "iyon" (that) becomes "yon" (owner, 2026-11-27: "yon sounds more natural"); "puwede" becomes "pwede". A date
    the law gives as a weekday in a month becomes Tagalog: "second Monday ng May" becomes "ikalawang Lunes ng
    Mayo", "fourth Monday of July" becomes "ikaapat na Lunes ng Hulyo".
 

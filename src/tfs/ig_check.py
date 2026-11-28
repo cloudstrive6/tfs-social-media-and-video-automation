@@ -1,4 +1,4 @@
-"""Read-only Instagram health check (Bryce, 2026-11-27, after four Reels failed at media_publish with Meta's
+"""Read-only Instagram health check (owner, 2026-11-27, after four Reels failed at media_publish with Meta's
 "Generic Internal Error", code -1, subcode 2207085, while YouTube, Facebook and TikTok posted).
 
 Asks Meta, without posting anything: is the Page token valid and which permissions it holds, is the Instagram

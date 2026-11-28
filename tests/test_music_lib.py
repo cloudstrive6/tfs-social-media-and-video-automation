@@ -1,4 +1,4 @@
-"""Music bed from the documentary library (Bryce, 2026-11-27): bar-line assembly, reveal on the space section,
+"""Music bed from the documentary library (owner, 2026-11-27): bar-line assembly, reveal on the space section,
 25 dB phone-band level held through pauses, chapter cue changes, pad fallback."""
 import json
 

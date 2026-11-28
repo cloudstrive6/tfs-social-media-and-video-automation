@@ -136,7 +136,6 @@ def test_the_real_queue_file_is_valid():
         assert t["kind"] == "vertical" and t["title"] and t["request"] and t["notes"]
         assert t["pillar"] in get_args(Pillar)
         assert "pockets" not in (t["request"] + t["notes"]).lower()       # the angle is a question, never a claim
-    assert "bryce" not in (editor.ROOT / "config" / "owner_topics.yaml").read_text(encoding="utf-8").lower()
     assert [t["id"].split("-", 4)[-1] for t in q] == ["nuvali-traffic", "modest-lives", "good-governance",
                                                      "ghost-projects"]
 

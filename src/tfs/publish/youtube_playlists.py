@@ -80,7 +80,7 @@ def ensure(key: str, have: dict[str, str] | None = None) -> str:
 
 
 def delete(playlist_id: str) -> None:
-    """Delete one of the channel's playlists (the videos in it are not touched). Only on Bryce's explicit OK."""
+    """Delete one of the channel's playlists (the videos in it are not touched). Only on the owner's explicit OK."""
     from .youtube import api
 
     api().playlists().delete(id=playlist_id).execute()

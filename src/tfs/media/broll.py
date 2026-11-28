@@ -1,7 +1,7 @@
 """Licensed b-roll from Wikimedia Commons: search, licence filter, download, the TFS grade and a per-item licence log.
 
 Automates what was done by hand for the approved v2 pilot (revamp-2026-11/v2-scripts/dl2.py, pilot/engine/
-grade_assets.py and update_asset_log.py). Policy (docs: Bryce-Brain wiki/answers/tfs-style-v2-spec-2026-11.md):
+grade_assets.py and update_asset_log.py). Policy (docs: the studio notes wiki/answers/tfs-style-v2-spec-2026-11.md):
 
 - Allowed licences: public domain (incl. PD-*), CC0 and CC BY (any version). Never BY-SA, NC, ND, GFDL-only,
   "fair use" or a missing licence.

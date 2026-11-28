@@ -1,4 +1,4 @@
-"""Local GPU first, Modal as fallback (Bryce, 2026-11-24), offline: queue posting, deferral, local takes, deadline."""
+"""Local GPU first, Modal as fallback (owner, 2026-11-24), offline: queue posting, deferral, local takes, deadline."""
 import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone

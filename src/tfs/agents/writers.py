@@ -119,7 +119,7 @@ def _big(text: str) -> list[str]:
 
 def _small(text: str) -> list[int]:
     """Small counts in order, as digits or Tagalog numerals ("7", "pitong", "ikapito" are all 7), so a retry may
-    spell a small count out (Bryce, 2026-11-26) but may not drop, change or swap one."""
+    spell a small count out (owner, 2026-11-26) but may not drop, change or swap one."""
     out = []
     for tok in _SMALL_TOKEN.findall(text):
         if tok.isdigit() and 1 <= int(tok) <= 10:
@@ -154,7 +154,7 @@ def _same_content(a: Script, b: Script) -> bool:
 
 def narration_edit(script: Script) -> Script:
     """Narration Editor: numbers/dates/acronyms as spoken, no emphasis hyphens, no word split across scenes.
-    Then the Taglish lint (Bryce, 2026-11-25: "Sa 7 buwan ng 2026"): if the edit still has unnatural patterns,
+    Then the Taglish lint (owner, 2026-11-25: "Sa 7 buwan ng 2026"): if the edit still has unnatural patterns,
     one more pass with the problems listed; the retry is kept only if it keeps the scenes and has fewer problems.
     What remains is logged, never fatal."""
     ids = [s.id for s in script.scenes]

@@ -1,5 +1,5 @@
 name: Blender hero shot (Modal GPU)
-# Manual only. Renders a Blender scene script on a Modal L4 GPU (Bryce approved Modal on 2026-11-24)
+# Manual only. Renders a Blender scene script on a Modal L4 GPU (the owner approved Modal on 2026-11-24)
 # and attaches the encoded MP4 plus the cost line as an artifact. Nothing is published.
 on:
   workflow_dispatch:

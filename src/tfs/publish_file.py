@@ -1,6 +1,6 @@
 """Publish one finished, owner-approved video right away, outside the schedule (the posting workflows stay off).
 
-Used for timely pieces Bryce approves one by one (first: the ₱170,598 national-debt Short, 2026-11-25). The video and
+Used for timely pieces the owner approves one by one (first: the ₱170,598 national-debt Short, 2026-11-25). The video and
 its captions are uploaded to the private R2 state bucket under publish/<id>/ (video.mp4, post.json); a request file
 publish-requests/<id>.json naming that key is committed, and .github/workflows/publish-file.yml runs
 `tfs publish-file --key publish/<id>`. Each platform is tried on its own; one failure never stops the others.
@@ -24,7 +24,7 @@ DEFAULT = ["youtube_shorts", "facebook_reel", "instagram_reel", "tiktok"]
 
 
 def _at(p: dict):
-    """post.json "at" (ISO time with offset): Post for Me holds the post until then (Bryce, 2026-11-27: backlog
+    """post.json "at" (ISO time with offset): Post for Me holds the post until then (owner, 2026-11-27: backlog
     Instagram posts go out one at a time). Missing or past: now."""
     from datetime import datetime
     at = datetime.fromisoformat(p["at"]) if p.get("at") else None

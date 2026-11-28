@@ -3,7 +3,7 @@ TFS_RENDER_TESTS=1:
 
     TFS_RENDER_TESTS=1 .venv/Scripts/python.exe -m pytest -q tests/test_atlas_render.py
 
-test_v5_frames_unchanged is the regression guard for the approved dry-run Short v5 (Bryce, 2026-11-25): the v5 shot
+test_v5_frames_unchanged is the regression guard for the approved dry-run Short v5 (owner, 2026-11-25): the v5 shot
 list and its captions (tests/fixtures/atlas_v5_*.json) are rendered with the runtime that made v5
 (tests/fixtures/atlas_v5_runtime.js, frozen from commit 01082f3) and with today's runtime, and every frame must
 match pixel for pixel. New blocks must stay inert for shots and words that do not use them.

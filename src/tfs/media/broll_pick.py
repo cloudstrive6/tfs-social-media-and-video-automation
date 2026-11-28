@@ -3,7 +3,7 @@
 Plugs `broll` (Wikimedia Commons, PD / CC0 / CC BY only) into the atlas planner's Resolver. Policy:
 - photos only in automated episodes (no fair-use news footage at all; Philippine government video is rejected
   by broll.evaluate);
-- skip any candidate whose metadata hints at children (Bryce's no-minors rule), and any file already used in
+- skip any candidate whose metadata hints at children (the owner's no-minors rule), and any file already used in
   this video;
 - every photo used gets a licence-log row with where it appears (item_dir/licences.json).
 """

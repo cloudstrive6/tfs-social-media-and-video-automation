@@ -1,5 +1,5 @@
 # Actions -> playlists -> Run workflow. Default is read-only: prints scopes, playlists and where each upload would go.
-# Tick "apply" to create the playlists (public) and add the videos (Bryce, 2026-11-26).
+# Tick "apply" to create the playlists (public) and add the videos (owner, 2026-11-26).
 name: playlists
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         type: boolean
         default: false
       delete_id:
-        description: delete this one playlist id instead (videos untouched; only on Bryce's OK)
+        description: delete this one playlist id instead (videos untouched; only on the owner's OK)
         type: string
         default: ""
 jobs:

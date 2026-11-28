@@ -37,7 +37,7 @@ class Unit:
 def is_live(sched: dict | None = None, at: datetime | None = None) -> bool:
     """The master switch (`live` in schedule.yaml). Missing means live, so an old-format config keeps running.
     `live_from` (ISO time, optional) holds planning until then, so a go-live can wait for posts already scheduled
-    by hand (Bryce, 2026-11-26: start after the OFW Short at 12:30 PHT on 27 Nov)."""
+    by hand (owner, 2026-11-26: start after the OFW Short at 12:30 PHT on 27 Nov)."""
     sched = schedule() if sched is None else sched
     if not sched.get("live", True):
         return False

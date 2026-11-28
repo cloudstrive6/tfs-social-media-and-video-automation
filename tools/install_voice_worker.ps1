@@ -1,5 +1,5 @@
 # Registers the TFS local narration worker as a Windows scheduled task that starts at logon (hidden, restarts on
-# failure). Bryce chose this on 2026-11-24 ("I'll add an Avast exception").
+# failure). The owner chose this on 2026-11-24 ("I'll add an Avast exception").
 #
 # Before running:
 #   1. The task runs the venv's BASE interpreter (pythonw.exe in the pyvenv.cfg home, C:\Python313) with -I, and

@@ -1,5 +1,5 @@
 """Style v2 (atlas engine): the writers and reviewers get the v2 bible and briefs, never the cartoon-era ones
-(Bryce, 2026-11-24: "don't use that old one")."""
+(owner, 2026-11-24: "don't use that old one")."""
 from tfs import config
 
 
@@ -19,14 +19,14 @@ def test_atlas_engine_uses_v2_bible_and_briefs(monkeypatch, tmp_path):
 
 
 def test_v2_numbers_stay_digits_and_are_read_in_english(monkeypatch, tmp_path):
-    """Bryce, 2026-11-25: numbers need not be Tagalog; the narrator says "one point three trillion pesos",
+    """The owner, 2026-11-25: numbers need not be Tagalog; the narrator says "one point three trillion pesos",
     "one hundred seventy thousand five hundred ninety eight", "twenty twenty six", "two thousand one"."""
     from tfs.media.tts_voxcpm import spoken
     monkeypatch.setattr(config, "channel", lambda: {"video": {"engine": "atlas"}})
     monkeypatch.setattr(config, "data_dir", lambda: tmp_path)
     ed = config.load_prompt("narration_editor")
     assert "(style v2" in ed.splitlines()[0] and "limang punto apat" not in ed
-    assert "Never write a big figure in Tagalog words" in ed          # small counts are Tagalog words (Bryce, 2026-11-26)
+    assert "Never write a big figure in Tagalog words" in ed          # small counts are Tagalog words (owner, 2026-11-26)
     assert "never spell them out in Tagalog" in config.load_prompt("scriptwriter")
     assert spoken("₱1.3 trillion") == "one point three trillion pesos"
     assert spoken("₱170,598") == "one hundred seventy thousand five hundred ninety-eight pesos"
@@ -41,7 +41,7 @@ ATLAS_PATH = ("trend_scout", "editor_in_chief", "researcher", "scriptwriter", "h
 
 
 def test_atlas_path_loads_only_v2_briefs_and_old_ones_are_retired(monkeypatch, tmp_path):
-    """Bryce, 2026-11-25: any old-style element (storytelling, narration, style) is removed and never used."""
+    """The owner, 2026-11-25: any old-style element (storytelling, narration, style) is removed and never used."""
     import pytest
     from tfs.agents import creative
     monkeypatch.setattr(config, "channel", lambda: {"video": {"engine": "atlas"}})

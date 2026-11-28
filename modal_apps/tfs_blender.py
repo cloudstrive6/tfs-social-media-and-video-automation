@@ -1,4 +1,4 @@
-"""TFS Blender hero shots on a Modal L4 GPU (Bryce approved Modal for this on 2026-11-24).
+"""TFS Blender hero shots on a Modal L4 GPU (the owner approved Modal for this on 2026-11-24).
 
 Renders any TFS Blender scene script headless with Cycles on the GPU (OptiX), split into frame chunks
 across a few containers, and returns the PNG frames. The same scene scripts run locally on the CPU;

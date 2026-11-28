@@ -242,7 +242,7 @@
       if (w.brk || i === S.words.length - 1) { groups.push(group); group = []; }
     });
     groups.forEach((g, gi) => {
-      // no box (Bryce, 2026-11-24): white letters with a thin dark outline and a soft shadow around the letters only
+      // no box (owner, 2026-11-24): white letters with a thin dark outline and a soft shadow around the letters only
       const o = Math.max(2, Math.round((V ? 2.4 : 2.6) * U));               // outline thickness in px
       const ring = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]]
         .map(([dx, dy]) => `${(dx * o).toFixed(1)}px ${(dy * o).toFixed(1)}px 0 rgba(15,20,32,.92)`).join(",");

@@ -1,4 +1,4 @@
-"""Store a Modal token for TFS Blender hero shots (2026-11-24). Bryce runs this; it never prints the token.
+"""Store a Modal token for TFS Blender hero shots (2026-11-24). The owner runs this; it never prints the token.
 
 On modal.com: Settings, API Tokens, New Token. Modal shows one command,
 `modal token set --token-id ak-... --token-secret as-...`, with a copy button. Press copy, then run

@@ -5,7 +5,7 @@ Flow per scene (ported from the 2026-11 pilot, revamp-2026-11/pilot/engine/align
 2. The deployed Modal function "tfs-voice"/"narrate" (modal_apps/tfs_voice.py) returns 2 takes per line
    (16-bit mono WAV at the native 48 kHz). Lines are sent in chunks of CHUNK, run in parallel containers.
 3. Each take is trimmed (silence below -38 dB of the peak, keeping 0.05 s before and 0.12 s after), its edges are
-   cleaned (VoxCPM2 sometimes starts a line with breathy, laugh-like bursts before the first word: Bryce heard them
+   cleaned (VoxCPM2 sometimes starts a line with breathy, laugh-like bursts before the first word: the owner heard them
    on the national budget dry run, 2026-11-27; see clean_edges), then it is heard by
    faster-whisper (same model and language as qa.py, CPU int8) and scored by letter match against the script:
    difflib on the joined letters with autojunk=False, with numbers turned into words on both sides so Whisper's
@@ -444,7 +444,7 @@ class VoiceDeferred(RuntimeError):
 
 
 def _from_local(texts: list[str], ids: list[int], out_dir: Path, item: str, deadline, threshold: float) -> bool:
-    """Local GPU first (Bryce, 2026-11-24). Scores the worker's WAVs like Modal takes and caches the good ones.
+    """Local GPU first (owner, 2026-11-24). Scores the worker's WAVs like Modal takes and caches the good ones.
     Returns True when the item may go on (all lines cached, or the deadline passed so Modal takes the rest);
     raises VoiceDeferred while the worker still has time."""
     from datetime import datetime, timezone

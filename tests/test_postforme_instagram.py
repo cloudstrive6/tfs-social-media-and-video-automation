@@ -1,4 +1,4 @@
-"""Instagram goes out through Post for Me's Quickstart project since 2026-11-27 (Bryce: "TFS IG content will be
+"""Instagram goes out through Post for Me's Quickstart project since 2026-11-27 (owner: "TFS IG content will be
 published via PostForMe"); the Meta Graph API route stays in the code for when the Page link comes back."""
 from __future__ import annotations
 

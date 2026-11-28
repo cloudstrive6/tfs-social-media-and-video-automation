@@ -1,8 +1,8 @@
-"""TFS music bed from the music team's documentary library (Bryce, 2026-11-27).
+"""TFS music bed from the music team's documentary library (owner, 2026-11-27).
 
-Bryce picked, blind on his phone, Netflix-style documentary strings: real sampled strings playing a minimalist
+The owner picked, blind on a phone, Netflix-style documentary strings: real sampled strings playing a minimalist
 driving ostinato ("Style C"), 25 dB under the narrator in the phone band (300 to 3400 Hz), held through pauses, no
-level jump at the reveal. The library (music team, Bryce-Brain `skills/global/music-team`, library v1) is 12 beds in
+level jump at the reveal. The library (music team, the studio notes `skills/global/music-team`, library v1) is 12 beds in
 six moods with section markers: intro, drive (its second half loops at bar lines), build, space (for a reveal),
 return, ending. This module:
 
@@ -31,7 +31,7 @@ from scipy.signal import butter, lfilter, sosfilt
 log = logging.getLogger(__name__)
 SR = 48000
 PREFIX = "music/doc-v1/"
-PHONE_GAP_DB = 25.0      # Bryce, 2026-11-27 (test 3, level C3)
+PHONE_GAP_DB = 25.0      # The owner, 2026-11-27 (test 3, level C3)
 HOLD_S = 2.2             # pauses shorter than this keep the bed down
 LIFT_DB = 6.0            # music-only stretches (before the first word, after the last, long pauses)
 ATTACK_S, RELEASE_S, PRE_S = 0.5, 1.2, 0.35   # duck back down before the voice returns, over 0.5 s

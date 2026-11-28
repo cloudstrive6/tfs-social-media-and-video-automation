@@ -1,4 +1,4 @@
-"""TFS local narration worker: the RTX 3080 narrates first, Modal only as the fallback (Bryce, 2026-11-24).
+"""TFS local narration worker: the RTX 3080 narrates first, Modal only as the fallback (owner, 2026-11-24).
 
 Loop (every 2 minutes): read the narration queue in R2 (src/tfs/media/voice_queue.py). When jobs wait:
 1. GPU in use by another process (nvidia-smi)? Ask the Taas Noo render for a slot with the agreed file handshake
@@ -51,7 +51,7 @@ def use_site(sp: Path) -> None:
 # here; VoxCPM is started the same way (see vox_cmd). This keeps the venv launcher exes out of the picture with Avast.
 # Note (2026-11-24): the venv launcher worked too (the real log shows both starts); the "sandboxed" reading came from
 # checking %LOCALAPPDATA% from an agent shell, which itself sees Avast's sandbox copy of C: files. Check C: files a
-# scheduled job writes from a Terminal tab (Bryce's own PowerShell), never from an agent's Bash/PowerShell tool.
+# scheduled job writes from a Terminal tab (the owner's own PowerShell), never from an agent's Bash/PowerShell tool.
 if sys.prefix == sys.base_prefix and (ROOT / ".venv" / "pyvenv.cfg").exists():
     use_site(venv_base(ROOT / ".venv")[1])
 sys.path.insert(0, str(ROOT / "src"))

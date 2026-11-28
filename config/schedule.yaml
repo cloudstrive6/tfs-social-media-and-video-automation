@@ -1,4 +1,4 @@
-# When things post. Revamp cadence (Bryce, 2026-11-24); the full table and the reasons are in the vault page
+# When things post. Revamp cadence (owner, 2026-11-24); the full table and the reasons are in the vault page
 # wiki/answers/tfs-weekly-posting-schedule-2026-11.md.
 #
 # Times are Asia/Manila (PHT, UTC+8) and stay fixed to the Philippine audience all year. In New Zealand that
@@ -19,7 +19,7 @@
 # day-to-day differences (20:30 vs 21:00) and per-platform offsets (Threads +30 min) are kept.
 
 # Master switch. false = the run loop plans nothing new under this schedule (nothing new is made or posted).
-# Bryce said go on 2026-11-26 ("Switch on now the regular automation"); planning starts at `live_from`, after the
+# The owner said go on 2026-11-26 ("Switch on now the regular automation"); planning starts at `live_from`, after the
 # two Shorts already scheduled by hand (impeachment 20:30 PHT 26 Nov, OFW remittances 12:30 PHT 27 Nov).
 live: true
 live_from: "2026-11-27T13:00:00+08:00"
@@ -28,7 +28,7 @@ production_lead_hours: 10     # production starts this long before the first slo
                               # 5 h to narrate before Modal takes over (tts.voxcpm.local_until_hours_before_slot: 5)
 
 # Kinds on pause: not planned, produced or posted. Long-form unpaused for the revamp (2026-11-24); `live`
-# above still holds everything until Bryce says go.
+# above still holds everything until the owner says go.
 paused: []
 
 # Default time of the i-th unit of each kind (the analyst override replaces these lists; old readers use them).

@@ -1,4 +1,4 @@
-"""TFS sound design v2 (map-explainer style, approved by Bryce on 2026-11-24 with the v2.2 pilot).
+"""TFS sound design v2 (map-explainer style, approved by the owner on 2026-11-24 with the v2.2 pilot).
 
 A synthesized "paper desk" SFX palette (owned outright, so no Content ID risk), a cue engine that places each
 sound on the visual beat the atlas runtime (engine atlas.js) animates, a synthesized 4-chord documentary pad,
@@ -458,7 +458,7 @@ def mix(voice: np.ndarray, shots: list[dict], total: float, sr: int = SR, seed: 
     at 0 s. Output length is max(len(voice), int((total + 0.5) * sr)). The mix is not normalised: write it
     with `write_wav` (float, no clipping) and finish it with `master`.
 
-    Music (Bryce, 2026-11-27): the music team's documentary library (media/music_lib.py), Netflix-style driving
+    Music (owner, 2026-11-27): the music team's documentary library (media/music_lib.py), Netflix-style driving
     strings at 25 dB under the narrator in the phone band, held through pauses, the reveal on the cue's space
     section. `music_text` (title and topic) picks the mood and `music_seed` (the item id) the variant. If the
     library is unavailable the v2 pad is used, with its swell and drop at reveals."""
